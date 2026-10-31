@@ -1,0 +1,61 @@
+{
+  "name": "geeospace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22 <27"
+  },
+  "scripts": {
+    "dev": "next dev --webpack --hostname 127.0.0.1 --port 3100",
+    "build": "next build --webpack",
+    "start": "next start --hostname 127.0.0.1 --port 3100",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test",
+    "cf:build": "opennextjs-cloudflare build",
+    "build:worker": "npm run cf:build",
+    "cf:preview": "opennextjs-cloudflare preview --ip 127.0.0.1 --port 8787",
+    "test:smoke:worker": "playwright test --config playwright.worker.config.ts",
+    "cf:typegen": "wrangler types cloudflare-env.d.ts",
+    "backup:local": "tsx scripts/backup-data.ts",
+    "restore:local": "tsx scripts/restore-data.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "5.3.0",
+    "@opennextjs/cloudflare": "1.20.14",
+    "@radix-ui/react-slot": "1.5.0",
+    "@tailwindcss/postcss": "4.3.3",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "1.65.0",
+    "next": "16.4.3",
+    "rclone.js": "0.6.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "tailwind-merge": "3.7.0",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261030.1",
+    "@playwright/test": "1.64.1",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.3",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5",
+    "wrangler": "4.156.0"
+  },
+  "overrides": {
+    "@node-minify/core": {
+      "glob": "10.5.0"
+    },
+    "adm-zip": "0.6.1"
+  }
+}
