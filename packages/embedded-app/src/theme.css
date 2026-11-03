@@ -1,0 +1,51 @@
+@import "tailwindcss";
+@theme inline {
+  --color-background: var(--background); --color-foreground: var(--foreground);
+  --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground);
+  --color-card: var(--card); --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent); --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring);
+}
+:root {
+  color-scheme: light dark;
+  --background: light-dark(#f8f8fa, #171719); --foreground: light-dark(#201f26, #f2f0f4);
+  --card: light-dark(#fff, #212124); --card-foreground: var(--foreground);
+  --muted: light-dark(#f6f6f8, #28282d); --muted-foreground: light-dark(#615f68, #b6b3be);
+  --border: light-dark(#e4e2e8, #3b3942); --input: var(--border);
+  --primary: light-dark(#b12536, #ff8892); --primary-foreground: light-dark(#fff, #201f26);
+  --secondary: var(--muted); --secondary-foreground: var(--foreground);
+  --accent: var(--muted); --accent-foreground: var(--foreground); --selection: light-dark(#fdf0f1, #3e222a); --ring: var(--primary);
+  --radius: .625rem; --radius-control: .5rem;
+  --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem; --space-5: 1.5rem; --space-6: 2rem; --space-7: 3rem;
+  --text-meta: .75rem; --text-body: .875rem; --text-title: 1.125rem; --text-display: 1.5rem; --control: 2.75rem;
+  font-family: "Inter Variable", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--foreground); background: var(--background); font-size: 16px;
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; font-size: var(--text-body); line-height: 1.55; }
+button, input, select { font: inherit; color: inherit; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { font-weight: 600; }
+.space-app { max-width: 90rem; padding: clamp(.75rem,3vw,1.75rem); margin: 0 auto; }
+:root[data-presentation="embedded"] .space-app { padding: clamp(.75rem,1.6vw,1rem); }
+:root[data-presentation="embedded"] .space-app-identity { display: none; }
+.space-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-bottom: .75rem; }
+:where(button,input,select):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.ui-button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control); min-width: var(--control); padding: var(--space-2) var(--space-3); border: 1px solid transparent; border-radius: var(--radius-control); font-weight: 500; cursor: pointer; }
+.ui-button-outline { background: var(--card); border-color: var(--border); }
+.ui-button-ghost { background: transparent; }
+.ui-button-primary { background: var(--primary); color: var(--primary-foreground); }
+.ui-button-secondary { background: var(--secondary); color: var(--secondary-foreground); }
+.ui-button:not(:disabled):hover { background: var(--accent); color: var(--accent-foreground); }
+.ui-button:disabled { opacity: .65; cursor: not-allowed; }
+.ui-button-icon { padding: var(--space-2); width: var(--control); }
+.ui-input { min-width: 0; width: 100%; min-height: var(--control); border: 1px solid var(--input); border-radius: var(--radius-control); background: var(--card); padding: var(--space-2) var(--space-3); }
+.ui-dialog-overlay { position: fixed; inset: 0; z-index: 50; background: #0008; }
+.ui-dialog-content { position: fixed; z-index: 51; top: 50%; left: 50%; transform: translate(-50%,-50%); width: min(30rem,calc(100% - var(--space-6))); max-height: calc(100dvh - var(--space-6)); overflow: auto; padding: var(--space-5); border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+.ui-dialog-close { position: absolute; top: var(--space-2); right: var(--space-2); display: grid; place-items: center; min-width: var(--control); min-height: var(--control); border: 0; border-radius: var(--radius-control); background: transparent; cursor: pointer; }
+.ui-dialog-content h2 { font-size: var(--text-title); margin: var(--space-3) var(--space-6) var(--space-5) 0; overflow-wrap: anywhere; }
+.ui-dialog-content p { color: var(--muted-foreground); }

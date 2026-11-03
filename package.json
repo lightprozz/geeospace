@@ -16,13 +16,17 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:e2e": "playwright test",
+    "test:notifications": "playwright test --config playwright.notifications.config.ts",
     "cf:build": "opennextjs-cloudflare build",
     "build:worker": "npm run cf:build",
     "cf:preview": "opennextjs-cloudflare preview --ip 127.0.0.1 --port 8787",
     "test:smoke:worker": "playwright test --config playwright.worker.config.ts",
     "cf:typegen": "wrangler types cloudflare-env.d.ts",
     "backup:local": "tsx scripts/backup-data.ts",
-    "restore:local": "tsx scripts/restore-data.ts"
+    "restore:local": "tsx scripts/restore-data.ts",
+    "build:apps": "npm run build --workspace geeo-calendar && npm run build --workspace geeo-notifications",
+    "typecheck:apps": "npm run typecheck --workspace geeo-calendar && npm run typecheck --workspace geeo-notifications",
+    "test:embedded": "playwright test --config playwright.embedded.config.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "5.3.0",
@@ -57,5 +61,10 @@
       "glob": "10.5.0"
     },
     "adm-zip": "0.6.1"
-  }
+  },
+  "workspaces": [
+    "apps/calendar",
+    "apps/notifications",
+    "packages/embedded-app"
+  ]
 }

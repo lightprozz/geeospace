@@ -7,6 +7,7 @@ test-results/
 playwright-report/
 *.tsbuildinfo
 .env*
+!apps/calendar/.env.example
 .dev.vars*
 backups/
 .DS_Store
