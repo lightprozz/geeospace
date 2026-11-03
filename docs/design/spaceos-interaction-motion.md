@@ -105,3 +105,5 @@ Weather dùng adapter độc lập, timeout/cache có giới hạn và nguồn t
 - Kiểm tra resource sau 50 vòng mở/đóng và ẩn widget: không tăng dần listener, RAF, object URL, animation hoặc media playback đang sống.
 
 Các gate thực thi ở [chi tiết Phase 1](../../plans/261029-1103-geeo-staff-workspace/spaceos-chrome-refinement.md); bằng chứng trước sửa ở [audit header/dock](../../plans/reports/design-261031-1108-spaceos-chrome-motion.md).
+
+Quy chuẩn cho toolbar, nội dung và theme của app nhúng nằm trong [SpaceOS Embedded App Layout v1](./spaceos-embedded-app-layout.md).

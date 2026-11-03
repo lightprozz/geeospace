@@ -39,6 +39,7 @@ Build/dev dùng Webpack vì Turbopack ở máy thực thi đã lỗi bind cổng
 - [GeeO SQL backup gate](./runbooks/geeo-sql-backup-restore.md).
 - [Design brief](./design/employee-experience.md), [owner vận hành](./operations/service-owners.md).
 - [Thiết kế chrome, interaction và motion SpaceOS](./design/spaceos-interaction-motion.md), cùng [sở thích thiết bị và cấu hình Weather](./operations/spaceos-preferences-weather.md).
+- [App Thông báo và trạng thái ứng dụng trên toolbar](./design/spaceos-notifications-and-app-status.md), [chạy app Thông báo độc lập](./runbooks/notifications-local.md), [chạy app Calendar độc lập](./runbooks/calendar-local.md). Giao diện đã tích hợp; nguồn lịch legacy còn cần session resolver, hiện chưa bật realtime push hoặc read-state.
 - [Địa chỉ tích hợp GeeO đã xác minh](./operations/integration-targets.md); Auth/API staging đã tìm được, registered client và session integration vẫn chưa hoàn tất.
 
 Legacy tại refer/zuey-me-main là bằng chứng hành vi, gồm khung OS đã được người dùng yêu cầu giữ lại ngày 30/10. Các component/state/CSS được dựng độc lập với token GeeO; không dùng source, assets cá nhân, workflow, migration hoặc account legacy. Phạm vi nghiệp vụ theo plan GeeO, không thêm lại commerce/booking hoặc nội dung tác giả.
