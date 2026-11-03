@@ -8,6 +8,8 @@ import { desktopApps, isDesktopApp, type DesktopAppId } from "@/lib/desktop/apps
 import { activeWindow, frameRect, initialDesktop, layoutKey, readLayout, windowReducer, type Area, type WindowMode } from "@/lib/desktop/window-store";
 import { AppGlyph } from "./app-glyph";
 import { AppPanel } from "./app-panel";
+import { EmbeddedCalendar } from "./embedded-calendar";
+import { EmbeddedNotifications } from "./embedded-notifications";
 import { AppLauncher } from "./app-launcher";
 import { AppearancePanel, defaultLook, lookKey, readLook, type Look } from "./appearance-panel";
 import { DesktopWindow } from "./desktop-window";
@@ -238,7 +240,7 @@ export function DesktopWorkspace({ initialApp, initialTime, launch = false }: { 
       {snap && <div className={`os-snap-preview os-snap-${snap}`} aria-hidden="true" />}
       {desktopApps.filter((app) => state.windows[app.id]).map((app) => {
         const win = state.windows[app.id]!;
-        return <DesktopWindow key={app.id} id={app.id} state={mobile && win.open && app.id !== active ? { ...win, minimized: true } : win} area={area} mobile={mobile} active={active === app.id} overview={win.open ? overviewStyle(app.id) : undefined} onFocus={() => { dispatch({ type: "focus", id: app.id }); setOverlay(null); }} onClose={() => closeApp(app.id)} onMinimize={() => minimizeApp(app.id)} onMaximize={() => dispatch({ type: "maximize", id: app.id })} onPlace={(rect, mode) => dispatch({ type: "place", id: app.id, rect, mode, area })} onSnap={setSnap}>{app.id === "appearance" ? <AppearancePanel look={look} onChange={changeLook} droppedFile={droppedFile} onDropConsumed={() => setDroppedFile(undefined)} /> : <AppPanel id={app.id} onOpen={openApp} />}</DesktopWindow>;
+        return <DesktopWindow key={app.id} id={app.id} state={mobile && win.open && app.id !== active ? { ...win, minimized: true } : win} area={area} mobile={mobile} active={active === app.id} overview={win.open ? overviewStyle(app.id) : undefined} onFocus={() => { dispatch({ type: "focus", id: app.id }); setOverlay(null); }} onClose={() => closeApp(app.id)} onMinimize={() => minimizeApp(app.id)} onMaximize={() => dispatch({ type: "maximize", id: app.id })} onPlace={(rect, mode) => dispatch({ type: "place", id: app.id, rect, mode, area })} onSnap={setSnap}>{app.id === "appearance" ? <AppearancePanel look={look} onChange={changeLook} droppedFile={droppedFile} onDropConsumed={() => setDroppedFile(undefined)} /> : app.id === "calendar" ? <EmbeddedCalendar dark={dark} motion={look.motion} visible={win.open && !win.minimized && (!mobile || active === app.id) && !overlay} /> : app.id === "notifications" ? <EmbeddedNotifications dark={dark} motion={look.motion} visible={win.open && !win.minimized && (!mobile || active === app.id) && !overlay} /> : <AppPanel id={app.id} onOpen={openApp} />}</DesktopWindow>;
       })}
     </main>
     <DesktopDock state={state} active={active} overview={overlay === "overview"} inert={isModal} moving={look.motion} onLaunch={id => { if (active === id && !state.windows[id]?.minimized) minimizeApp(id); else openApp(id); }} onOverview={() => setOverlay(v => v === "overview" ? null : "overview")} onLauncher={() => setOverlay("launcher")} />

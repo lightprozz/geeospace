@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+.os-notifications-embed { height: 100%; min-height: 0; }
+.os-notifications-embed iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--card); }
+.os-notifications-embed iframe[hidden] { display: none; }
+.os-app-status-tray { display: flex; align-items: center; }
+.os-app-status-trigger { position: relative; }
+.os-app-status-count { font-size: var(--os-font-small); font-variant-numeric: tabular-nums; color: var(--foreground); }
+.os-app-status-mini { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--os-font-small); }
+.os-app-status-popover { margin: 0; position: fixed; inset: calc(var(--os-bar-height) + var(--space-2)) var(--space-4) auto auto; width: min(340px,calc(100vw - var(--space-6))); padding: var(--space-4); background: var(--card); color: var(--foreground); border: 1px solid var(--os-line); border-radius: var(--os-window-radius); box-shadow: var(--os-shadow); }
+.os-app-status-heading { display: flex; align-items: center; justify-content: space-between; }
+.os-app-status-popover p { color: var(--muted-foreground); font-size: var(--os-font-body); line-height: 1.6; margin: var(--space-2) 0; }
+.os-app-status-popover .os-app-status-summary { font-size: 18px; color: var(--foreground); font-weight: 600; }
+.os-app-status-preference { display: flex; align-items: center; min-height: 44px; gap: var(--space-2); padding-block: var(--space-2); font-size: var(--os-font-body); cursor: pointer; }
+.os-app-status-preference input { width: var(--space-4); min-width: var(--space-4); height: var(--space-4); margin: 0; accent-color: var(--primary); }
+.os-menubar .os-app-status-open { width: 100%; min-height: 44px; background: var(--os-selected); color: var(--foreground); margin-top: var(--space-2); }
+@media (max-width: 1100px) { .os-app-status-mini { display: none; } }
+
 :root {
   --background: oklch(1 0 0); --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0); --muted: oklch(0.967 0.001 286.375); --muted-foreground: oklch(0.46 0.01 286);
@@ -342,3 +358,8 @@ button:disabled, input:disabled { cursor: not-allowed; }
   .os-companion:is(:focus-within,:hover) .os-companion-controls { visibility: visible; }
   .os-companion-help { pointer-events: auto; }
 }
+
+.os-calendar-embed { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--card); }
+.os-calendar-embed > p { padding: var(--space-4); }
+.os-calendar-embed > iframe { display: block; width: 100%; flex: 1; min-height: 0; border: 0; }
+.os-calendar-embed > iframe[hidden] { display: none; }

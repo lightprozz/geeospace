@@ -4,6 +4,7 @@ import type { DesktopAppId } from "@/lib/desktop/apps";
 import type { Look } from "@/lib/desktop/appearance";
 import { exitOverlay } from "@/lib/desktop/motion";
 import { useSpace } from "./space-context";
+import { AppStatusTray } from "./app-status-tray";
 import { WeatherControl } from "./weather-control";
 
 type Props = { brand: RefObject<HTMLButtonElement | null>; active?: DesktopAppId; inert: boolean; mobile: boolean; dark: boolean; apple: boolean; clock: string; look: Look; onLook: (next: (look: Look) => Look) => void; onOpen: (id: DesktopAppId) => void; onLauncher: () => void; onSearch: () => void; onOverview: () => void; onDesktop: () => void; onArrange: () => void; onCloseAll: () => void };
@@ -38,7 +39,7 @@ export function DesktopMenubar(p: Props) {
     <button role="menuitem" tabIndex={-1} onClick={() => run(actions.onCloseAll)}>{t("Đóng tất cả cửa sổ", "Close all windows")}</button>
     <button role="menuitem" tabIndex={-1} onClick={() => run(actions.onArrange)}>{t("Sắp lại cửa sổ", "Arrange windows")}</button>
   </div>}</div><span className="os-active-app">{actions.active ? label(actions.active) : t("Không gian làm việc", "Workspace")}</span>
-  <div className="os-menubar-tools"><div ref={moreAnchor} className="os-utilities-anchor"><button className="os-utilities-toggle" aria-label={t("Tiện ích", "Utilities")} aria-expanded={more} onClick={() => setMore(!more)}>•••</button><div className="os-utilities" data-expanded={more}>{utilities}</div></div>
+  <div className="os-menubar-tools"><AppStatusTray dark={actions.dark} motion={actions.look.motion} onOpen={actions.onOpen} /><div ref={moreAnchor} className="os-utilities-anchor"><button className="os-utilities-toggle" aria-label={t("Tiện ích", "Utilities")} aria-expanded={more} onClick={() => setMore(!more)}>•••</button><div className="os-utilities" data-expanded={more}>{utilities}</div></div>
   <button aria-label={t("Tìm nhanh", "Quick search")} aria-keyshortcuts="Control+K Meta+K" onClick={actions.onSearch}><Command size={16} /><kbd>{actions.apple ? "⌘ K" : "Ctrl K"}</kbd></button>
   <button aria-label={actions.dark ? t("Chuyển sang chế độ sáng", "Switch to light mode") : t("Chuyển sang chế độ tối", "Switch to dark mode")} onClick={() => actions.onLook(v => ({ ...v, mode: actions.dark ? "light" : "dark" }))}>{actions.dark ? <Sun size={17} /> : <Moon size={17} />}</button>
   <button className="os-account-chip" aria-label={t("Tài khoản Gee-O", "Gee-O account")} onClick={() => actions.onOpen("account")}><UserRound size={16} /><span>{t("Kết nối Gee-O", "Connect Gee-O")}</span></button><time dateTime={actions.clock}>{new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-GB", { timeZone: "Asia/Ho_Chi_Minh", weekday: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(actions.clock))}</time></div></header>;
