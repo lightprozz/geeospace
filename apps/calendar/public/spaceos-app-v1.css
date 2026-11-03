@@ -1,0 +1,25 @@
+:root {
+  color-scheme: light dark;
+  --bg: light-dark(#f8f8fa, #171719);
+  --card: light-dark(#fff, #212124);
+  --subtle: light-dark(#f6f6f8, #28282d);
+  --ink: light-dark(#201f26, #f2f0f4);
+  --muted: light-dark(#615f68, #b6b3be);
+  --border: light-dark(#e4e2e8, #3b3942);
+  --accent: light-dark(#b12536, #ff8892);
+  --accent-bg: light-dark(#fdf0f1, #3e222a);
+  --radius: .625rem;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+.space-app { max-width: 90rem; padding: clamp(.75rem, 3vw, 1.75rem); margin: 0 auto; }
+:root[data-presentation="embedded"] .space-app { padding: clamp(.75rem, 1.6vw, 1rem); }
+:root[data-presentation="embedded"] .space-app-identity { display: none; }
+.space-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-bottom: .75rem; }
+:where(button, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

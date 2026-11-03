@@ -1,0 +1,26 @@
+export const translations = {
+  vi: {
+    subtitle: "Lịch làm việc", today: "Hôm nay", previous: "Khoảng trước", next: "Khoảng sau",
+    navigation: "Điều hướng ngày", views: "Chế độ xem", week: "Tuần", month: "Tháng", agenda: "Lịch biểu",
+    allDay: "Cả ngày", noEvents: "Không có sự kiện", retry: "Thử lại",
+    campus: "Chi nhánh", allCampuses: "Tất cả chi nhánh",
+    loading: ["Đang tải lịch", ""],
+    unconfigured: ["Chưa kết nối lịch làm việc", "Cần thiết lập nguồn lịch GeeO để xem sự kiện."],
+    unauthorized: ["Cần đăng nhập GeeO", "Hãy đăng nhập vào tài khoản GeeO được cấp quyền xem lịch rồi thử lại."],
+    forbidden: ["Bạn chưa có quyền xem lịch", "Tài khoản hiện tại chưa được cấp quyền truy cập lịch này."],
+    error: ["Không tải được lịch", "Hãy thử lại sau ít phút."],
+    empty: ["Không có sự kiện", "Chưa có sự kiện trong khoảng ngày đang xem."],
+  },
+  en: {
+    subtitle: "Work calendar", today: "Today", previous: "Previous period", next: "Next period",
+    navigation: "Date navigation", views: "Calendar views", week: "Week", month: "Month", agenda: "Agenda",
+    allDay: "All day", noEvents: "No events", retry: "Try again",
+    campus: "Branch", allCampuses: "All branches",
+    loading: ["Loading calendar", ""],
+    unconfigured: ["Calendar is disconnected", "Connect the GeeO calendar source to see your events."],
+    unauthorized: ["GeeO sign-in required", "Sign in with a GeeO account that has calendar access, then try again."],
+    forbidden: ["Calendar access is restricted", "Your current account does not have access to this calendar."],
+    error: ["Calendar could not be loaded", "Please try again in a few minutes."],
+    empty: ["No events", "There are no events in the selected date range."],
+  },
+};
