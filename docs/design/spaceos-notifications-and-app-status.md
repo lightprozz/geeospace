@@ -1,72 +1,72 @@
-# Thông báo và trạng thái ứng dụng trên SpaceOS
+# Notifications and app status in SpaceOS
 
-Áp dụng [quy chuẩn app nhúng](./spaceos-embedded-app-layout.md). Người dùng chọn app Thông báo độc lập, nhúng như Calendar ngày 03/11/2026. Source triển khai ở `apps/notifications/`; OS sở hữu cửa sổ và thanh trạng thái.
+Notifications is an independent Next.js app embedded like Calendar under the [layout standard](./spaceos-embedded-app-layout.md). SpaceOS owns its window and toolbar; the app owns event content. Apply these information layers and the [development guide](./spaceos-app-development.md) to status for future apps.
 
-## App Thông báo
+## Notifications app
 
-Bố cục tham chiếu được chuyển thành hai vùng: sidebar tìm kiếm/nguồn/chủ đề/tùy chọn và vùng cập nhật có bộ lọc thời gian, danh sách, chi tiết. Không sao chép các nhóm Leads, Sales, Email trong ảnh vì không phải nguồn GeeO đã được xác minh. Khi nhúng chỉ chrome OS hiển thị tên app; chạy riêng có header Thông báo. Dùng semantic tokens Calendar v1, GeeO đỏ tiết chế, bề mặt đặc, Inter/system sans, nội dung 14px và meta 12px.
+The reference becomes two regions: source/topic/search/preferences navigation and an updates area with time filters, list, and detail. Do not copy Leads, Sales, or Email groups from the image without verified GeeO sources. Embedded identity belongs to OS chrome; standalone shows a Notifications header. Use Calendar v1 semantic tokens, restrained GeeO red, solid surfaces, Inter/system sans, 14px content, and 12px metadata.
 
-| Kích thước | Quy tắc |
+| Size | Rule |
 |---|---|
-| Mở lần đầu trên desktop | 820px, co theo workspace |
-| Kéo tối thiểu | 320px theo window manager hiện hành |
-| Trên 640px viewport app | Sidebar 224px, vùng nội dung linh hoạt |
-| Từ 640px trở xuống | Nguồn và tìm kiếm nằm trên danh sách; toolbar xuống dòng |
-| Nhỏ nhất hỗ trợ | 320px; control 44px, không cuộn ngang |
+| Initial desktop opening | 820px, constrained to workspace |
+| Minimum resize | 320px under the current window manager |
+| App viewport above 640px | 224px sidebar and flexible content |
+| App viewport at or below 640px | Sources/search above the list; wrapping toolbar |
+| Smallest viewport | 320px, 44px controls, no horizontal page scroll |
 
-Tìm kiếm không phân biệt dấu tiếng Việt, kết hợp chủ đề và Tất cả/Sắp diễn ra/Đã diễn ra. Nhóm chủ đề và tự cập nhật danh sách là sở thích của trình duyệt; chỉ các boolean này được lưu, không lưu sự kiện hoặc thông tin người dùng. Theme/locale, thu nhỏ và khôi phục giữ bộ lọc. Chi tiết dùng dialog với Escape, nút đóng và focus của trình duyệt.
+Search and filters support finding events again. Preserve reading context across theme/locale/minimize/restore. Topic grouping and automatic refresh are display preferences, not read-state. The [component](../../apps/notifications/components/notification-app.tsx) and [store](../../apps/notifications/lib/notification-store.ts) own current behavior. Details use a dialog with Escape, close control, and focus management.
 
-Loading, chưa cấu hình, cần đăng nhập, thiếu quyền, lỗi nguồn, nguồn trống và không khớp bộ lọc là các trạng thái riêng. Mất quyền hoặc refresh lỗi xóa nội dung nguồn khỏi giao diện. Nguồn trống chỉ được kết luận sau response hợp lệ.
+Distinguish loading, unconfigured, sign-in required, forbidden, source failure, valid empty results, and no filter matches. Permission loss or refresh failure clears source content. Empty results require a valid response.
 
-## Đối chiếu legacy
+## Legacy evidence
 
-`ClientAppv1/src/components/dashboard/Notifications.js` lấy `GET /api/ClassEvents/GetEventsPerUser/{sub}`, nhóm theo `subject`, hiển thị `title` và `startTime`. Menu chuông trong `src/components/common/layout/AppMainLayout.js` dùng cùng loại dữ liệu. Component dashboard gọi `handleNotificationClick` nhưng không định nghĩa handler; không tái tạo hành vi lỗi đó.
+`ClientAppv1/src/components/dashboard/Notifications.js` reads `GET /api/ClassEvents/GetEventsPerUser/{sub}`, groups by `subject`, and displays `title`/`startTime`. The bell menu in `src/components/common/layout/AppMainLayout.js` uses the same data. The dashboard calls an undefined `handleNotificationClick`; do not reproduce that defect.
 
-- Đây là snapshot sự kiện lịch theo người dùng, chưa chứng minh là durable notification feed.
-- `startTime` là giờ sự kiện, không phải giờ phát thông báo. Hiển thị theo Asia/Ho_Chi_Minh, ghi GMT+7.
-- Badge là số sự kiện của snapshot, không phải unread hoặc số việc cần xử lý. Không có đánh dấu đã đọc/đọc tất cả cho nguồn này.
-- Không suy ra thông báo mới, thay đổi hoặc hủy từ việc đọc snapshot. Không tạo nhắc việc khi nguồn lỗi.
-- Không tạo deep link tới lớp từ title/subject. Mở item hiện xem chi tiết sự kiện; cần destination contract và quyền đã xác minh trước khi mở LMS.
+- This is a user-scoped calendar snapshot, not evidence of a durable notification feed.
+- `startTime` is event time, not notification publication time. Display in `Asia/Ho_Chi_Minh` with GMT+7.
+- The badge counts snapshot events, not unread notifications or actionable tasks. Read/read-all actions are unsupported for this source.
+- A snapshot alone does not establish newly created, changed, or cancelled events. Do not create reminders on source failure.
+- Do not derive class deep links from titles/topics. Current items open details; LMS navigation needs verified destination and access contracts.
 
-Adapter trong `notification-data.mjs` dùng actor do server session resolver cung cấp, không nhận user ID/token từ query browser. Chỉ chiếu title/subject/startTime và identity snapshot; gộp row trùng chính xác. Identity này không dùng làm durable read-state ID. Timestamp không có offset đòi hỏi `sourceOffset` đã được owner xác nhận. Adapter mặc định trả chưa cấu hình cho đến khi có session integration thật.
+The [adapter](../../apps/notifications/notification-data.mjs) and [tests](../../apps/notifications/notification-data.test.mjs) own the projection. A server session resolver must establish the actor. Snapshot hashes are not durable read-state IDs. Missing timestamp offsets require owner confirmation. The [runbook](../runbooks/notifications-local.md) owns integration limits; no environment variable turns the bridge into a session.
 
-## Ba lớp thông tin trên OS
+## Three OS information layers
 
-| Lớp | Mục đích | Thông báo hiện tại |
+| Layer | Purpose | Current Notifications surface |
 |---|---|---|
-| Icon trên thanh đầu | Liếc nhanh, mở popover | Chuông 17px trong hit area theo OS; số sự kiện khi nguồn xác định được |
-| Popover | Tóm tắt ngắn và một hành động chính | Trạng thái nguồn, thời điểm kiểm tra, tùy chọn thông tin ngắn, Mở Thông báo |
-| App đầy đủ | Tìm kiếm, lọc và đọc chi tiết | Danh sách nhóm theo chủ đề |
+| Header icon | Glance and open a popover | 17px bell within the OS hit area; event count when known |
+| Popover | Short summary and one primary action | Source state, observation time, mini-info preference, Open Notifications |
+| Full app | Search, filter, and read details | Topic-grouped event list |
 
-Toolbar không chứa tiêu đề sự kiện, tên người hoặc nội dung riêng tư. Không nhấp nháy icon, không toast cho từng snapshot và không thay đổi thứ tự icon theo số đếm. Trạng thái không xác định không hiển thị 0. Số lớn rút gọn 99+; tên truy cập và popover vẫn dùng số đầy đủ. Thông tin ngắn mặc định tắt; ở host ≤1100px chỉ giữ icon để dành chỗ cho utilities. Popover dùng top layer, Escape/outside-click và trả focus về trigger.
+Keep event titles, names, and private content out of the toolbar. Do not blink icons, toast each snapshot, or reorder by count. Unknown state has no zero badge. Abbreviate large values to 99+ while accessible text/popover retain the full count. Mini information is off by default; host widths at or below 1100px retain icons only. Popovers use the top layer, Escape/outside-click, and trigger focus restoration.
 
-Cho các app tiếp theo, dùng cùng phân lớp nhưng đăng ký rõ app ID, icon từ registry OS, kiểu giá trị (count/progress/status), ưu tiên và quyền hiển thị. Đề xuất tối đa ba app được ghim cạnh utilities trên desktop; phần còn lại vào overflow có nhãn. Chỉ một dòng thông tin ngắn trên một item, không để app tự render HTML hoặc gửi URL tùy ý lên menubar. Chuông là mục đầu tiên được triển khai; registry nhiều app/ghim/overflow động là thiết kế mở rộng, chưa được bật trong bản này.
+For future apps, declare app ID, OS-owned icon, value type (count/progress/status), priority, and visibility permissions. The proposed desktop limit is three pinned apps beside utilities, with labeled overflow. Use one short line per item; no app-supplied HTML or arbitrary URLs. Only the bell is implemented; dynamic multi-app registration/pinning/overflow remains a proposal.
 
-## Transport và realtime
+## Shared app-status design
 
-`AppStatusTray` quản lý iframe `/status` riêng, nên đóng/thu nhỏ cửa sổ Thông báo không ngắt cập nhật toolbar. Iframe trạng thái chỉ tải `/api/status`, endpoint trả count/status/observedAt, không trả tiêu đề. App đầy đủ tải `/api/notifications`. Cả hai đều same-origin với app độc lập, không mở CORS wildcard.
+Each app must define summary meaning before adding an icon. The dynamic registry is not implemented.
 
-Bridge v1 dùng `spaceos:ready` và `spaceos:init`, đồng bộ theme đã resolve, locale, reducedMotion, visible và instanceId. Cả hai phía kiểm tra exact origin và WindowProxy. Sau handshake, status channel gửi:
+| Decision | Constraint |
+|---|---|
+| App/icon/label | OS-owned identity/icon; localized and accessible label; no arbitrary HTML |
+| Value type | Count, progress, or status with explicit units/scope/business meaning |
+| Source/access | Calculation source and audience; pinning grants no access |
+| Freshness | Observation time and synchronization state; stale values are not live |
+| Presentation | Priority/pinning/overflow fit the host; mini information is optional |
+| Action | One primary popover action opening authorized app context |
 
-```json
-{
-  "type": "spaceos:app-status",
-  "version": 1,
-  "appId": "notifications",
-  "instanceId": "host-issued-instance",
-  "sequence": 1,
-  "status": "ready",
-  "count": 12,
-  "observedAt": "2026-11-03T08:00:00.000Z"
-}
-```
+[Count semantics](./employee-experience.md#count-semantics) separates events, unread, and needs-action. Keep names, event contents, quiz scores, and payroll amounts out of mini information. Private details belong in authenticated apps. Source errors/revocation must make unknown counts explicit.
 
-Ví dụ trên chỉ minh họa contract. Runtime kiểm tra version, app ID, instance, sequence tăng, count nguyên có giới hạn và observation time. Trạng thái lỗi phải gửi count/observedAt = null; không chấp nhận payload chứa count giả cho lỗi. Host chỉ lấy trường đã định nghĩa, bỏ nội dung khác. Chỉ status frame đã đăng ký được cập nhật toolbar, không phải mọi iframe app.
+## Current transport and transition
 
-Hiện dùng polling 60 giây, dừng request khi host ẩn và kiểm tra lại khi hiện. Không gọi polling là realtime push. Sau 150 giây không có trạng thái hợp lệ, host bỏ badge và báo cần cập nhật lại. Request có timeout, response cũ bị bỏ khi bị thay thế. Tab riêng dùng polling khi trang hiển thị; tắt tự cập nhật trong app chỉ tác động danh sách, không tắt kênh trạng thái của OS.
+[AppStatusTray](../../components/desktop/app-status-tray.tsx) owns an iframe separate from the app window. [StatusChannel](../../apps/notifications/components/status-channel.tsx), [HTTP handlers](../../apps/notifications/lib/http-handler.mjs), and [status parser](../../lib/desktop/app-status.ts) own payloads, validation, and TTL; [tests](../../tests/unit/app-status.test.ts) verify the contract. Frame sequence is not a source revision.
 
-Khi backend có feed được xác thực, status channel có thể nhận SSE/WebSocket và phát cùng contract tới OS; cần cursor/reconnect/reconcile và permission-revocation trước khi kích hoạt. Không mở nhiều kết nối push cho mỗi lần mở cửa sổ. [Phase 6](../../plans/261029-1103-geeo-staff-workspace/phase-06-notification-board.md) vẫn sở hữu durable feed, read-state và rule nghiệp vụ; bản UI này không hoàn thành hoặc thay thế các gate đó.
+The [shared source hook](../../packages/embedded-app/src/use-source.ts) currently polls according to visibility; there is no realtime push or read receipt. App content and toolbar status are separate consumers. Disabling list refresh does not disable the toolbar. Summaries minimize data and only registered frames with matching origin/source/instance may update them.
 
-## Chạy và kiểm tra
+The [update workflow](./spaceos-app-update-workflow.md) owns the target runtime, summary replacement, invalidation, reconciliation, and transport choices. Do not run duplicate push connections in both status iframe and shared runtime. Transfer summary ownership explicitly and preserve bridge compatibility or provide a version transition.
 
-Xem [runbook app Thông báo](../runbooks/notifications-local.md) cho cổng, cấu hình, adapter session và các lệnh kiểm thử.
+Durable feeds, audience/expiry, and read-state remain required business capabilities. The legacy UI does not satisfy those gates. Backend event production remains a later research step.
+
+## Local setup and checks
+
+See the [Notifications runbook](../runbooks/notifications-local.md) for ports, configuration, session adapter, and checks.

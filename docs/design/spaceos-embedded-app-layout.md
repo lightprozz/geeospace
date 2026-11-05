@@ -1,56 +1,78 @@
-# Quy chuẩn layout và theme cho app nhúng SpaceOS v1
+# SpaceOS embedded app layout and theme standard v1
 
-Calendar là mẫu triển khai. Quy chuẩn áp dụng cho các app do team GeeO kiểm soát và có tích hợp bridge SpaceOS.
+Calendar is the implementation reference for GeeO-controlled apps using the SpaceOS bridge. Start new apps with the [development guide](./spaceos-app-development.md). This document owns layout, theme, UI state, and behavior inside windows.
 
-[App Thông báo](./spaceos-notifications-and-app-status.md) áp dụng cùng quy chuẩn, với sidebar nguồn/chủ đề, nội dung sự kiện và status channel riêng cho toolbar. Mở mặc định 820px, hỗ trợ tối thiểu 320px; bố cục đổi từ hai cột sang một cột tại 640px.
+[Notifications](./spaceos-notifications-and-app-status.md) applies this standard to source/topic navigation and event content. Apps do not duplicate the host menubar, dock, or traffic lights inside an iframe.
 
-## Brief Calendar
+## Calendar brief
 
-- Register là Product. Giáo viên và nhân viên mở lịch cạnh các cửa sổ khác trên desktop hoặc dùng màn hình nhỏ khi di chuyển.
-- Ưu tiên quét nhanh khoảng ngày, bộ lọc và lịch. Nhận diện GeeO đỏ tiết chế, nền sáng trung tính #f8f8fa, chữ #201f26, accent #b12536. Dark dùng cùng vai trò màu với bảng màu riêng.
-- Dùng Inter nếu có và system sans làm dự phòng. Khoảng ngày là điểm nhấn chữ chính. Nhịp lưới lịch và dấu ngày hôm nay là chi tiết nhận diện.
-- Variance 3, motion 2, density 6. Tiêu chí là bỏ hàng nhận diện trùng khi nhúng, giữ thao tác và trạng thái nguồn rõ ở 320px trở lên.
+- Register: Product. Teachers/staff view schedules beside other windows or on smaller devices while travelling.
+- Prioritize date ranges, filters, and schedule scanning. Use restrained GeeO red, neutral light background #f8f8fa, text #201f26, and accent #b12536; dark mode preserves semantic roles.
+- Prefer Inter with system sans fallback. The date range is the primary typographic anchor; calendar rhythm and today's marker provide identity.
+- Variance 3, motion 2, density 6. Remove redundant embedded branding while preserving clear controls and source states from 320px upward.
 
-## Phân lớp
+## Surface ownership
 
-| Vùng | Quy tắc |
+| Region | Rule |
 |---|---|
-| OS chrome | SpaceOS sở hữu tên app, đóng/thu nhỏ, kéo cửa sổ và mở riêng. |
-| Nhận diện standalone | App có header gọn với tên và icon khi chạy riêng. Ẩn header sau khi nhận context nhúng hợp lệ. |
-| Toolbar nghiệp vụ | Giữ ngữ cảnh hiện tại, điều hướng và nhóm thao tác liên quan. Calendar đặt khoảng ngày, GMT+7, hôm nay, trước/sau, chế độ xem và chi nhánh tại đây. |
-| Nội dung | Calendar, danh sách hoặc bảng là vùng chính. Trang chi tiết ưu tiên tên đối tượng và hành động của đối tượng. Form nhóm theo nhiệm vụ và đặt nút lưu tại vị trí dự đoán được. |
-| Phản hồi | Hiện tải, trống, hết phiên, thiếu quyền và lỗi nguồn trong vùng trạng thái sát nội dung. Lỗi có hành động khắc phục khi khả dụng. |
+| OS chrome | SpaceOS owns app name, close/minimize, window dragging, and standalone opening |
+| Standalone identity | Show a compact name/icon header; hide redundant identity after valid embedded context |
+| Business toolbar | Keep current context, navigation, and related actions. Calendar includes date range, GMT+7, today, previous/next, view, and branch |
+| Content | Prioritize the schedule, list, or table. Details emphasize object name/action; forms group tasks and place save predictably |
+| Feedback | Put loading, empty, expired-session, forbidden, and source errors near content, with recovery when available |
 
-Shopify tách app surface khỏi chrome của host. SpaceOS áp dụng phân lớp đó cho cửa sổ nhúng. [Shopify App Home](https://shopify.dev/docs/apps/build/app-home).
+This host/app separation follows the surface distinction illustrated by [Shopify App Home](https://shopify.dev/docs/apps/build/app-home).
 
-## Kích thước cửa sổ và bố cục responsive
+## Window sizing and responsive layout
 
-Mỗi app phải ghi ba giá trị trong hồ sơ thiết kế trước khi tích hợp. Dùng CSS px và phân biệt kích thước cửa sổ desktop với chiều rộng viewport bên trong app.
+Record three CSS-pixel values before integration. Distinguish desktop window width from the app's inner viewport.
 
-| Giá trị | Ý nghĩa | Calendar |
+| Value | Meaning | Calendar |
 |---|---|---|
-| Chiều rộng mở mặc định | Kích thước desktop khi mở app lần đầu, co theo vùng làm việc | 820 px |
-| Chiều rộng kéo tối thiểu trên desktop | Mức app đề xuất để thao tác chính vẫn thoải mái khi đặt cạnh cửa sổ khác | 480 px đề xuất cho Calendar |
-| Viewport nhỏ nhất được hỗ trợ | Mức cần kiểm tra ở mobile, cửa sổ hẹp và zoom | 320 px |
+| Default opening width | First desktop opening, constrained to workspace | 820px |
+| Minimum desktop resize width | Proposed comfortable working width beside other apps | 480px proposed |
+| Smallest supported viewport | Mobile, narrow windows, and zoom validation | 320px |
 
-- **Desktop rộng.** Calendar dùng lưới tuần bảy cột khi viewport của app rộng hơn 640 px. Toolbar đặt điều hướng, khoảng ngày và chế độ xem trên cùng hàng khi đủ chỗ.
-- **Desktop thu hẹp.** Ở 640 px trở xuống, Calendar dùng danh sách theo ngày cho chế độ tuần và xuống dòng theo nhóm toolbar. Giữ ngày đang xem, bộ lọc và chế độ khi kéo cửa sổ.
-- **Mobile.** SpaceOS mở app dạng sheet ở viewport host dưới 768 px. App bố trí nội dung theo chiều rộng thật của sheet, cho phép cuộn dọc và giữ vùng chạm chính từ 44 px. Lịch tháng giữ lưới để chọn ngày và mở lịch biểu.
-- **Khi thiếu chiều rộng.** Ưu tiên bố cục gọn hoặc sheet. Giới hạn kéo desktop được áp dụng ở window manager khi có metadata theo app. Tránh đặt `min-width` cho trang iframe làm tràn màn hình ở mobile hoặc khi zoom.
+- **Wide desktop:** Calendar shows a seven-column week above 640px app viewport; navigation, dates, and view share a row when space permits.
+- **Narrow desktop:** At 640px or less, week view becomes a daily list and toolbar groups wrap. Preserve dates, filters, and mode during resize.
+- **Mobile:** Below 768px host width, SpaceOS uses an app sheet. Respond to its actual width, allow vertical scrolling, and provide 44px primary touch targets. Month view retains a date-selection grid and opens the agenda.
+- **Insufficient width:** Prefer compact content or a sheet. App-specific desktop limits belong to the window manager when supported; page-level iframe `min-width` must not overflow mobile or zoomed layouts.
 
-Window manager hiện dùng giới hạn chung 320 px cho cửa sổ desktop. Mức 480 px là thông số thiết kế đề xuất của Calendar. Bố cục hiện tại vẫn hỗ trợ viewport hẹp đến 320 px.
+The current window manager has a shared 320px minimum. Calendar's 480px value is a design proposal, not an enforced per-app limit; its layout still supports 320px.
 
-## Tokens và hành vi
+## Tokens and behavior
 
-- Dùng semantic tokens cho nền app, bề mặt, nền phụ, chữ, chữ phụ, viền, accent, nền chọn và focus. Màu nghiệp vụ giữ cùng ngữ nghĩa khi đổi theme. Bề mặt nội dung dùng màu đặc và viền nhẹ.
-- Nhịp spacing cơ sở 4px. Gutter nhúng 12–16px, standalone tối đa 28px. Khoảng nhóm toolbar 8–12px. Control desktop cao tối thiểu 36px, control chính trên thiết bị cảm ứng 44px. Calendar giữ nút ngày trong lưới tháng theo chiều rộng từng ô.
-- Chữ nội dung 13–14px, meta 12px, tiêu đề ngữ cảnh 16–20px. Dùng trọng lượng chữ để phân cấp. Radius control 8px, vùng nội dung 10px.
-- Theme standalone theo hệ thống. Khi nhúng, app áp dụng theme đã resolve, locale và reduced motion qua bridge hiện có. Đổi theme hoặc locale giữ khoảng ngày, chế độ và bộ lọc. Chrome OS điều phối motion cửa sổ. Calendar dùng phản hồi trạng thái tức thì.
-- CSS mẫu v1 được phục vụ từ chính origin Calendar. Team có thể dùng cùng semantic token và ánh xạ sang component stack của mình. App độc lập nên pin bản CSS tương thích với release của mình. Atlassian cũng dùng token và context của host để đồng bộ theme cho app. [Atlassian theming](https://developer.atlassian.com/platform/forge/design-tokens-and-theming/).
+- Use semantic tokens for app background, surfaces, secondary areas, text, muted text, borders, accent, selection, and focus. Business colors keep their meaning in both themes. Reading surfaces are solid with light borders.
+- Use a 4px spacing rhythm, embedded gutters of 12–16px, standalone gutters up to 28px, and toolbar group gaps of 8–12px. Desktop controls are at least 36px high; primary touch controls are 44px. Calendar month cells size date buttons to their columns.
+- Body text is 13–14px, metadata 12px, contextual headings 16–20px. Use weight for hierarchy. Control radius is 8px and content-region radius 10px.
+- Standalone follows system theme. Embedded context supplies resolved theme, locale, and reduced motion. Preserve dates, view, and filters across changes. OS chrome owns window motion; Calendar provides immediate state feedback.
+- [Semantic tokens](../../packages/embedded-app/src/theme.css) and [UI primitives](../../packages/embedded-app/src/ui/) are shared shadcn/ui-style source. Bundle from each app's origin; app styles must not replace GeeO design with library presets. Primitive focus/keyboard support still requires validation in real components and journeys.
 
-## Kiểm tra trước khi duyệt app
+## Independent app stack and state
 
-- Kiểm tra nhúng và standalone ở 320, 375, 768 và 1440 CSS px, tại chiều rộng desktop tối thiểu của app và ngay hai phía điểm đổi bố cục. Kéo cửa sổ desktop qua các mức này và kiểm tra riêng sheet mobile. Đo theo viewport của app. Toolbar được xuống dòng theo nhóm, vùng trang không cuộn ngang. [WCAG Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html).
-- Kiểm tra VI/EN, light/dark, reduced motion, keyboard và focus-visible. Đo tương phản chữ thường tối thiểu 4.5:1 và đường viền focus có tương phản tối thiểu 3:1.
-- Kiểm tra dữ liệu thật và các trạng thái tải, trống, thiếu quyền, lỗi. Theme và resize không được làm mất bộ lọc, draft hoặc ngữ cảnh hiện tại.
-- Khi nhúng, chỉ có một tiêu đề nhận diện app trong chrome cửa sổ. Ở tab riêng, tên app vẫn nhận diện được. Các điều khiển nghiệp vụ hoạt động ở cả hai chế độ.
+Keep Next.js App Router, React, TypeScript, and npm workspaces. The [shared package](../../packages/embedded-app/package.json) supplies UI/theme/bridge; [architecture](../architecture/platform-foundation.md) owns artifact, BFF, and session boundaries. Both presentation modes use one business implementation.
+
+| State | Ownership and constraint |
+|---|---|
+| Geometry/chrome | Host; apps cannot alter the window store through arbitrary messages |
+| Dates, filters, tabs, selection | Per-instance app store; preserve across resize/theme/minimize |
+| Business data/permissions | Server source; client snapshots/caches are not authoritative |
+| Toolbar summary | One OS-side owner under the update workflow, not whichever window has focus |
+| Preferences | Persist display choices only; storage failure must not block work |
+| Drafts | Source contract and retention; never sensitive forms in preferences |
+
+Create Zustand stores per instance, never a server singleton holding user state. Zustand does not synchronize iframes, tabs, or devices automatically. See [Calendar store](../../apps/calendar/lib/calendar-store.ts), [Notifications store](../../apps/notifications/lib/notification-store.ts), and [state tests](../../tests/unit/embedded-state.test.ts). The [source hook](../../packages/embedded-app/src/use-source.ts) owns current reading lifecycle; its internal counter is not a business revision.
+
+The [shared bridge](../../packages/embedded-app/src/bridge.tsx) and [host wrapper](../../components/desktop/embedded-calendar.tsx) own v1. Validate version, exact origin/source, and instance before accepting context. The bridge carries theme, locale, reduced motion, and visibility; it provides no SSO, permission proof, mutations, or draft service. New payloads need versioned contracts and tests on both sides.
+
+[Notifications/status](./spaceos-notifications-and-app-status.md) owns toolbar semantics. [Calendar](../runbooks/calendar-local.md) and [Notifications](../runbooks/notifications-local.md) runbooks own setup. Origins connect presentation, not identity or data access.
+
+The [update workflow](./spaceos-app-update-workflow.md) proposes an OS-owned runtime separating window consumers from toolbar summaries. It is not yet provided by the current bridge.
+
+## App review checks
+
+- Validate both modes at 320, 375, 768, and 1440 CSS px, the app's desktop minimum, and both sides of layout breakpoints. Resize the desktop window and test the mobile sheet separately. Measure the inner viewport; wrap toolbar groups without page-level horizontal scrolling. See [WCAG Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html).
+- Validate VI/EN, light/dark, reduced motion, keyboard, and visible focus. Normal text contrast is at least 4.5:1; focus boundaries at least 3:1.
+- Validate real-data and loading/empty/forbidden/error states. Theme and resize preserve filters, drafts, and context.
+- Embedded identity appears once in window chrome; standalone identity remains recognizable. Business controls work in both modes.
+- Cover handshake/version failure, expiry, revocation, and user changes without retaining old private context. Design unsaved-work behavior explicitly for forms.

@@ -1,9 +1,9 @@
-# Gate backup/restore GeeO SQL Server
+# GeeO SQL Server backup and restore gate
 
-Chưa truy cập database GeeO và chưa thực hiện thay đổi schema/data. Hiện chưa xác nhận owner vận hành, database/context, nguồn backup hoặc quyền restore; tài liệu này là checklist gate, không phải runbook đã vận hành thành công.
+No GeeO database has been accessed or changed through this workflow. Operations owner, database/context, backup route, and restore permissions remain unconfirmed. This is a prerequisite checklist, not evidence of successful recovery.
 
-Trước bất kỳ migration/seed/bulk update AuthAPI/GeeO nào, owner phải xác nhận target dev/staging/production, các database/context thực sự liên quan, snapshot point nhất quán, retention và nơi khôi phục tách biệt. Không đưa connection string/credential vào tài liệu hoặc logs.
+Before any AuthAPI/GeeO migration, seed, or bulk update, confirm the development/staging/production target, affected databases/contexts, consistent snapshot point, retention, and isolated restore destination. Never record connection strings or credentials in docs/logs.
 
-Owner chạy backup bằng tuyến vận hành đã có của GeeO, ghi receipt/thời điểm/checksum nếu có, sau đó rehearsal restore vào database riêng và đối chiếu schema, record totals và integrity theo domain. Đo RPO/RTO thay vì tự đặt giá trị. Nếu cần freeze ghi, xác nhận thời gian và cách mở lại với người vận hành.
+The owner takes a backup through GeeO's existing operating route, records receipt/time/checksum where available, and rehearses restore into a separate database. Compare schema, record totals, and domain integrity. Measure RPO/RTO rather than inventing values. Confirm any write-freeze window and resumption with the operator.
 
-Migration chỉ được tiếp tục khi có bằng chứng backup/restore phù hợp target và ứng dụng/schema rollback hoặc forward-fix tương thích. Lấy backup mới ngay trước thay đổi tiếp theo. Không dùng script local D1/R2 để chứng minh SQL Server recovery và không restore toàn DB nhằm hoàn tác một thay đổi UI.
+Continue only with target-appropriate backup/restore evidence and compatible app/schema rollback or forward-fix. Take a fresh backup immediately before each subsequent change. Local D1/R2 scripts do not establish SQL Server recovery; never restore a whole database merely to undo a UI change.

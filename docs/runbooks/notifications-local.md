@@ -1,40 +1,47 @@
-# App Thông báo độc lập tại máy
+# Running Notifications locally
 
-App dùng Node.js ≥22 <27, không thêm dependency. Static server và API đọc nằm ở `apps/notifications/server.mjs`. Cổng cố định là 3300; SpaceOS dùng 3100. Kiểm tra owner cổng trước khi chạy, không chuyển cổng để né tiến trình đang sống.
+Notifications uses Next.js App Router, React, and TypeScript in `apps/notifications/`, with Node.js ≥22 <27. Shared UI/theme/bridge is in `packages/embedded-app/`. The fixed app port is 3300; SpaceOS uses 3100. Run `npm ci` from the root and check port ownership before starting. Do not choose another port to bypass an existing server.
 
 ```sh
-SPACEOS_PARENT_ORIGIN=http://127.0.0.1:3100 npm --prefix apps/notifications start
+SPACEOS_PARENT_ORIGIN=http://127.0.0.1:3100 npm --prefix apps/notifications run dev
 ```
 
-Đặt `NEXT_PUBLIC_SPACEOS_NOTIFICATIONS_ORIGIN=http://127.0.0.1:3300` trong `.env.local` của SpaceOS và chạy `npm run dev`. Giá trị public này được nhúng lúc build: production phải build lại với origin HTTPS đúng. Không dùng cùng origin với host. Mở app riêng tại `http://127.0.0.1:3300`, hoặc route `/notifications` của SpaceOS. Khi dừng công việc, Ctrl+C tiến trình app do mình khởi tạo; không dừng server của phiên khác.
+For persistent local configuration, copy the app's environment sample into its Next.js local environment file without overwriting an existing file. Next.js loads that file for this app; host configuration does not replace it. The sample contains only the public parent origin. Keep local environment files ignored and restart development after changes.
 
-`SPACEOS_PARENT_ORIGIN` phải là exact HTTPS origin, hoặc HTTP localhost/127.0.0.1 cho development. Chưa đặt thì standalone vẫn hoạt động và CSP từ chối mọi frame ancestor. Server chỉ phục vụ allowlist assets và GET `/api/notifications`, `/api/status`; query bổ sung hoặc mutation bị từ chối. Responses không được cache. Bridge không mang access token. Production cần thiết lập session/cookie của app đúng mô hình đăng nhập đã duyệt; bridge không tự tạo SSO hay chuyển token của host vào iframe.
+Set `NEXT_PUBLIC_SPACEOS_NOTIFICATIONS_ORIGIN=http://127.0.0.1:3300` for SpaceOS and run `npm run dev`. This public origin is embedded at build time; rebuild production with the correct HTTPS origin. Host and app use different origins. Open `http://127.0.0.1:3300` standalone or SpaceOS `/notifications`. Stop only processes you started with Ctrl+C.
 
-## Kết nối nguồn thật
+`SPACEOS_PARENT_ORIGIN` must be an exact HTTPS origin, or HTTP localhost/127.0.0.1 for development. Without it, standalone works and CSP rejects all frame ancestors. GET `/api/notifications` and `/api/status` reject extra queries and mutations. Responses are not cached. The bridge carries no token and provides no SSO. Production requires app sessions/cookies under the selected identity design.
 
-Entry point mặc định chưa nạp session GeeO nên trả `NOTIFICATIONS_NOT_CONFIGURED` (503). Cấu hình origin chỉ kết nối giao diện, không tự cấp quyền truy cập dữ liệu. Không đặt access token trong biến `NEXT_PUBLIC_*`, query, localStorage hoặc postMessage.
+Production uses `npm --prefix apps/notifications run build`, then `npm --prefix apps/notifications start`. Supply the same parent origin at build and runtime: CSP is built, bridge context reads runtime configuration. Rebuild after origin changes. The app has its own artifact; host builds do not build independent apps. No Notification session/API-token environment variable is wired in yet; the adapter needs real server integration.
 
-Đường tích hợp server là `createNotificationsHandler` trong `notification-data.mjs`, truyền vào `createNotificationsServer({ spaceOrigin, getNotifications })`:
+## Real source integration
 
-- `apiOrigin`: exact HTTPS origin đã xác minh có endpoint legacy. Route source được lấy từ caller legacy, chưa xác minh live bằng một phiên được cấp quyền.
-- `resolveActor(request)`: xác minh session phía server rồi trả `subject`, `accessToken`, `canReadUserEvents`; không lấy các trường này trực tiếp từ query/header do client tự đặt. Authorization phía backend vẫn phải kiểm tra recipient.
-- `sourceOffset`: chỉ cần cho timestamp upstream không có timezone; owner phải xác nhận giá trị, không tự suy theo máy chạy.
+The default entry returns 503 `NOTIFICATIONS_NOT_CONFIGURED` without a GeeO session. Origin configuration connects presentation only. Never put tokens in `NEXT_PUBLIC_*`, URLs, localStorage, or postMessage.
 
-Chưa cung cấp resolver hoặc bằng chứng quyền của source thì giữ adapter mặc định. Không tái sử dụng token trong bundle cũ hay credential của người khác. Không có database/migration/read-state trong thay đổi này.
+Use `createNotificationsHandler` in [notification-data](../../apps/notifications/notification-data.mjs), passing the configured handler into `createNotificationRoutes(load)` in [HTTP handler](../../apps/notifications/lib/http-handler.mjs). Both Next.js routes use exported `handleNotifications`.
 
-Các trạng thái 401/403/503 được giữ tách khỏi snapshot trống. Payload không hợp lệ hoặc network timeout báo unavailable, không trả danh sách rỗng thay lỗi. `/api/status` chỉ chiếu count và thời điểm quan sát; không có tiêu đề sự kiện. Cập nhật hiện là polling 60 giây, chưa có realtime push hoặc read receipts.
+- `apiOrigin`: verified exact HTTPS origin with the legacy endpoint. The route comes from legacy callers; live authorized access remains unverified.
+- `resolveActor(request)`: validate the server session, then return `subject`, `accessToken`, and `canReadUserEvents`. Never trust these from client-provided query/header fields. Backend recipient checks still apply.
+- `sourceOffset`: only for offset-free upstream timestamps, with owner confirmation.
 
-## Kiểm thử
+Keep the default adapter until resolver/access evidence exists. Do not reuse old bundle tokens or other people's credentials. No database, migration, or read-state is added here.
+
+Keep 401/403/503 distinct from empty snapshots. Invalid payloads/timeouts are unavailable, not empty. `/api/status` contains count/observation time without titles. Updates currently poll every 60 seconds; no push or read receipts exist.
+
+## Checks
 
 ```sh
 npm --prefix apps/notifications test
+npm run typecheck:apps
+npm run build:apps
 npx vitest run tests/unit/app-status.test.ts tests/unit/desktop-window.test.ts
-npm run test:notifications -- --workers=3
+npm run test:notifications
+npm run test:embedded
 npm run typecheck
 npm run lint
 npm run build
 ```
 
-Playwright config `playwright.notifications.config.ts` khởi chạy cả hai dịch vụ khi chưa chạy, giữ server đang có tại local và tự dừng server do runner tạo. Nếu tái sử dụng SpaceOS, xác minh origin notifications đã được nạp. CI không reuse server. Fixtures chỉ được trả qua interception trong test, không nằm trong runtime app. Kiểm tra browser covers standalone/iframe, nguồn lỗi, tìm kiếm, chi tiết, responsive, locale và status channel.
+The [Notifications harness](../../playwright.notifications.config.ts) starts absent services, reuses local servers, and stops only servers it creates. Verify the Notifications origin when reusing SpaceOS. CI does not reuse servers. Fixtures remain test-only. Browser checks cover both modes, failures, search/details, responsive behavior, locale, and status channel. Choose relevant checks; use one local worker unless safe parallelism is justified.
 
-Thiết kế và ý nghĩa badge: [Thông báo và trạng thái ứng dụng](../design/spaceos-notifications-and-app-status.md).
+See [Notifications design and badge semantics](../design/spaceos-notifications-and-app-status.md).

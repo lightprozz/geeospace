@@ -1,29 +1,31 @@
-# App Calendar độc lập tại máy
+# Running Calendar locally
 
-App dùng Node.js ≥22 <27. Entry chạy local là Next app ở `apps/calendar/` (port 3200); SpaceOS dùng 3100. `apps/calendar/server.mjs` là static server legacy, không phải entry mặc định. Kiểm tra owner cổng trước khi chạy, không chuyển cổng để né tiến trình đang sống.
+Calendar uses Next.js App Router, React, and TypeScript with Node.js ≥22 <27. Its workspace is `apps/calendar/`, fixed port 3200; SpaceOS uses 3100. Shared UI/theme/bridge is in `packages/embedded-app/`. Run `npm ci` from the repository root. Check port ownership before starting; do not choose another port to bypass a live process.
 
 ```sh
 SPACEOS_PARENT_ORIGIN=http://127.0.0.1:3100 npm --prefix apps/calendar run dev
 ```
 
-Đặt `NEXT_PUBLIC_SPACEOS_CALENDAR_ORIGIN=http://127.0.0.1:3200` cho SpaceOS rồi chạy `npm run dev`. Giá trị public này được nhúng lúc build: production phải build lại với origin HTTPS đúng. Không dùng cùng origin với host. Mở app riêng tại `http://127.0.0.1:3200`, hoặc route `/calendar` của SpaceOS. Khi dừng công việc, Ctrl+C tiến trình app do mình khởi tạo; không dừng server của phiên khác.
+Set `NEXT_PUBLIC_SPACEOS_CALENDAR_ORIGIN=http://127.0.0.1:3200` for SpaceOS and run `npm run dev`. The public value is embedded at build time; production requires rebuilding with the correct HTTPS origin. Host and app must have different origins. Open `http://127.0.0.1:3200` standalone or SpaceOS `/calendar`. Stop only processes you started, using Ctrl+C.
 
-`SPACEOS_PARENT_ORIGIN` phải là exact HTTPS origin, hoặc HTTP localhost/127.0.0.1 cho development. Chưa đặt thì standalone vẫn hoạt động và CSP từ chối mọi frame ancestor. `GET /api/events` yêu cầu `from`/`to` dạng ngày, `to` sau `from`, cửa sổ tối đa 42 ngày; ngoài phạm vi trả 400 `INVALID_DATE_RANGE`. Responses không được cache. Bridge (`spaceos:ready`/`spaceos:init` trong `components/desktop/embedded-calendar.tsx`) không mang access token.
+Production uses `npm --prefix apps/calendar run build`, then `npm --prefix apps/calendar start`. Supply the same `SPACEOS_PARENT_ORIGIN` during build and runtime: CSP is generated at build time, while bridge context reads runtime configuration. Rebuild after changing origins. Production needs a real session adapter; local MVP is disabled there.
 
-## Kết nối nguồn thật
+`SPACEOS_PARENT_ORIGIN` must be an exact HTTPS origin, or HTTP localhost/127.0.0.1 for development. Without it, standalone works and CSP rejects all frame ancestors. `GET /api/events` accepts date-formatted `from`/`to`, with `to` after `from` and at most 42 days. Invalid ranges return 400 `INVALID_DATE_RANGE`. Responses are not cached. The [bridge](../../components/desktop/embedded-calendar.tsx) carries no token.
 
-Entry mặc định chưa nạp session GeeO nên trả `CALENDAR_NOT_CONFIGURED` (503). Cấu hình origin chỉ kết nối giao diện, không tự cấp quyền truy cập dữ liệu. Không đặt access token trong biến `NEXT_PUBLIC_*`, query, localStorage hoặc postMessage.
+## Real source integration
 
-Đường tích hợp server là `createCalendarEventsHandler` trong `apps/calendar/calendar-data.mjs`, qua `handleCalendar` trong `apps/calendar/lib/http-handler.mjs` và `createLocalMvpHandler` trong `apps/calendar/local-mvp.mjs`:
+Default entry has no GeeO session and returns 503 `CALENDAR_NOT_CONFIGURED`. Origin configuration connects presentation only. Never put tokens in `NEXT_PUBLIC_*`, URLs, localStorage, or postMessage.
 
-- `GEEO_CALENDAR_MVP_ACCESS_TOKEN` chỉ dùng cho local development; `NODE_ENV=production` có token thì route trả 503 `CALENDAR_MVP_DISABLED`. Token không rời server adapter.
-- `GEEO_CALENDAR_API_ORIGIN` phải là exact origin đã xác minh (cho phép `https://dev-lms.gee-o.vn`, `https://lms.gee-o.vn`, `https://lms.gee-o.edu` theo `local-mvp.mjs`); sai định dạng bị từ chối lúc cấu hình, không thử dò endpoint.
-- `GEEO_CALENDAR_SOURCE_OFFSET` chỉ đặt sau khi owner xác nhận timezone của event không offset; không tự suy theo máy chạy. Xem mẫu trong `apps/calendar/.env.example`.
-- `resolveActor` local kiểm tra token qua `/auth/connect/userinfo`, yêu cầu `permission` chứa `class.schedule` và `branch_ids` không rỗng. Authorization theo campus vẫn thuộc backend.
+Integrate `createCalendarEventsHandler` in [calendar-data](../../apps/calendar/calendar-data.mjs), `handleCalendar` in [HTTP handler](../../apps/calendar/lib/http-handler.mjs), and `createLocalMvpHandler` in [local MVP](../../apps/calendar/local-mvp.mjs):
 
-Chưa cung cấp resolver hoặc bằng chứng quyền của source thì giữ adapter mặc định. Không tái sử dụng token trong bundle cũ hay credential của người khác.
+- `GEEO_CALENDAR_MVP_ACCESS_TOKEN` is development-only. Production with it configured returns 503 `CALENDAR_MVP_DISABLED`. The token stays server-side.
+- `GEEO_CALENDAR_API_ORIGIN` must be a verified exact origin. The local allowlist includes `https://dev-lms.gee-o.vn`, `https://lms.gee-o.vn`, and `https://lms.gee-o.edu`. Reject invalid configuration rather than probing endpoints.
+- Set `GEEO_CALENDAR_SOURCE_OFFSET` only after owner confirmation for offset-free timestamps; never infer from the machine. Consult the app's environment sample.
+- Local `resolveActor` validates through `/auth/connect/userinfo`, requires `permission` containing `class.schedule` and non-empty `branch_ids`. Backend campus checks remain mandatory.
 
-## Kiểm thử
+Keep the default adapter until resolver and access evidence exist. Do not reuse old bundle tokens or other people's credentials.
+
+## Checks
 
 ```sh
 npm --prefix apps/calendar test
@@ -31,6 +33,6 @@ npm --prefix apps/calendar run typecheck
 npm run test:embedded
 ```
 
-`playwright.embedded.config.ts` khởi chạy cả ba dịch vụ (3100/3200/3300) khi chưa chạy, giữ server đang có tại local và tự dừng server do runner tạo. CI không reuse server. Fixtures chỉ được trả qua interception trong test, không nằm trong runtime app. Kiểm tra browser covers standalone/iframe, nguồn lỗi, responsive, locale và giữ bộ lọc khi resize/theme.
+The [embedded harness](../../playwright.embedded.config.ts) starts absent services on 3100/3200/3300, reuses local servers, and stops only those it creates. CI does not reuse servers. Fixtures are intercepted in tests only. Browser coverage includes both presentation modes, source failures, responsive behavior, locale, and filter retention on resize/theme.
 
-Thiết kế và quy chuẩn nhúng: [Calendar trong quy chuẩn app nhúng](../design/spaceos-embedded-app-layout.md).
+See the [embedded layout standard](../design/spaceos-embedded-app-layout.md).

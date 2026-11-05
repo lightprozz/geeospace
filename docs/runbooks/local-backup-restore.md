@@ -1,18 +1,18 @@
-# Backup/restore local D1 và R2
+# Local D1 and R2 backup and restore
 
-Phạm vi: snapshot logic của DB và bucket LEARNING_FILES trong local state. Không truy cập Cloudflare remote, không thay thế D1 Time Travel/R2 recovery production hoặc SQL Server backup. Chưa có business schema/dữ liệu người dùng.
+Scope: logical snapshots of the local DB and LEARNING_FILES bucket. This does not access remote Cloudflare or replace production D1 Time Travel/R2 recovery or SQL Server backups. There is no business schema/user data yet.
 
-Trước snapshot, dừng toàn bộ writer/dev/preview ở workspace. `--writers-stopped` là xác nhận của người vận hành; script không thể chứng minh mọi writer ngoài app đã ngừng. Không chạy với luồng ghi đang hoạt động vì DB/R2 không có transaction chung. File snapshot chứa nội dung riêng, được ghi mode 0600 và không ghi đè; giữ ở thư mục riêng an toàn và không commit.
+Stop workspace writers/dev/preview before snapshots, respecting process ownership. `--writers-stopped` is an operator attestation; the script cannot prove external writers stopped. D1/R2 share no transaction. Snapshots contain private content, use mode 0600, never overwrite, and belong in safe private storage outside Git.
 
 ```sh
 npm run backup:local -- /private/tmp/geeospace-backup.json --writers-stopped
 npm run restore:local -- /private/tmp/geeospace-backup.json /private/tmp/geeospace-restored-new
 ```
 
-Backup đọc `.wrangler/state`; restore bắt buộc thư mục mới chưa tồn tại và nằm ngoài active state, kể cả khi thư mục cha đi qua symlink. Script dùng đường dẫn vật lý sau khi resolve symlink. Snapshot có checksum; corruption bị chặn trước khi ghi. Kiểm tra lại cấu trúc, tập bản ghi không phụ thuộc thứ tự SELECT và object bodies sau phục hồi.
+Backup reads `.wrangler/state`. Restore requires a new nonexistent directory outside active state, including through symlinked parents; scripts resolve physical paths. Checksums reject corruption before writing. Verify schema, order-independent record sets, and object bodies afterward.
 
-Destination mới có `restore-status.json`: `in-progress`, rồi `verified` sau kiểm chứng. Nếu restore thất bại giữa DB và R2, script đánh dấu `failed`, đổi tên vùng mới sang hậu tố `.failed-<timestamp>` và báo đường dẫn cách ly. Không dùng vùng cách ly làm active state; giữ snapshot và nguồn để điều tra. Script không xóa hoặc đổi tên thư mục đã tồn tại do người dùng cung cấp.
+The new destination records `restore-status.json`: `in-progress`, then `verified`. Partial DB/R2 failure marks `failed`, renames the new area with `.failed-<timestamp>`, and reports quarantine. Never activate quarantined data; preserve snapshot/source for investigation. Scripts do not delete or rename pre-existing user destinations.
 
-Giới hạn được cố ý fail closed: payload tối đa 16 MiB, không virtual/FTS tables, không integer vượt safe range, không extended R2 HTTP metadata ngoài contentType, không snapshot đang có writer. Custom metadata và file bodies được giữ. Khi business schema hoặc dữ liệu vượt giới hạn, cần recovery route phù hợp và test trước migration; không coi việc có script này là đã đạt recovery production.
+Intentional fail-closed limits: 16 MiB payload, no virtual/FTS tables, no unsafe-range integers, no extended R2 HTTP metadata beyond contentType, and no snapshots with active writers. Custom metadata and file bodies are preserved. If business data exceeds these limits, establish and test a suitable recovery route before migration. This script alone does not meet production recovery requirements.
 
-`npm run test:integration` dùng D1/R2 thật qua local runtime: backup trạng thái trống trước schema test, kiểm tra unique constraint/batch rollback/CAS, snapshot DB + file, từ chối bản corrupt, restore sang vùng tách biệt rồi so dữ liệu/checksum. Test chỉ chứa fixture và hủy vùng test sau chạy.
+`npm run test:integration` uses real local D1/R2: backup empty state before the fixture schema, test unique constraints/batch rollback/CAS, snapshot DB/files, reject corruption, restore into isolation, and compare data/checksums. Fixtures are test-only and temporary areas are removed after execution.

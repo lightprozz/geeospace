@@ -1,109 +1,107 @@
-# SpaceOS: chrome, tương tác và motion
+# SpaceOS chrome, interaction, and motion
 
-SpaceOS là lớp OS của Geeospace. Bản thiết kế này giữ composition/hành vi Zuey, nhận diện/token GeeO và stack Next/React hiện tại; dùng Apple HIG hiện hành để hoàn thiện tính nhất quán, khả năng đọc và điều khiển. Không chuyển sang SwiftUI, không lấy asset chân dung, wallpaper hoặc SF Symbols của Apple/Zuey làm asset sản phẩm.
+SpaceOS is Geeospace's OS layer. Preserve the selected Zuey composition/behavior, GeeO branding/tokens, and Next.js/React stack. Apple HIG informs consistency, legibility, and control; it does not require SwiftUI or authorize reuse of Apple/Zuey portraits, wallpapers, or SF Symbols as product assets.
 
-Ngày 31/10/2026 người dùng xác nhận khôi phục đủ Weather, VI/EN, companion GeeO có pause/ẩn và Appearance nâng cao. Quyết định này thay phần loại Weather/mascot khỏi brief trước. Những chức năng này là phạm vi phải triển khai, không phải đã hoàn tất.
+Retain Weather, VI/EN, the GeeO companion with pause/hide, and advanced Appearance. This document defines the design contract. Implementation and acceptance evidence belong in execution records; a visible widget does not prove every requirement is met.
 
-Register: Product. Scene: giáo viên/nhân viên làm nhiều việc trên desktop và dùng Home/sheet trên điện thoại. Direction: OS quen thuộc, gọn và có chiều sâu để theo dõi app/ngữ cảnh. Color: giữ GeeO primary và semantic colors; tùy biến shell không đổi màu nghiệp vụ. Type: Inter theo GeeO. Signature: menubar, dock động, cửa sổ và companion GeeO. Dials: variance 3, motion 5 có giảm chuyển động, density 5.
+Register: Product. Scene: desktop multitasking and mobile Home/sheets for teachers/staff. Direction: familiar, compact OS interaction with depth for app/context tracking. Color: GeeO primary and semantic colors; shell customization does not change business meaning. Type: GeeO Inter. Signature: menubar, dynamic dock, windows, and GeeO companion. Dials: variance 3, motion 5 with reduced-motion support, density 5.
 
-## Cách áp dụng tài liệu Apple
+## Applying Apple guidance
 
-Motion cần có mục đích, ngắn, theo thao tác và cho phép người dùng ngắt; không bắt họ chờ hiệu ứng. Đây là nguyên tắc tham chiếu, không phải bộ duration bắt buộc. [Apple HIG Motion](https://developer.apple.com/design/human-interface-guidelines/motion).
+Motion must be purposeful, brief, input-driven, and interruptible, without delaying work. This is guidance rather than prescribed durations. See [Apple HIG Motion](https://developer.apple.com/design/human-interface-guidelines/motion).
 
-Glass phân tách lớp điều khiển với nội dung; không phủ lên mọi card. [Apple HIG Materials](https://developer.apple.com/design/human-interface-guidelines/materials). Các cập nhật macOS 27 trong WWDC26 nhấn mạnh diffusion để dễ đọc, viền/specular để tách lớp và thích ứng accessibility. [Apple WWDC26](https://developer.apple.com/videos/play/wwdc2026/102/).
+Glass separates controls from content rather than covering every card. See [Materials](https://developer.apple.com/design/human-interface-guidelines/materials). The macOS 27 WWDC26 material guidance emphasizes readable diffusion, separating rims/specular highlights, and accessibility adaptation. See [WWDC26](https://developer.apple.com/videos/play/wwdc2026/102/).
 
-Window layout linh hoạt và hỗ trợ keyboard/pointing device là nền tảng cho công việc trên Mac. [Designing for macOS](https://developer.apple.com/design/human-interface-guidelines/designing-for-macos). SpaceOS áp dụng các nguyên tắc này trên web; không chiếm phím browser như Cmd+W/Q và không giả là menu bar hệ điều hành.
+Flexible windows and keyboard/pointing input support work on Mac. Apply [Designing for macOS](https://developer.apple.com/design/human-interface-guidelines/designing-for-macos) to the web without taking browser Cmd+W/Q or pretending to be the operating system's menu bar.
 
-Zuey là chuẩn cho dock toggle đã được chọn: bấm app đang focus thì minimize. Không tự thay hành vi đó bằng một quy ước macOS khác chỉ vì thêm tài liệu Apple.
+The selected Zuey dock behavior remains: clicking the focused app minimizes it. Apple references do not silently replace that choice.
 
-## Header và dock
+## Header and dock
 
-| Bề mặt | Hợp đồng thiết kế |
+| Surface | Design contract |
 |---|---|
-| Menubar | Desktop fine-pointer dùng baseline 36px từ source; coarse-pointer/mobile giữ không gian đủ cho hit area 44px. Logo GeeO, app active khi có, nhóm utilities bên phải, account chip có nhãn và clock. Không ép mọi thiết bị vào control 28px của nguồn |
-| Utilities | Weather, VI/EN, palette/shortcut chip, theme, companion toggle, account, clock. Thiếu chiều ngang dùng priority/overflow có keyboard, không ép các control chồng nhau |
-| Tài khoản | Có nhãn nhìn thấy được; chỉ thể hiện trạng thái auth thật. Khi client chưa sẵn sàng, dẫn tới trạng thái kết nối, không giả đã đăng nhập |
-| Dock | Nhóm app trước, nhóm utilities sau; Home ở nhóm app, không để launcher mới chiếm vị trí của Home. Không nhân bản mục học/LMS chỉ để đủ số icon như Zuey |
-| Hình học | Baseline desktop 1440+: icon 48px, dock cao khoảng 66px, đáy 10px, gap 6px như source; smaller/coarse layout phải fit mà không giảm vùng chạm dưới yêu cầu. Đo theo CSS px và DPR, không theo pixel ảnh chụp |
-| Fish-eye | Neighbor cùng dịch chuyển để chừa chỗ; không chỉ scale icon trong slot cố định. Đường cong mềm, peak tham chiếu 1.55/reach 150px; giảm biên độ nếu viewport không đủ. Mouse/trackpad có hover; touch không có hover giả |
-| Trạng thái | Phân biệt closed, running, active và minimized bằng dot/focus/label; tooltip có tên và shortcut, xuất hiện cả khi keyboard focus. Overview có pressed state |
-| Sắp lại | Giữ nguyên tập app đang mở, nội dung, draft, trạng thái và URL; chỉ đổi hình học/bounds. Đây không phải lệnh reset về hai app mặc định |
-| Đóng tất cả | Lệnh riêng; không đánh đồng với show-desktop/minimize. Khi module có draft, đi qua hợp đồng unsaved-work của module |
+| Menubar | Fine-pointer desktop baseline 36px; coarse/mobile space supports 44px hit areas. GeeO logo, active app when applicable, right utilities, labeled account chip, and clock; do not force every device into reference 28px controls |
+| Utilities | Weather, VI/EN, palette/shortcut, theme, companion toggle, account, clock. Use priority/keyboard-accessible overflow instead of overlaps |
+| Account | Visible label and truthful auth state; unconfigured clients open connection status rather than fabricated sign-in |
+| Dock | Apps first, utilities second; Home remains in apps. Do not duplicate learning/LMS merely to match a reference icon count |
+| Geometry | At desktop 1440+, reference icons 48px, dock about 66px high, 10px bottom offset, 6px gap. Smaller/coarse layouts must fit while retaining touch targets. Measure CSS px and DPR, not screenshot pixels |
+| Fish-eye | Neighbors move to make room, not just scale inside fixed slots. Smooth curve, reference peak 1.55/reach 150px, reduced amplitude when needed. Hover is for mouse/trackpad, not simulated touch hover |
+| State | Distinguish closed/running/active/minimized through dots, focus, and labels. Tooltips provide names/shortcuts on hover and keyboard focus. Overview exposes pressed state |
+| Arrange | Preserve open apps, content, drafts, state, and URL; change only geometry/bounds rather than resetting default apps |
+| Close all | Separate from show-desktop/minimize; honor each module's unsaved-work contract |
 
-## Hợp đồng trạng thái và điều phối
+## State and orchestration
 
-Tách trạng thái đích khỏi trạng thái đang trình bày. Business/UI state không phụ thuộc việc animation có được phát hay hoàn tất. Một owner quản lý mỗi transform; lifecycle, FLIP, overview và gesture không ghi đè nhau.
+Separate target state from presentation state. Business/UI state cannot depend on animation playback/completion. Each transform has one owner; lifecycle, FLIP, overview, and gestures must not overwrite one another.
 
-| Tình huống | Kết quả và chuyển tiếp |
+| Situation | Result and transition |
 |---|---|
-| Dock → app đóng | Mở từ control gần nhất hoặc icon dock; focus app, cập nhật hash, giữ mounted content khi chỉ ẩn |
-| Dock → app ở sau | Đưa ra trước; không chạy lại entrance toàn cửa sổ |
-| Dock → app đang focus | Minimize về icon của chính app; focus app hợp lệ kế tiếp |
-| Dock → app minimized | Restore theo đường ngược của minimize, không dùng entrance chung |
-| Restore giữa minimize | Lấy vị trí/kích thước/opacity hiện tại rồi đảo đích; không nhảy về frame đầu |
-| Close | Ra nhanh quanh tâm cửa sổ; ngắt input và chuyển focus hợp lệ, không biến thành animation bay về dock |
-| Max/snap/overview | FLIP từ visual rect hiện tại tới rect mới; không layout animation liên tục toàn app |
-| Gesture đang chuyển động | Bàn giao từ frame hiện tại sang pointer; không gọi finish để nhảy về đích trước khi kéo |
-| Resize/breakpoint giữa animation | Rebase tới bounds mới; bỏ state desktop-only khi sang mobile, không để overview che Home/sheet |
-| Background/reduced-motion | Hoàn tất hoặc dừng về state đích đúng; không để window vô hình còn nhận input hoặc overlay kẹt |
+| Dock → closed app | Open from the nearest control/dock origin, focus, update hash; preserve mounted content when merely hidden |
+| Dock → background app | Bring forward without replaying entrance |
+| Dock → focused app | Minimize toward its icon; focus the next valid app |
+| Dock → minimized app | Reverse minimize rather than use generic entrance |
+| Restore during minimize | Retarget from current position/size/opacity without resetting |
+| Close | Fast exit around window center, disable input, restore valid focus; distinct from dock minimize |
+| Maximize/snap/overview | FLIP from current visual rectangle; avoid continuous app-wide layout animation |
+| Gesture during transition | Hand off from current frame to pointer without snapping to the old target |
+| Resize/breakpoint during transition | Rebase bounds and discard desktop-only presentation on mobile; overview must not cover Home/sheets |
+| Background/reduced motion | Resolve to correct target state; no invisible input-active windows or stuck overlays |
 
-Nguồn mở app có loại control, rect, thời điểm và hạn hiệu lực; baseline tham chiếu 700ms. Không giữ vô hạn tọa độ của launcher đã đóng. Focus restoration trở lại trigger thật còn tồn tại, không luôn ép về logo.
+Opening origins include control type, rectangle, timestamp, and validity; reference lifetime 700ms. Do not retain coordinates from a closed launcher indefinitely. Restore focus to a real surviving trigger rather than always the logo.
 
-## Motion tokens và choreography
+## Motion tokens and choreography
 
-Các số dưới đây là baseline SpaceOS đề xuất từ hành vi Zuey và nhu cầu web, **không phải thông số animation Apple công bố**. Được hiệu chỉnh bằng video và profiling trước nghiệm thu.
+These are proposed SpaceOS baselines derived from the selected interaction and web needs, not Apple-published timings. Tune against video and profiling before acceptance.
 
-| Motion | Baseline | Easing/đường đi |
+| Motion | Baseline | Easing/path |
 |---|---|---|
-| Press/focus | 90–120ms | Phản hồi ngay, scale/brightness rất nhẹ; không đổi bố cục |
-| Dock theo pointer | Cập nhật mỗi frame; hồi 200–340ms | Neighbor spacing liên tục; spring có damping, không rung kéo dài |
-| Tooltip | Delay hover 150–250ms, vào 150ms | Opacity và dịch 4px; keyboard không phải chờ tìm thông tin |
-| Menu/popover/palette | Vào 150–200ms, ra 120–160ms | Từ trigger, ease-out/ease-in; không thay bằng fade toàn màn hình |
-| Open window | 340–440ms | Grow từ origin gần nhất, spring ngắn có kiểm soát; không kéo méo nội dung quá lâu |
-| Minimize | Khoảng 440ms | Thu hẹp nhiều chặng rồi tăng tốc về dock, ease riêng; không cùng easing với open |
-| Restore | 400–440ms | Đảo đường minimize và settle nhanh ở đích; không chỉ nối hai rect bằng scale chung |
-| Close | Khoảng 150ms | Tâm khoảng 50%/40%, scale nhẹ, opacity và dịch xuống vài px; ease-in |
-| Max/snap/overview | 300–340ms | Transform-only FLIP; layer focus và nhãn overview đồng bộ |
-| Mobile sheet | Vào 360–440ms; ra 240–300ms | Trượt theo trục dọc; Home lùi nhẹ; kéo hủy hồi 160–220ms từ đúng vị trí ngón tay |
-| Theme/material | 200–340ms | Crossfade khi khả dụng; nội dung, focus và preferences không reset |
+| Press/focus | 90–120ms | Immediate feedback, slight scale/brightness, no layout shift |
+| Pointer-driven dock | Per frame; return 200–340ms | Continuous neighbor spacing and damped spring |
+| Tooltip | Hover delay 150–250ms, enter 150ms | Opacity/4px shift; keyboard access does not wait for discovery |
+| Menu/popover/palette | Enter 150–200ms, exit 120–160ms | Trigger-origin ease-out/in, not a whole-screen fade |
+| Open window | 340–440ms | Grow from nearest origin with a controlled short spring; avoid prolonged content distortion |
+| Minimize | About 440ms | Multi-stage narrowing then acceleration toward dock, distinct easing |
+| Restore | 400–440ms | Reverse minimize path with quick settling, not generic rectangle interpolation |
+| Close | About 150ms | Center around 50%/40%, slight scale/opacity/downshift, ease-in |
+| Maximize/snap/overview | 300–340ms | Transform-only FLIP with coordinated focus layer/labels |
+| Mobile sheet | Enter 360–440ms, exit 240–300ms | Vertical movement, slight Home recession, cancelled drag returns in 160–220ms from finger position |
+| Theme/material | 200–340ms | Crossfade where supported without resetting content/focus/preferences |
 
-Ngắt/retarget phải giữ liên tục vị trí và opacity; với spring giữ vận tốc nếu engine hỗ trợ. Không xếp hàng nhiều animation sau click lặp, không chờ timer để đổi state, không replay entrance khi chỉ focus. Token CSS đọc được cả `ms` và `s` sau tối ưu production.
+Interrupt/retarget continuously in position/opacity, preserving spring velocity if supported. Do not queue animations after rapid clicks, delay state until a timer, or replay entrance on focus. Production token parsing must handle CSS `ms` and `s`.
 
-## Material, depth và khả năng đọc
+## Materials, depth, and legibility
 
-Menubar/dock/titlebar/popover là lớp functional material; thân app chứa bảng, form, học liệu và tiền lương dùng surface đọc được. Có shadow/rim/specular tiết chế, focused/inactive rõ ràng; không tăng blur toàn màn hình để tạo cảm giác cao cấp.
+Menubar, dock, titlebars, and popovers are functional material layers. Tables, forms, learning content, and payroll use readable surfaces. Keep shadows/rims/specular highlights restrained and focused/inactive states distinct. Avoid full-screen blur as decoration.
 
-Tier nâng cao chỉ bật khi browser/capability và performance cho phép; frost là fallback, opaque dùng cho giảm transparency/contrast hoặc khi người dùng tắt. Web CSS không tự nhận tùy chỉnh native Liquid Glass; SpaceOS phải cung cấp preference và fallback riêng. `prefers-reduced-motion`, `prefers-reduced-transparency`, contrast/forced-colors có test tách biệt.
+Enable enhanced materials only when capability and performance permit. Frost is a fallback; opaque supports reduced transparency/contrast or user choice. Web CSS does not inherit native Liquid Glass preferences. Test reduced motion, reduced transparency, contrast, and forced colors separately.
 
-Không mặc định glass càng trong càng đúng macOS mới. Nội dung động sau chrome phải được diffused đủ để control/text vẫn rõ ở light/dark và wallpaper phức tạp. Không animate backdrop-filter trên vùng lớn trong lúc drag.
+More transparency is not automatically more faithful. Diffuse moving backgrounds enough for controls/text across themes and complex wallpapers. Do not animate large backdrop-filter regions during dragging.
 
-## Widgets đã chọn
+## Selected utilities
 
-| Widget | Hành vi đầy đủ cần xây |
+| Utility | Required behavior |
 |---|---|
-| Weather | Mặc định off; người dùng chọn thành phố hoặc yêu cầu vị trí gần đúng. Có loading/offline/denied/not-found/error/stale/refresh/off và attribution. Không hiện nhiệt độ giả; không xin vị trí lúc mở app |
-| VI/EN | Dịch toàn bộ shell, menu, tooltip, aria, widget/settings và placeholder app; giữ app ID/hash/window rect/theme/preferences. Dữ liệu và mã trạng thái nghiệp vụ không tự dịch hay đổi nghĩa |
-| Companion GeeO | Hình/nhân vật do GeeO sở hữu hoặc tạo mới; hỗ trợ hiện/ẩn, pause/resume, kéo có bounds, trạng thái nghỉ/tương tác, menu hướng dẫn mở app thật. Không dùng chân dung Zuey hoặc giả thông báo/câu trả lời AI |
-| Appearance nâng cao | Light/dark/system, shell accents phù hợp GeeO, dim cho ảnh/video, preset đầy đủ phù hợp thương hiệu, custom image/video, drag-drop, reset có phạm vi, glass tiers, reduced-motion/animation preference |
+| Weather | Off by default; explicit city selection or approximate location request. Loading/offline/denied/not-found/error/stale/refresh/off and attribution; no fabricated temperature or startup location prompt |
+| VI/EN | Translate shell/menu/tooltips/ARIA/widgets/settings/placeholders while preserving IDs, hashes, geometry, themes, preferences, and business-state meaning |
+| GeeO companion | GeeO-owned/new artwork; show/hide, pause/resume, bounded dragging, rest/interaction states, and guidance opening real apps. No personal reference portraits or fabricated notices/AI answers |
+| Advanced Appearance | Light/dark/system, GeeO-compatible accents, image/video dimming, branded presets, custom image/video, drag/drop, scoped reset, material tiers, and motion preferences |
 
-Companion chỉ đưa hướng dẫn chung ở Phase 1; notice riêng tư phải qua policy và nguồn Phase 6. Pause companion không vô hiệu motion điều hướng cần thiết của cả OS. Background video/hiệu ứng dừng khi hidden, reduced-motion hoặc người dùng pause; không chạy loop vô ích sau khi widget ẩn.
+The companion currently provides generic guidance; private notices require their source/policy integration. Pausing it does not disable required OS navigation motion. Stop media/effect loops when hidden, motion-reduced, paused, or no longer displayed.
 
-Ảnh/video từ thiết bị không tự upload. Media lớn dùng blob store phù hợp và revoke object URLs; storage đầy/không khả dụng có thông báo và phương án dùng trong phiên. Migrate preferences cũ mà không làm mất theme/layout/ảnh đã chọn. Không lưu token, dữ liệu học viên hoặc hồ sơ công/lương vào preferences.
+Device images/video are not uploaded automatically. Use appropriate blob storage for large media and revoke object URLs. Handle full/unavailable storage with clear feedback and in-session use. Migrate old preferences without losing theme/layout/media. Never store tokens, student records, work records, or payroll in preferences.
 
-Weather dùng adapter độc lập, timeout/cache có giới hạn và nguồn thật. Open-Meteo là một lựa chọn cho evaluation/prototype; dùng thương mại cần plan phù hợp theo nhà cung cấp, không tự coi free tier là quyền triển khai SME. [Open-Meteo pricing](https://open-meteo.com/en/pricing). Không mua dịch vụ hoặc nhận secret qua chat; credential nếu cần chỉ ở server. Provider/production activation được chốt trong bước triển khai widget, không chặn sửa hình học/interaction của OS.
+Weather uses an isolated real-source adapter with bounded timeout/cache. Open-Meteo is an evaluation option; commercial deployment requires an appropriate provider plan. See [pricing](https://open-meteo.com/en/pricing). Credential provisioning belongs on the server through the deployment route, never chat. Provider/production activation requires an owner and does not block shell geometry work.
 
-## Tiêu chuẩn kiểm chứng “mượt”
+## Smoothness validation
 
-Đây là mục tiêu nghiệm thu SpaceOS đề xuất, không phải số đo hiện tại hay cam kết từ Apple.
+These are proposed acceptance targets, not current measurements or Apple guarantees.
 
-- Mỗi thao tác có feedback trong vòng 100ms; chrome không chờ dữ liệu API để cho biết đã nhận input.
-- Chạy chuỗi mở → minimize → restore → close tại 10%/50%/90% tiến trình và click nhanh; không jump, ghost, stale callback hoặc lệch hash/focus. Có kiểm tra riêng pointercancel, mất capture và đổi breakpoint.
-- Hover dock quét cả hai chiều và vào/ra nhanh: không icon overlap, tooltip nhảy, dock tràn viewport hoặc click nhầm icon do target di chuyển.
-- Đo frame pacing theo tần số màn hình thực: T≈16.7ms ở 60Hz, T≈8.3ms ở 120Hz. Target p95 trong khoảng 1.25T và dưới 1% frame dài hơn 2T trong kịch bản steady-state; không long task >50ms do chính animation. Ghi hardware/browser/DPR/refresh và profiler overhead, không suy từ một lần headless.
-- Có Chrome và Safari, mouse/trackpad, coarse pointer, keyboard, 320/375/768/1440 và màn hình lớn; có reflow 200%, light/dark, wallpaper tương phản và reduced preferences. Nếu môi trường không có một tổ hợp, ghi unverified thay vì pass.
-- Lưu video reference/remake cùng viewport, theme, trạng thái và timeline để so origin/trajectory/duration/easing/settle. Chụp ảnh cuối animation chỉ chứng minh bố cục.
-- Kiểm tra resource sau 50 vòng mở/đóng và ẩn widget: không tăng dần listener, RAF, object URL, animation hoặc media playback đang sống.
+- Feedback within 100ms for each input; chrome does not wait for business APIs to acknowledge input.
+- Exercise open → minimize → restore → close at 10%/50%/90% progress and rapid clicks. No jumps, ghosts, stale callbacks, hash/focus mismatch. Cover pointercancel, lost capture, and breakpoint changes.
+- Sweep dock both ways and enter/leave quickly: no overlap, unstable tooltip, overflow, or accidental clicks from moving targets.
+- Measure frame pacing against actual refresh: T≈16.7ms at 60Hz and T≈8.3ms at 120Hz. Proposed steady-state p95≤1.25T, under 1% frames above 2T, and no animation-caused task over 50ms. Record hardware/browser/DPR/refresh/profiler overhead; one headless run is insufficient.
+- Cover Chrome/Safari, mouse/trackpad, coarse input, keyboard, 320/375/768/1440 and large screens, 200% reflow, both themes, high-contrast wallpaper, and reduced preferences. Mark unavailable combinations unverified.
+- Compare reference/remake video at identical viewport/theme/state/timeline for origin, path, duration, easing, and settling. Final screenshots establish layout only.
+- Check after 50 open/close cycles and hidden utilities: listeners, RAF, object URLs, animations, and media must not accumulate.
 
-Các gate thực thi ở [chi tiết Phase 1](../../plans/261029-1103-geeo-staff-workspace/spaceos-chrome-refinement.md); bằng chứng trước sửa ở [audit header/dock](../../plans/reports/design-261031-1108-spaceos-chrome-motion.md).
-
-Quy chuẩn cho toolbar, nội dung và theme của app nhúng nằm trong [SpaceOS Embedded App Layout v1](./spaceos-embedded-app-layout.md).
+[App layout](./spaceos-embedded-app-layout.md) owns embedded toolbar/content/theme rules; [app acceptance](./spaceos-app-development.md#internal-saas-quality-acceptance) connects these checks to release evidence.

@@ -1,19 +1,19 @@
-# Local Workers và build
+# Local Workers and builds
 
-`npm run cf:build` chạy build Next và adapter OpenNext. `npm run cf:preview` mở local Workers tại 127.0.0.1:8787, dùng local D1/R2; không tạo tài nguyên remote. `npm run test:smoke:worker` tự quản lý vòng đời server preview.
+`npm run cf:build` builds Next.js and the OpenNext adapter. `npm run cf:preview` serves local Workers at 127.0.0.1:8787 with local D1/R2, creating no remote resources. `npm run test:smoke:worker` manages its preview server lifecycle.
 
-`wrangler.jsonc` dùng nodejs_compat, assets output của OpenNext, self-reference service và hai binding DB/LEARNING_FILES. ID `local-geeospace` chỉ là định danh cho bộ mô phỏng local. Không triển khai nguyên cấu hình này lên account thật.
+[Wrangler configuration](../../wrangler.jsonc) uses nodejs_compat, OpenNext assets, a self-reference service, and DB/LEARNING_FILES bindings. `local-geeospace` identifies the local simulator only. Do not deploy that configuration unchanged to a real account.
 
-Điều kiện production còn thiếu: account/resource ID, domain, secret management, cấu hình auth đã kiểm chứng, nguồn nghiệp vụ và backup/restore thực tế. Một local build pass không cấp quyền gọi deployment. Triển khai staging/production phải xác định target và rollback trước khi chạy.
+Production requires confirmed accounts/resource IDs, domains, secret management, auth, business sources, and real backup/recovery. A local build does not authorize deployment. Establish staging/production targets and rollback before executing.
 
-Không dùng `export const runtime = "edge"` cho OpenNext routes. Không dùng ISR/shared cache cho dữ liệu cá nhân; các trang workspace hiện dynamic. `/api/auth/login` trả problem 503 không cache; dữ liệu riêng sẽ cần auth/policy ở từng handler trước khi có kết nối.
+Do not use `export const runtime = "edge"` for OpenNext routes. Private data must not use ISR/shared caching; workspace pages are dynamic. `/api/auth/login` returns a non-cacheable 503 problem. Each private-data handler needs auth/policy before integration.
 
-Node/workerd có thể cần quyền mở cổng localhost trong sandbox. Nếu bị EPERM thì ghi rõ môi trường, không làm test giả hoặc đổi liên tục sang port khác. Port 3100 dành Next, 8787 dành Workers.
+Node/workerd may require localhost-port permission in a sandbox. Record EPERM as an environment limitation rather than faking tests or cycling ports. Next uses 3100; Workers uses 8787.
 
-## Chuẩn bị staging và rollback
+## Staging and rollback preparation
 
-Chưa có staging target được cấp; các bước dưới đây là trình tự chuẩn bị, không phải deployment đã thực hiện. Người vận hành cần xác nhận account, environment, domain, resource bindings và quyền truy cập. Auth owner phải đăng ký đúng callback/logout và client PKCE; secret được quản lý tại target, không chuyển qua chat hoặc bundle client.
+No staging target has been provisioned through this workflow. These are preparation requirements, not a completed deployment. Confirm account, environment, domain, bindings, and access. Auth owners register callback/logout and PKCE client settings; secrets stay in target secret management, never chat/client bundles.
 
-Trước phát hành, lưu source revision hoặc archive source khi chưa có Git checkout, lockfile và artifact đã qua `cf:build` cùng checksum; giữ riêng artifact trước đó và cấu hình binding/version tương ứng. Ghi deployment receipt sau khi phát hành bằng tuyến đã được owner xác nhận. Không dùng local resource ID trong `wrangler.jsonc` làm target staging.
+Before release, retain source revision (or archive if Git is unavailable), lockfile, successfully built artifact, and checksum. Preserve the previous artifact and compatible binding/version configuration. Record a deployment receipt through the owner-confirmed operating route. Local resource IDs are not staging targets.
 
-Sau khi phát hành, kiểm tra health, HTTP 404, no-store, login/callback/logout, quyền actor/object và hành trình browser trên domain đích. Rollback chọn deployment/artifact trước đó có receipt xác minh và tương thích schema; thực hiện qua tuyến vận hành của target rồi chạy lại health và hành trình ảnh hưởng. Nếu có migration, theo protocol recovery ở tài liệu nền tảng trước khi đổi app version. Không có target/receipt thì chưa thể diễn tập hoặc công bố rollback staging thành công.
+After rollout, verify health, HTTP 404, no-store, login/callback/logout, actor/object permissions, and browser journeys on the target domain. Roll back through its operational route to a receipt-verified, schema-compatible artifact, then repeat affected checks. Migrations follow [platform recovery requirements](../architecture/platform-foundation.md#migration-and-recovery-before-real-data). Without a target/receipt, do not claim a successful staging rollback rehearsal.

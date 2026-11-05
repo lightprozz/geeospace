@@ -1,45 +1,49 @@
 # Geeospace
 
-Ứng dụng Next.js 16 dành cho giáo viên/nhân viên. Mã hiện tại là nền tảng Phase 1: desktop OS với menubar/dock/cửa sổ, Home mobile, trạng thái chưa kết nối, lỗi API, build OpenNext, kiểm thử local D1/R2 và recovery local. Chưa có phiên đăng nhập Gee-O Auth, dữ liệu lịch/yêu cầu/công, tự học hoặc kết nối Dify thực tế.
+Geeospace is an internal workspace for GeeO teachers and staff. It applies SaaS quality principles to usability, access control, consistency, and operations. SpaceOS provides a desktop menubar, dock, and windows; mobile uses Home and app sheets. Independent business apps use Next.js, shadcn/ui styled with GeeO tokens, and per-instance UI state.
 
-## Chạy tại máy
+**Start with the [SpaceOS app development guide](./design/spaceos-app-development.md).** It connects design decisions, integration points, and acceptance criteria for developers and AI collaborators.
 
-Từ gốc workspace, dùng Node.js 24 hoặc 26 và npm. Các phiên bản package thực tế nằm trong package.json và package-lock.json.
+## Design navigation
 
-```sh
-npm ci
-npm run dev
-```
+| Document | Decisions it owns |
+|---|---|
+| [Employee experience](./design/employee-experience.md) | Work outcomes, business identity and state, badges, context, drafts, and usability validation |
+| [Platform architecture](./architecture/platform-foundation.md) | Host, apps, BFF, identity, data ownership, artifacts, and recovery |
+| [Embedded app layout](./design/spaceos-embedded-app-layout.md) | Chrome and content, sizing, responsive layouts, tokens, UI state, and bridge |
+| [Interaction and motion](./design/spaceos-interaction-motion.md) | Desktop/mobile shell, dock, focus, window lifecycle, materials, and selected utilities |
+| [Notifications and app status](./design/spaceos-notifications-and-app-status.md) | Legacy notification data, mini icons and information, popovers, and summary semantics |
+| [App update workflow](./design/spaceos-app-update-workflow.md) | Target runtime within an OS page, lifecycle, snapshot reconciliation, and transport boundaries |
 
-Mở http://127.0.0.1:3100/ để vào desktop hoặc Home mobile. `/today`, `/calendar` và các route app vẫn mở đúng đích; các tương tác OS dùng hash của app. Giao diện chưa kết nối là chủ ý: không hiển thị lịch, số việc, tên người hay số tiền giả. `/sign-in` mở app Tài khoản giải thích auth chưa được thiết lập; `/api/auth/login` trả 503 `GEEO_AUTH_NOT_READY`. Không dùng shell như bằng chứng hoàn thiện nghiệp vụ.
+## Current implementation and target design
 
-Dock mở/khôi phục app; bấm app đang focus sẽ thu nhỏ. Ba nút trên titlebar đóng, thu nhỏ và phóng to; kéo titlebar hoặc các cạnh để sắp cửa sổ. Cmd/Ctrl+K tìm nhanh; Alt+O mở tổng quan; Giao diện đổi màu/hình nền. Trên điện thoại, chọn app từ Home, dùng nút Trang chủ hoặc kéo titlebar xuống để về Home.
+The OS shell, independent Calendar and Notifications apps, and [shared UI/theme/bridge package](../packages/embedded-app/package.json) exist. Source adapters establish data and permission boundaries. Configuring origins connects presentation only. The [login route](../app/api/auth/login/route.ts) does not yet create a Gee-O Auth session. Notifications is unconfigured by default; Calendar offers the limited local evaluation path documented in its runbook. A launcher icon does not imply a complete business module.
 
-## Kiểm chứng
+The shared update runtime, business bridge extensions, and multi-app status registry are target designs. The Notifications toolbar currently uses a status iframe and polling. No broker, MQTT adapter, realtime push, or durable read-state has been implemented. Backend event production will be researched later. Legacy calendar snapshots are not a read/unread inbox.
 
-```sh
-npm test
-npm run lint
-npm run typecheck
-npm run build
-npm run test:e2e
-npm run cf:build
-npm run test:smoke:worker
-```
+Design docs define constraints; source, tests, and configuration establish current behavior. Plans and reports record execution and evidence at a point in time. They do not establish product certification or supersede the current design contract.
 
-Vitest unit/integration dùng fixture chỉ trong test. Integration tạo D1/R2 local tách biệt dưới thư mục tạm rồi hủy. Playwright dùng cổng cố định 3100/8787; local có thể tái sử dụng dev server 3100 sau khi xác minh health service là Geeospace. CI không tái sử dụng. Runner dừng server do nó tạo, giữ nguyên server người dùng đang chạy. Nếu cổng bận bởi dịch vụ khác, không tăng cổng hoặc kill tiến trình người khác.
+## Local development and source references
 
-Build/dev dùng Webpack vì Turbopack ở máy thực thi đã lỗi bind cổng nội bộ. Đây vẫn là Next.js 16. React dùng Server Components mặc định. Font Inter được bundle từ package, không tải Google Fonts lúc build.
+The [root manifest](../package.json) and [lockfile](../package-lock.json) own dependencies, workspaces, and scripts. Install with npm from the repository root. The `dev` script runs SpaceOS on its fixed project port. Start only the apps needed, check port ownership first, and stop processes you started when the task ends.
 
-## Nguồn và quyết định
+- [Local Calendar](./runbooks/calendar-local.md): independent app, parent origin, adapter, and local MVP limits.
+- [Local Notifications](./runbooks/notifications-local.md): app-specific environment, artifact, and session integration boundary.
+- [Local Workers](./runbooks/local-workers.md): OpenNext/Workers and local bindings.
+- [Current CI](../.github/workflows/checks.yml): automated checks currently enabled; a host build does not replace independent app builds and tests.
 
-- [Plan đang thực hiện](../plans/261029-1103-geeo-staff-workspace/plan.md).
-- [Ranh giới kiến trúc](./architecture/platform-foundation.md).
-- [Local Workers](./runbooks/local-workers.md), [backup/restore local](./runbooks/local-backup-restore.md).
-- [GeeO SQL backup gate](./runbooks/geeo-sql-backup-restore.md).
-- [Design brief](./design/employee-experience.md), [owner vận hành](./operations/service-owners.md).
-- [Thiết kế chrome, interaction và motion SpaceOS](./design/spaceos-interaction-motion.md), cùng [sở thích thiết bị và cấu hình Weather](./operations/spaceos-preferences-weather.md).
-- [App Thông báo và trạng thái ứng dụng trên toolbar](./design/spaceos-notifications-and-app-status.md), [chạy app Thông báo độc lập](./runbooks/notifications-local.md), [chạy app Calendar độc lập](./runbooks/calendar-local.md). Giao diện đã tích hợp; nguồn lịch legacy còn cần session resolver, hiện chưa bật realtime push hoặc read-state.
-- [Địa chỉ tích hợp GeeO đã xác minh](./operations/integration-targets.md); Auth/API staging đã tìm được, registered client và session integration vẫn chưa hoàn tất.
+The [app registry](../lib/desktop/apps.ts) is navigation metadata, not server authorization. [Host tokens](../app/globals.css) and [embedded tokens](../packages/embedded-app/src/theme.css) own theme values. Synthetic data belongs only in test fixtures. Source failures must not produce empty schedules, zero work counts, or fabricated payroll amounts.
 
-Legacy tại refer/zuey-me-main là bằng chứng hành vi, gồm khung OS đã được người dùng yêu cầu giữ lại ngày 30/10. Các component/state/CSS được dựng độc lập với token GeeO; không dùng source, assets cá nhân, workflow, migration hoặc account legacy. Phạm vi nghiệp vụ theo plan GeeO, không thêm lại commerce/booking hoặc nội dung tác giả.
+## Operations and integration
+
+- [Service owners](./operations/service-owners.md): responsibilities to confirm before enabling data, permissions, and rollout.
+- [GeeO integration targets](./operations/integration-targets.md): verified Auth/API discovery routes and evidence limits.
+- [Preferences and Weather](./operations/spaceos-preferences-weather.md): utility configuration and device-local data.
+- [Local backup and restore](./runbooks/local-backup-restore.md): local rehearsal, distinct from production recovery.
+- [SQL backup gate](./runbooks/geeo-sql-backup-restore.md): prerequisites for GeeO backend changes.
+
+## Delivery and reference material
+
+[App acceptance and release requirements](./design/spaceos-app-development.md#internal-saas-quality-acceptance) define the durable delivery contract. Local execution plans and historical reports are maintained separately under `plans/`; they are not prerequisites for navigating this documentation set.
+
+Legacy source and reference images provide behavioral and visual evidence. They do not expand scope or authorize reuse of private data and assets. Preserve the selected OS experience and GeeO workflows; do not import commerce, booking, personal assets, accounts, or migrations from reference projects.
