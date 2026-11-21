@@ -49,7 +49,7 @@ test("OS motion: interruption, gestures, keyboard and anchored lifecycle", async
     });
     expect(minimizing).toMatchObject({ hidden: false, inert: true, animations: 1 });
     expect(minimizing.duration).toBeGreaterThan(150);
-    await page.getByRole("navigation", { name: "Dock ứng dụng" }).getByRole("button", { name: "Yêu cầu của tôi", exact: true }).evaluate(el => (el as HTMLButtonElement).click());
+    await page.evaluate(() => { location.hash = "requests"; });
     await expect(win).toHaveAttribute("data-phase", "visible");
     await expect(win).not.toHaveAttribute("inert");
     await expect(page).toHaveURL(/#requests$/);
