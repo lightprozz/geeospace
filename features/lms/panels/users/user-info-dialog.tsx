@@ -191,9 +191,9 @@ export function UserInfoDialog({
     enabled: !!userId && open,
   })
   const assignment = parseAssignedCampuses(data?.assignedCampus, campuses.map(campus => campus.name))
-  const assignedCampuses = assignment.needsReview && data?.assignedCampus
-    ? [data.assignedCampus]
-    : assignment.values.map(value => campuses.find(campus => campus.id === value)?.name ?? value)
+  const assignedCampuses = assignment.kind === 'ids'
+    ? assignment.values.map(id => campuses.find(campus => campus.id === id)?.name ?? id)
+    : assignment.needsReview && data?.assignedCampus ? [data.assignedCampus] : assignment.values
 
   const handleOpenChange = useCallback(
     (o: boolean) => {

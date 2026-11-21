@@ -90,8 +90,7 @@ export function UsersPageClient() {
 
       // Branch filter
       if (branchFilter !== 'all') {
-        const selectedBranch = branchFilter.toLowerCase()
-        if (!parseAssignedCampuses(user.branch, availableBranches).values.some(branch => branch.toLowerCase() === selectedBranch)) return false
+        if (!parseAssignedCampuses(user.branch, availableBranches).values.includes(branchFilter)) return false
       }
 
       return true

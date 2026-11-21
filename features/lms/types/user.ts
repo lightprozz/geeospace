@@ -203,25 +203,28 @@ export function isUserActive(
 export function parseAssignedCampuses(
   assignment: string | null | undefined,
   campusNames: readonly (string | null | undefined)[],
-): { values: string[]; needsReview: boolean } {
-  if (!assignment?.trim()) return { values: [], needsReview: false }
+): { kind: 'ids' | 'names'; values: string[]; needsReview: boolean } {
+  if (!assignment?.trim()) return { kind: 'ids', values: [], needsReview: false }
   try {
     const ids: unknown = JSON.parse(assignment)
     if (Array.isArray(ids)) {
-      return { values: ids.filter((id): id is string => typeof id === 'string' && !!id), needsReview: false }
+      return { kind: 'ids', values: ids.filter((id): id is string => typeof id === 'string' && !!id), needsReview: false }
     }
   } catch { /* Older accounts store comma-separated campus names. */ }
   const split = (value: string) => value.split(',').map(part => part.trim())
-  const catalog = new Map<string, string>()
+  const catalog = new Map<string, { name: string; spelling: string }[]>()
   let maxParts = 0
   for (const name of campusNames) {
-    if (!name?.trim()) continue
-    const parts = split(name.toLowerCase())
+    if (typeof name !== 'string' || !name.trim()) continue
+    const parts = split(name)
     maxParts = Math.max(maxParts, parts.length)
-    catalog.set(parts.join(','), name)
+    const spelling = parts.join(',')
+    const key = spelling.toLowerCase()
+    const names = catalog.get(key) ?? []
+    names.push({ name, spelling })
+    catalog.set(key, names)
   }
   const parts = split(assignment)
-  const lowerParts = parts.map(part => part.toLowerCase())
   const best = new Array<{ missing: number; ambiguous: boolean; values: string[] }>(parts.length + 1)
   best[parts.length] = { missing: 0, ambiguous: false, values: [] }
   // Prefer parses that leave the fewest unknown names; keep candidates for read-only filtering.
@@ -231,12 +234,15 @@ export function parseAssignedCampuses(
       ? { ...fallback, missing: fallback.missing + 1, values: [parts[start], ...fallback.values] }
       : fallback
     for (let end = start + 1; end <= Math.min(start + maxParts, parts.length); end++) {
-      const name = catalog.get(lowerParts.slice(start, end).join(','))
-      if (!name) continue
+      const spelling = parts.slice(start, end).join(',')
+      const names = catalog.get(spelling.toLowerCase())
+      if (!names) continue
+      const exact = names.filter(name => name.spelling === spelling)
+      const matches = exact.length ? exact : names
       const rest = best[end]
-      const values = [name, ...rest.values]
+      const values = [...new Set([...matches.map(({ name }) => name), ...rest.values])]
       if (rest.missing < choice.missing) {
-        choice = { ...rest, values }
+        choice = { ...rest, values, ambiguous: rest.ambiguous || matches.length > 1 }
       } else if (rest.missing === choice.missing) {
         choice = { ...choice, ambiguous: true, values: [...new Set([...choice.values, ...values])] }
       }
@@ -244,7 +250,7 @@ export function parseAssignedCampuses(
     best[start] = choice
   }
   const { missing, ambiguous, values } = best[0]
-  return { values, needsReview: ambiguous || missing > 0 }
+  return { kind: 'names', values, needsReview: ambiguous || missing > 0 }
 }
 
 /** Get initials from full name for Avatar fallback */

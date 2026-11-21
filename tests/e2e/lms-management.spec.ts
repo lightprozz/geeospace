@@ -160,6 +160,28 @@ test("users: does not overwrite ambiguous legacy campus assignments without conf
   });
 });
 
+test("users: keeps the exact campus assignment on role-only edits", async ({ page }) => {
+  const { users, branches, requests, routes } = await mockManagement(page);
+  branches.push({ ...branches[0], id: "north-uppercase", name: "NORTH CAMPUS" });
+  users[0].assignedCampus = "North Campus";
+  await page.goto("/#lms-users");
+  const panel = page.locator('[data-app="lms-users"]');
+  await panel.getByRole("button", { name: "Actions for Mai Nguyen" }).click();
+  await page.getByRole("menuitem", { name: "Edit Role" }).click();
+  const dialog = page.getByRole("dialog", { name: "Edit Role & Campus" });
+  await expect(dialog.getByRole("checkbox", { name: "North Campus", exact: true })).toBeChecked();
+  await expect(dialog.getByRole("checkbox", { name: "NORTH CAMPUS", exact: true })).not.toBeChecked();
+  await dialog.getByRole("combobox", { name: "Role" }).click();
+  await page.getByRole("option", { name: "Planner", exact: true }).click();
+  await dialog.getByRole("button", { name: "Save Changes" }).click();
+  await expect(dialog).toBeHidden();
+  expect(requests).toContainEqual({
+    path: `${routes.users}/mai/role`,
+    method: "PUT",
+    body: { roleId: "role-planner", assignedCampusIds: ["north"] },
+  });
+});
+
 test("users: toggles a column sort from the keyboard and announces its direction", async ({ page }) => {
   const { users } = await mockManagement(page);
   users[1].isActive = true;
