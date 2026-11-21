@@ -104,7 +104,7 @@ export function MaterialPreviewDialog({
 
         {/* Preview area */}
         <div className="flex-1 min-h-0 relative rounded-md overflow-hidden border bg-muted/20">
-          {material.fileName && previewUrl ? <FilePreview key={material.id} url={previewUrl} name={material.fileName} /> : previewUrl ? (
+          {material.materialFormat !== 4 && material.fileName && previewUrl ? <FilePreview key={material.id} url={previewUrl} name={material.fileName} /> : previewUrl ? (
             <>
               {!iframeLoaded && (
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -148,7 +148,7 @@ export function MaterialPreviewDialog({
         </div>
 
         <DialogFooter>
-          {material.fileName && <Button variant="outline" onClick={() => {
+          {material.materialFormat !== 4 && material.fileName && <Button variant="outline" onClick={() => {
             void downloadAuthenticated(getMaterialViewUrl(material.id, material.fileName!), material.fileName!).catch(() => toast.error('Unable to download material'))
           }}>Download file</Button>}
           <Button variant="outline" onClick={onClose}>
