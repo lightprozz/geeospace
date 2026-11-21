@@ -8,13 +8,14 @@ interface ExamFormSource {
 export function resolveExamFormSession(
   key: string | null,
   template: ExamFormJson | null,
-  draft: ExamFormSource | null,
+  getDraft: (key: string) => ExamFormSource | undefined,
   saved: ExamFormSource,
 ) {
+  const draft = key ? getDraft(key) : undefined
   return {
     key,
     scores: draft?.scores ?? saved.scores ?? template,
     comment: draft?.comment ?? saved.comment,
-    restored: draft !== null,
+    restored: draft !== undefined,
   }
 }

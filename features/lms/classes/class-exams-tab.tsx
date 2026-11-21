@@ -133,7 +133,7 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
   // ── Draft persistence ──
   const [draftRestored, setDraftRestored] = useState(false)
   const [showDraftBanner, setShowDraftBanner] = useState(false)
-  const { saveDraft, getDraft, clearDraft, hasDraft } = useExamDraftStore()
+  const { saveDraft, getDraft, clearDraft } = useExamDraftStore()
   const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   /** Tracks whether the user has made manual edits (prevents initial API load from saving draft) */
   const hasUserEdited = useRef(false)
@@ -200,16 +200,6 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
     return parseExamFormJson(selectedTemplate.examFormJson)
   }, [selectedTemplate])
 
-  // Draft-based scores (takes priority over saved result)
-  // Note: getDraft and hasDraft are stable store methods; including them would
-  // cause unnecessary re-renders since they are Zustand selectors.
-  const draftScores = useMemo<{ scores: ExamFormJson; comment: string } | null>(() => {
-    if (!draftKey || !hasDraft(draftKey)) return null
-    const draft = getDraft(draftKey)
-    return draft ? { scores: draft.scores, comment: draft.comment } : null
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftKey])
-
   // Saved result-based scores
   const savedScores = useMemo<{ scores: ExamFormJson | null; comment: string }>(() => {
     const result = savedResult
@@ -225,8 +215,8 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
 
   // ── Final form state: draft > saved > template ──
   const formSession = useMemo(
-    () => resolveExamFormSession(draftKey, templateScores, draftScores, savedScores),
-    [draftKey, templateScores, draftScores, savedScores],
+    () => resolveExamFormSession(draftKey, templateScores, getDraft, savedScores),
+    [draftKey, templateScores, getDraft, savedScores],
   )
 
   useLayoutEffect(() => {
@@ -376,6 +366,11 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
       overall: scores.overall,
       academic: scores.academic,
     }
+    if (draftSaveTimerRef.current) {
+      clearTimeout(draftSaveTimerRef.current)
+      draftSaveTimerRef.current = null
+    }
+    saveDraft(draftKey, examFormJson, comment)
     saveResult(
       {
         classId,
@@ -387,10 +382,15 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
       },
       {
         onSuccess: () => {
-          // Clear draft from localStorage after successful save
+          if (prevDraftKeyRef.current === draftKey) {
+            hasUserEdited.current = false
+            if (draftSaveTimerRef.current) {
+              clearTimeout(draftSaveTimerRef.current)
+              draftSaveTimerRef.current = null
+            }
+            setDraftRestored(false)
+          }
           if (draftKey) clearDraft(draftKey)
-          hasUserEdited.current = false
-          setDraftRestored(false)
         },
       },
     )
@@ -406,6 +406,7 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
     saveResult,
     draftKey,
     clearDraft,
+    saveDraft,
   ])
 
   /** Discard draft and reset form to API data */
