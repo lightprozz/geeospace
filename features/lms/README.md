@@ -8,6 +8,14 @@ form collections used by both Requests and Form Templates are in
 
 ## Wiring an LMS panel
 
+Desktop windows already run under `LmsProvider`, which installs the browser
+transport, shares a query cache, clears it on auth reset, and hosts Sonner.
+Wrap shadcn panel contents in `LmsUiScope`. Use `PermissionGuard` for a panel's
+read permission and `usePermission` or `useCan` for its actions, with constants
+from `lib/permissions.ts`. The API remains responsible for enforcing access.
+
+For a new host outside the desktop:
+
 1. Before mounting LMS panels, register the platform's authenticated browser
    adapter with `configureLmsTransport({ request, resolveUrl })`. There is no
    unauthenticated fallback. Use the platform's URL configuration,
@@ -25,8 +33,7 @@ form collections used by both Requests and Form Templates are in
 3. For Roles, call `getRolePermissionKeys(PERMISSIONS)` using the platform's
    permission catalog instead of keeping a second list.
 
-Auth, the Query provider, shadcn components, and per-panel UI are separate
-ports. This layer does not mount any components or make requests on import.
+This layer does not mount any components or make requests on import.
 
 For attendance reports, pass the active class and lesson log to
 `useStudentReport(classId, logId)` and include both IDs in
