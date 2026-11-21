@@ -51,6 +51,7 @@ export function ExamFrameClient({ level, levelId }: ExamFrameClientProps) {
   // Local editing state — detached from server until Save All
   const [localForms, setLocalForms] = useState<ExamFormItemRequest[]>(serverForms)
   const [confirmSaveEmpty, setConfirmSaveEmpty] = useState(false)
+  const hasUnsavedChanges = JSON.stringify(localForms) !== JSON.stringify(serverForms)
 
   function handleAdd() {
     const newType = localForms.length + 1
@@ -187,7 +188,7 @@ export function ExamFrameClient({ level, levelId }: ExamFrameClientProps) {
       </div>
 
       {/* ── Sticky footer ───────────────────────────────────────────── */}
-      {localForms.length > 0 && canUpdateExamFrame && (
+      {(localForms.length > 0 || hasUnsavedChanges) && canUpdateExamFrame && (
         <div className="sticky bottom-0 border-t bg-background/95 backdrop-blur px-4 py-3 flex items-center justify-between gap-2">
           <p className="text-xs text-muted-foreground">
             Changes are local — click Save to persist all templates.
