@@ -431,6 +431,24 @@ describe("serializeGridCsv", () => {
     expect(lines[1]).toBe("Alice,THM202,M2 - Upper,main_teacher,1.5,,1.5")
   })
 
+  it("exports rounded per-teacher subtotals after the grouped detail rows", () => {
+    const model = buildGridModel([
+      makeItem({ score: 1.25 }),
+      makeItem({ classId: "class-2", className: "THM203", score: 0.25 }),
+      makeItem({ teacherId: "teacher-2", teacherName: "Bob", score: 1.5 }),
+    ], "2026-01")
+    const columns = dayColumns("2026-01").filter((c) => c.dateKey === "2026-01-05")
+    expect(serializeGridCsv(model, columns, { groupByTeacher: true }).split("\r\n").slice(1)).toEqual([
+      "Alice,THM202,M2 - Upper,main_teacher,1.25,1.3",
+      "Alice,THM203,M2 - Upper,main_teacher,0.25,0.3",
+      "Subtotal — Alice,,,,1.5,1.5",
+      "Bob,THM202,M2 - Upper,main_teacher,1.5,1.5",
+      "Subtotal — Bob,,,,1.5,1.5",
+      "TOTAL,,,,3,3",
+    ])
+    expect(serializeGridCsv(model, columns)).not.toContain("Subtotal")
+  })
+
   it("quotes and escapes fields containing commas or quotes", () => {
     const items = [
       makeItem({

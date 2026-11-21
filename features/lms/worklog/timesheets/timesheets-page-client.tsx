@@ -143,9 +143,9 @@ export function TimesheetsPageClient() {
 
   const handleExportCsv = useCallback(() => {
     if (!model) return
-    const csv = serializeGridCsv(model, columns)
+    const csv = serializeGridCsv(model, columns, { groupByTeacher })
     downloadCsv(`timesheets_${periodKey}.csv`, csv)
-  }, [model, columns, periodKey])
+  }, [model, columns, periodKey, groupByTeacher])
 
   // Approve/reject success: patch the cache in place — no network call —
   // instead of reloading the whole period.

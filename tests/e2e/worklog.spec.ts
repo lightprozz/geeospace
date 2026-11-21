@@ -70,7 +70,9 @@ test("filters and exports Timesheets, prevents self-approval, and patches a succ
   expect(download.suggestedFilename()).toBe("timesheets_2026-11.csv");
   const csv = await readFile(await download.path(), "utf8");
   expect(csv).toContain(otherEntry.className!);
+  expect(csv).toContain(`Subtotal — ${otherEntry.teacherName}`);
   expect(csv).not.toContain(ownEntry.className!);
+  expect(csv).not.toContain(`Subtotal — ${ownEntry.teacherName}`);
 
   await panel.getByRole("row", { name: /Discover 2/ }).getByRole("button", { name: /1 entry/ }).click();
   await page.getByRole("button", { name: "Approve", exact: true }).click();
