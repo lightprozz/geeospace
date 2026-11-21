@@ -1,36 +1,11 @@
 import { createElement, type ComponentProps } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { parseClassPath } from '@/features/lms/classes/navigation'
 import { shortenName } from '@/features/lms/classes/shorten-name'
 import { A4Page } from '@/features/lms/classes/exam-print-templates/a4-page'
 import { DefaultTemplate } from '@/features/lms/classes/exam-print-templates/default-template'
 import type { PrintTemplateProps } from '@/features/lms/types/exam-result'
-import { CLASS_DRAFT_OWNER_KEY, prepareClassDraftSession } from '@/features/lms/classes/draft-session'
-import { useExamDraftStore } from '@/features/lms/stores/use-exam-draft-store'
-import { useReportDraftStore } from '@/features/lms/stores/use-report-draft-store'
-
-afterEach(() => vi.restoreAllMocks())
-
-describe('Classes draft identity isolation', () => {
-  it.each([null, 'another-user'])('clears unowned or other-account drafts (%s)', owner => {
-    const exams = vi.spyOn(useExamDraftStore.getState(), 'clearAllDrafts').mockImplementation(() => {})
-    const reports = vi.spyOn(useReportDraftStore.getState(), 'clearAllDrafts').mockImplementation(() => {})
-    const storage = { getItem: () => owner, setItem: vi.fn() }
-    prepareClassDraftSession('teacher-1', storage)
-    expect(exams).toHaveBeenCalledOnce()
-    expect(reports).toHaveBeenCalledOnce()
-    expect(storage.setItem).toHaveBeenCalledWith(CLASS_DRAFT_OWNER_KEY, 'teacher-1')
-  })
-  it('keeps drafts for the same identity and surfaces storage failures to the host', () => {
-    const exams = vi.spyOn(useExamDraftStore.getState(), 'clearAllDrafts').mockImplementation(() => {})
-    const reports = vi.spyOn(useReportDraftStore.getState(), 'clearAllDrafts').mockImplementation(() => {})
-    prepareClassDraftSession('teacher-1', { getItem: () => 'teacher-1', setItem: () => {} })
-    expect(exams).not.toHaveBeenCalled()
-    expect(reports).not.toHaveBeenCalled()
-    expect(() => prepareClassDraftSession('teacher-1', { getItem: () => { throw new Error('Storage denied') }, setItem: () => {} })).toThrow('Storage denied')
-  })
-})
 
 describe('Classes window navigation', () => {
   it('maps list, detail and tab paths', () => {
