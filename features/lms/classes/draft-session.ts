@@ -3,11 +3,11 @@ import { useReportDraftStore } from '@/features/lms/stores/use-report-draft-stor
 import { useClassStore } from '@/features/lms/stores/use-class-store'
 import { createJSONStorage } from 'zustand/middleware'
 
-const discardStorage = createJSONStorage(() => ({
+const discardStorage = {
   getItem: () => null,
   setItem: () => {},
   removeItem: () => {},
-}))!
+}
 
 export function clearClassDrafts() {
   useExamDraftStore.getState().clearAllDrafts()
@@ -26,7 +26,7 @@ export function prepareClassDraftSession(identity: string, storage: Storage) {
   useReportDraftStore.persist.setOptions({ storage: discardStorage })
   clearClassDrafts()
 
-  const scopedStorage = identity ? createJSONStorage(() => ({
+  const scopedStorage = identity ? {
     getItem: (name: string) => {
       try { return storage.getItem(name) } catch { return null }
     },
@@ -36,9 +36,15 @@ export function prepareClassDraftSession(identity: string, storage: Storage) {
     removeItem: (name: string) => {
       try { storage.removeItem(name) } catch {}
     },
-  }))! : discardStorage
-  useExamDraftStore.persist.setOptions({ name: examName, storage: scopedStorage })
-  useReportDraftStore.persist.setOptions({ name: reportName, storage: scopedStorage })
+  } : discardStorage
+  useExamDraftStore.persist.setOptions({
+    name: examName,
+    storage: createJSONStorage<ReturnType<typeof useExamDraftStore.getState>>(() => scopedStorage),
+  })
+  useReportDraftStore.persist.setOptions({
+    name: reportName,
+    storage: createJSONStorage<ReturnType<typeof useReportDraftStore.getState>>(() => scopedStorage),
+  })
   void useExamDraftStore.persist.rehydrate()
   void useReportDraftStore.persist.rehydrate()
 }

@@ -24,7 +24,7 @@ async function openTab(identity: string) {
   return { exams, reports, prepareClassDraftSession }
 }
 
-const scores = { overall: [], academic: [] }
+const scores = { examName: 'Midterm', examType: 1, overall: [], academic: [] }
 describe('Classes draft persistence isolation', () => {
   it('isolates a second account from a first tab that continues writing', async () => {
     const first = await openTab('teacher-1')
