@@ -11,6 +11,7 @@ import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect } fr
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReactToPrint } from 'react-to-print'
 import { resolveExamFormSession } from './exam-form-session'
+import { saveExamSubmission } from './save-exam-submission'
 import {
   Printer,
   Save,
@@ -144,6 +145,10 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
   const draftKey = selectedStudentId && selectedExamType
     ? buildExamDraftKey(classId, selectedStudentId, selectedExamType)
     : ''
+  const latestFormRef = useRef({ key: draftKey, scores, comment })
+  useLayoutEffect(() => {
+    latestFormRef.current = { key: draftKey, scores, comment }
+  }, [draftKey, scores, comment])
 
   // ── Reset hasUserEdited when selection changes ──
   // Use useLayoutEffect to run synchronously before paint to prevent
@@ -350,13 +355,13 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
   })
 
   // ── Save mutation ──
-  const { mutate: saveResult, isPending: isSaving } = useSaveExamResult(
+  const { mutateAsync: saveResult, isPending: isSaving } = useSaveExamResult(
     classId,
     selectedStudentId,
     examTypeNum,
   )
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!selectedStudentId || !selectedExamType) {
       return
     }
@@ -371,29 +376,33 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
       draftSaveTimerRef.current = null
     }
     saveDraft(draftKey, examFormJson, comment)
-    saveResult(
-      {
+    try {
+      const cleared = await saveExamSubmission(draftKey, () => saveResult({
         classId,
         studentId: selectedStudentId,
         examType: examTypeNum,
         examResultJson: JSON.stringify(examFormJson),
         teacherComment: comment,
         modifiedBy: authUser?.name ?? 'system',
-      },
-      {
-        onSuccess: () => {
-          if (prevDraftKeyRef.current === draftKey) {
-            hasUserEdited.current = false
-            if (draftSaveTimerRef.current) {
-              clearTimeout(draftSaveTimerRef.current)
-              draftSaveTimerRef.current = null
-            }
-            setDraftRestored(false)
-          }
-          if (draftKey) clearDraft(draftKey)
-        },
-      },
-    )
+      }), () => {
+        const latest = latestFormRef.current
+        return latest.key !== draftKey || (
+          latest.scores.overall === examFormJson.overall &&
+          latest.scores.academic === examFormJson.academic &&
+          latest.comment === comment
+        )
+      })
+      if (cleared && prevDraftKeyRef.current === draftKey) {
+        hasUserEdited.current = false
+        if (draftSaveTimerRef.current) {
+          clearTimeout(draftSaveTimerRef.current)
+          draftSaveTimerRef.current = null
+        }
+        setDraftRestored(false)
+      }
+    } catch {
+      // The mutation reports save failures; keep the draft for retry.
+    }
   }, [
     selectedStudentId,
     selectedExamType,
@@ -405,7 +414,6 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
     authUser,
     saveResult,
     draftKey,
-    clearDraft,
     saveDraft,
   ])
 
