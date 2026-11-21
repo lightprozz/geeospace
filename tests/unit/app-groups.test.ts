@@ -18,6 +18,13 @@ it("searches across groups and handles empty and unmatched queries", () => {
   expect(searchApps("")).toHaveLength(desktopApps.length);
   expect(searchApps("nonexistentxyz")).toEqual([]);
 });
+it("ranks app matches above group-only matches while preserving group searches", () => {
+  const work = searchApps("work").map(app => app.id);
+  expect(work.slice(0, 2)).toEqual(["work", "lms-worklog"]);
+  expect(work.indexOf("today")).toBeGreaterThan(work.indexOf("lms-worklog"));
+  for (const query of ["LMS", "Gee-O LMS"]) expect(searchApps(query).map(app => app.id)).toEqual(appsInGroup("lms").map(app => app.id));
+  expect(searchApps("workspace")).toHaveLength(appsInGroup("workspace").length);
+});
 it("round trips hashes and rejects malformed or unsafe routes", () => {
   for (const path of ["", "123", "123/overview", "học-viên"]) expect(parseAppHash(formatAppHash("lms-classes", path))).toEqual({ id: "lms-classes", path });
   for (const hash of ["#unknown/123", "#lms-classes/%", "#lms-classes/%2E%2E", "#lms-classes/%00", "#lms-classes/%2Fbad"]) expect(parseAppHash(hash)).toBeUndefined();

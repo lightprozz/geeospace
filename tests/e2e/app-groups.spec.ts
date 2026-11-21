@@ -52,6 +52,16 @@ test("launcher groups, cross-group search, keyboard navigation and focus trap", 
   await expect(page.locator('[data-app="lms-curriculum"]')).toBeVisible();
 });
 
+test("search selects an app match before group-only matches", async ({ page }) => {
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog", { name: "Tìm nhanh chức năng" });
+  await dialog.getByRole("combobox").fill("work");
+  await expect(dialog.getByRole("option").nth(0)).toContainText("Công & lương");
+  await expect(dialog.getByRole("option").nth(1)).toContainText("Nhật ký công việc");
+  await page.keyboard.press("Enter");
+  await expect(page.locator('[data-app="work"]')).toBeVisible();
+});
+
 test("deep links, navigate, back and hashchange keep the window path", async ({ page }) => {
   await page.goto("/#lms-classes/123");
   const classes = page.locator('[data-app="lms-classes"]');

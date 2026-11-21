@@ -14,7 +14,8 @@ export function AppLauncher({ mode, onOpen, onClose }: { mode: "launcher" | "sea
   const close = () => exitOverlay(backdrop.current, onClose);
   const open = (id: DesktopAppId) => { rememberLaunch(id); exitOverlay(backdrop.current, () => onOpen(id)); };
   const listId = useId();
-  const apps = searchApps(query).sort((a, b) => appGroups.findIndex(group => group.id === a.group) - appGroups.findIndex(group => group.id === b.group));
+  const matches = searchApps(query);
+  const apps = query.trim() ? matches : matches.sort((a, b) => appGroups.findIndex(group => group.id === a.group) - appGroups.findIndex(group => group.id === b.group));
   const groupLabel = (id: string) => { const group = appGroups.find(group => group.id === id)!; return t(group.label, group.english); };
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
