@@ -88,6 +88,17 @@ export function FormTemplatesPageClient() {
           ) : null}
         </div>
 
+        <div className="flex flex-wrap gap-2">
+          {canWrite ? (
+            <Button type="button" variant="outline" size="sm" onClick={() => router.push("/form-templates/collections")}>
+              Manage collections
+            </Button>
+          ) : null}
+          <Button type="button" variant="outline" size="sm" onClick={() => router.push("/form-templates/worklog-templates")}>
+            Worklog templates
+          </Button>
+        </div>
+
         {/* Filters */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">

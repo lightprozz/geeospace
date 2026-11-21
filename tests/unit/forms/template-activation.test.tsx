@@ -7,6 +7,8 @@ import { FormTemplateDetailClient } from "@/features/forms/form-templates/_compo
 
 const state = vi.hoisted(() => ({
   deactivate: false,
+  canWrite: true,
+  push: vi.fn(),
   mutateAsync: vi.fn(),
   buttons: [] as { title?: string; label: string; onClick?: () => unknown }[],
 }))
@@ -18,10 +20,10 @@ vi.mock("@/components/ui/button", () => ({
   },
 }))
 vi.mock("@/features/forms/window-adapter", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: state.push }),
   useSetDashboardHeader: vi.fn(),
 }))
-vi.mock("@/lib/use-can", () => ({ useCanWriteTemplates: () => true }))
+vi.mock("@/lib/use-can", () => ({ useCanWriteTemplates: () => state.canWrite }))
 vi.mock("@/features/forms/form-templates/hooks/use-template-mutations", () => ({
   useSetActive: () => ({ mutateAsync: state.mutateAsync, isPending: false }),
 }))
@@ -50,6 +52,8 @@ vi.mock("@/features/forms/form-templates/_components/three-column-builder", () =
 
 beforeEach(() => {
   state.buttons = []
+  state.canWrite = true
+  state.push.mockReset()
   state.mutateAsync.mockReset()
 })
 
@@ -69,4 +73,19 @@ it.each([false, true])("detail activation sends the target active state when dea
   expect(toggle).toBeDefined()
   await toggle!.onClick!()
   expect(state.mutateAsync).toHaveBeenCalledWith(deactivate)
+})
+
+it.each([false, true])("exposes collection management only to writers and worklog templates to readers (write=%s)", async canWrite => {
+  state.canWrite = canWrite
+  renderToStaticMarkup(<FormTemplatesPageClient />)
+  const collections = state.buttons.find(button => button.label === "Manage collections")
+  expect(Boolean(collections)).toBe(canWrite)
+  if (collections) {
+    await collections.onClick!()
+    expect(state.push).toHaveBeenLastCalledWith("/form-templates/collections")
+  }
+  const worklogs = state.buttons.find(button => button.label === "Worklog templates")
+  expect(worklogs).toBeDefined()
+  await worklogs!.onClick!()
+  expect(state.push).toHaveBeenLastCalledWith("/form-templates/worklog-templates")
 })
