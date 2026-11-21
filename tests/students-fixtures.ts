@@ -15,7 +15,7 @@ export const student = {
 
 export const students: StudentAllItem[] = [student,
   { ...student, id: 'student-2', studentName: 'Tran Bao Long', englishName: 'Leo', campusId: 'campus-2', campusName: 'River Campus' },
-  { ...student, id: 'student-3', studentName: 'Le Mai', englishName: 'May', currentStudentType: 4, currentStudentTypeName: 'Suspended' },
+  { ...student, id: 'student-3', studentName: 'Le Mai', englishName: 'May', currentStudentType: 4, currentStudentTypeName: 'Suspended', suspendDate: '2025-02-01' },
 ]
 
 export const studentDetail: StudentDetail = {

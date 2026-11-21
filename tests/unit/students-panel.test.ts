@@ -8,7 +8,7 @@ import { StudentsPanel } from '@/features/students/students-panel'
 import { WindowNavigationContext } from '@/components/desktop/window-navigation'
 import { usePermissionStore } from '@/stores/use-permission-store'
 import { useStudentStore } from '@/features/lms/stores/use-student-store'
-import { studentResponse } from '../students-fixtures'
+import { student, studentResponse } from '../students-fixtures'
 
 let dispose: () => void
 let client: QueryClient
@@ -47,6 +47,8 @@ it('renders active students, searches names and phones, filters inactive, and na
   expect(screen.getByText('No students found')).toBeTruthy()
   fireEvent.mouseDown(screen.getByRole('tab', { name: /Inactive/ }), { button: 0, ctrlKey: false })
   await screen.findByText('Le Mai')
+  expect(screen.getByText('Suspended', { selector: '[data-slot="badge"]' })).toBeTruthy()
+  expect(screen.queryByText('Active', { selector: '[data-slot="badge"]' })).toBeNull()
   expect(screen.queryByText('Nguyen Minh Anh')).toBeNull()
 })
 
@@ -59,6 +61,26 @@ it('shows an empty list and can recover from a list transport failure', async ()
   await waitFor(() => expect(screen.queryByRole('alert')).toBeNull())
   expect(screen.getByText('No students found')).toBeTruthy()
 })
+
+it.each([[1, 'Active'], [4, 'Suspended'], [5, 'Terminated']] as const)(
+  'shows the date-derived badge for student type %s',
+  async (currentStudentType, status) => {
+    request.mockResolvedValue([{
+      ...student,
+      currentStudentType,
+      suspendDate: currentStudentType === 4 ? '2025-02-01' : null,
+      terminateDate: currentStudentType === 5 ? '2025-02-01' : null,
+    }])
+    useStudentStore.getState().setActiveTab(currentStudentType === 1 ? 'active' : 'inactive')
+    mount()
+    await screen.findByText(student.studentName)
+    const badge = screen.getByText(status, { selector: '[data-slot="badge"]' })
+    expect(badge).toBeTruthy()
+    if (currentStudentType !== 1) {
+      expect(screen.queryByText('Active', { selector: '[data-slot="badge"]' })).toBeNull()
+    }
+  },
+)
 
 it('renders profile, parents, payment and reports from the shared transport, and goes back to list', async () => {
   mount('student-1')
