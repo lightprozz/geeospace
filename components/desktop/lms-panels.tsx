@@ -1,11 +1,12 @@
-import { appsInGroup, type DesktopAppId } from "@/lib/desktop/apps";
+import { appDefinition, appGroups, appsInGroup, type DesktopAppId } from "@/lib/desktop/apps";
 import { AppGlyph } from "./app-glyph";
 import { useSpace } from "./space-context";
 import { useWindowNavigation } from "./window-navigation";
 
-export function LmsHub({ onOpen }: { onOpen: (id: DesktopAppId) => void }) {
+export function LmsHub({ id, onOpen }: { id: DesktopAppId; onOpen: (id: DesktopAppId) => void }) {
   const { t, label } = useSpace();
-  return <div className="os-panel"><h1>Gee-O LMS</h1><p>{t("Quản lý học tập và giảng dạy trong Geeospace.", "Teaching and learning management in Geeospace.")}</p><div className="os-app-group-grid">{appsInGroup("lms").filter(app => app.id !== "lms").map(app => <button key={app.id} onClick={() => onOpen(app.id)}><AppGlyph id={app.id} /><span>{label(app.id)}</span></button>)}</div></div>;
+  const group = appGroups.find(group => group.id === appDefinition(id).group)!;
+  return <div className="os-panel"><h1>{t(group.label, group.english)}</h1><p>{t("Mở ứng dụng trong nhóm.", "Open an app in this group.")}</p><div className="os-app-group-grid">{appsInGroup(group.id).filter(app => app.id !== id).map(app => <button key={app.id} onClick={() => onOpen(app.id)}><AppGlyph id={app.id} /><span>{label(app.id)}</span></button>)}</div></div>;
 }
 export function LmsPlaceholder({ id }: { id: DesktopAppId }) {
   const { t, label, description } = useSpace();
