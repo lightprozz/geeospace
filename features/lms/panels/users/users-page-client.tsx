@@ -132,22 +132,17 @@ export function UsersPageClient() {
   }, [campuses])
   const availableRoles = useMemo(() => [...new Set(allUsers.flatMap(user => user.roleId ? [user.roleId] : []))].sort(), [allUsers])
 
-  // ── Sort handler — toggle: none → asc → desc → none ───────────
   const handleSortChange = useCallback(
     (field: string) => {
       const f = field as keyof UserRecord
-      if (sort?.field === f) {
-        if (sort.desc) {
-          setSort(null)
-        } else {
-          setSort({ field: f, desc: true })
-        }
-      } else {
-        setSort({ field: f, desc: false })
-      }
+      setSort(current => {
+        const active = current ?? defaultSort
+        if (active.field !== f) return { field: f, desc: false }
+        return active.desc ? null : { field: f, desc: true }
+      })
       setPage(1)
     },
-    [sort],
+    [],
   )
 
   // ── Handlers ─────────────────────────────────────────────────────

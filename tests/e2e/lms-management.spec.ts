@@ -93,7 +93,11 @@ test("users: toggles a column sort from the keyboard and announces its direction
   users[1].isActive = true;
   await page.goto("/#lms-users");
   const panel = page.locator('[data-app="lms-users"]');
-  await expect(panel.getByRole("columnheader", { name: "Full Name" })).toHaveAttribute("aria-sort", "ascending");
+  const fullName = panel.getByRole("columnheader", { name: "Full Name" });
+  await expect(fullName).toHaveAttribute("aria-sort", "ascending");
+  await fullName.getByRole("button").press("Enter");
+  await expect(fullName).toHaveAttribute("aria-sort", "descending");
+  await expect(panel.locator("tbody tr").first()).toContainText("Mai Nguyen");
   const header = panel.getByRole("columnheader", { name: "Email", exact: true });
   const sortButton = header.getByRole("button", { name: "Email", exact: true });
   await sortButton.focus();
