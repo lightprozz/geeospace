@@ -18,6 +18,7 @@ import { BottomBar } from './bottom-bar'
 import { EndScreen } from './end-screen'
 import { ContentRenderer } from './content-renderer'
 import { StudentRosterDialog } from './student-roster-dialog'
+import { lessonUnitKey } from './unit-key'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -168,7 +169,7 @@ export function LetsLearnClient({
           <EndScreen />
         ) : currentUnit ? (
           <div className="flex-1 w-full h-full p-4 lg:p-8 flex justify-center items-start overflow-y-auto">
-            <ContentRenderer key={currentUnit.id} unit={currentUnit} contentType={contentType} />
+            <ContentRenderer key={lessonUnitKey(currentUnit, store.activeStep)} unit={currentUnit} contentType={contentType} />
           </div>
         ) : null}
       </div>

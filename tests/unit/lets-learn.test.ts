@@ -3,9 +3,18 @@ import { useLetsLearnStore } from '@/features/lms/stores/use-lets-learn-store'
 import { resolveContentType, type LessonUnit } from '@/features/lms/types/lets-learn'
 import { toRosterStudents } from '@/features/lets-learn/student-roster/student-grid'
 import { parseAppHash } from '@/lib/desktop/navigation'
+import { lessonUnitKey } from '@/features/lets-learn/unit-key'
 
 const store = () => useLetsLearnStore.getState()
 beforeEach(() => store().resetSession())
+
+it('gives consecutive units distinct viewer identities even without IDs or resources', () => {
+  const unit = { material: null } as LessonUnit
+  expect(lessonUnitKey(unit, 0)).not.toBe(lessonUnitKey(unit, 1))
+  expect(lessonUnitKey(unit, 0)).toBe(lessonUnitKey(unit, 0))
+  const withMaterial = { ...unit, material: { id: 'm', url: 'https://example.test/first.pdf', fileName: null } }
+  expect(lessonUnitKey(withMaterial, 0)).not.toBe(lessonUnitKey({ ...withMaterial, material: { ...withMaterial.material, url: 'https://example.test/second.pdf' } }, 0))
+})
 
 it('times each step, navigates completed steps and stops timing the end screen', () => {
   store().initSession(2)
