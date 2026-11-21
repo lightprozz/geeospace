@@ -35,6 +35,7 @@ import { usePermission } from '@/components/auth/permission-guard'
 import { PERMISSIONS } from '@/lib/permissions'
 import {
   STUDENT_TYPE_OPTIONS,
+  CLASS_TYPE,
   type StudentAllItem,
 } from '@/features/lms/types/student'
 
@@ -339,6 +340,12 @@ export function StudentsPageClient() {
     [setActiveTab, setCampusFilter, setLevelFilter, setClassFilter, setTypeFilter, setSearchQuery, setPage],
   )
 
+  const typeOptions = activeTab === 'active' ? STUDENT_TYPE_OPTIONS : [
+    STUDENT_TYPE_OPTIONS[0],
+    { value: CLASS_TYPE.Suspended, label: 'Suspended' },
+    { value: CLASS_TYPE.Terminated, label: 'Terminated' },
+  ]
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       {header}
@@ -436,7 +443,7 @@ export function StudentsPageClient() {
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  {STUDENT_TYPE_OPTIONS.map((opt) => (
+                  {typeOptions.map((opt) => (
                     <SelectItem key={opt.value} value={String(opt.value)}>
                       {opt.label}
                     </SelectItem>
