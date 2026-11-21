@@ -5,7 +5,7 @@ const primitives = ["alert-dialog", "alert", "avatar", "badge", "breadcrumb", "b
 for (const theme of ["light", "dark"] as const) {
   test(`UI kit ${theme}: themed in development, unavailable in production`, async ({ page }, testInfo) => {
     const response = await page.goto(`/ui-kit?theme=${theme}&accent=blue`);
-    if (testInfo.config.configFile.endsWith("playwright.worker.config.ts")) {
+    if (testInfo.config.configFile?.endsWith("playwright.worker.config.ts")) {
       expect(response?.status()).toBe(404);
       await expect(page.getByRole("heading", { name: "LMS UI kit" })).toHaveCount(0);
       return;
