@@ -10,6 +10,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReactToPrint } from 'react-to-print'
+import { resolveExamFormSession } from './exam-form-session'
 import {
   Printer,
   Save,
@@ -223,25 +224,23 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
   }, [savedResult])
 
   // ── Final form state: draft > saved > template ──
-  const computedScores = draftScores?.scores ?? savedScores.scores ?? templateScores
-  const computedComment = draftScores?.comment ?? savedScores.comment
+  const formSession = useMemo(
+    () => resolveExamFormSession(draftKey, templateScores, draftScores, savedScores),
+    [draftKey, templateScores, draftScores, savedScores],
+  )
 
-  // Sync to local state only when computed values change.
-  // This is a legitimate "derived state" pattern for external data (API/localStorage).
-  // The eslint rule is overly strict; the data sources (draft, savedResult, template) are
-  // already memoized, so adding them to deps would be redundant.
   useLayoutEffect(() => {
-    if (computedScores) {
-      hasUserEdited.current = draftScores !== null // Don't mark as edited if restored from draft
+    if (formSession.scores) {
+      hasUserEdited.current = formSession.restored
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setScores(computedScores)
+      setScores(formSession.scores)
 
-      setComment(computedComment)
+      setComment(formSession.comment)
 
-      setDraftRestored(draftScores !== null)
+      setDraftRestored(formSession.restored)
     }
 
-  }, [computedScores, computedComment, draftScores])
+  }, [formSession])
 
   // ── Auto-hide draft banner after 3 seconds ──
   // This is a side-effect (timeout) that must run when draftRestored changes.
