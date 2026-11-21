@@ -65,7 +65,7 @@ export function ExamTemplateCard({
 
   function handleUpdate(updated: ExamFormJson) {
     setParsed(updated)
-    onChange({ ...form, examFormJson: JSON.stringify(updated) })
+    onChange({ ...form, examName: updated.examName, examFormJson: JSON.stringify(updated) })
   }
 
   return (
