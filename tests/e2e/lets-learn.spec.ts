@@ -69,3 +69,36 @@ test('deep links show empty and error states without closing the workspace', asy
   await page.goto('/#lets-learn/missing')
   await expect(page.getByText('Lesson not found', { exact: true })).toBeVisible()
 })
+
+test('tool overlays fit a short maximized lesson window', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'Exact desktop viewport regression')
+  await page.setViewportSize({ width: 1280, height: 841 })
+  await page.goto('/#lets-learn/lesson-1/class-1')
+  await page.addStyleTag({ content: 'nextjs-portal { display: none; }' })
+  const panel = page.locator('[data-app="lms-lets-learn"]')
+  await panel.getByRole('button', { name: /Phóng to/ }).click()
+  await panel.getByRole('button', { name: 'Open student roster' }).click()
+  const roster = panel.getByRole('dialog', { name: 'Student roster' })
+  await roster.getByRole('button', { name: 'Timer', exact: true }).click()
+  const area = roster.locator('[data-tool-area]')
+  for (const control of [roster.getByRole('heading', { name: 'Timer', exact: true }), roster.getByRole('button', { name: 'Start timer', exact: true }), roster.getByRole('button', { name: 'Reset timer', exact: true })]) {
+    await expect(control).toBeInViewport({ ratio: 1 })
+    await expect.poll(async () => {
+      const bounds = await area.boundingBox()
+      const rect = await control.boundingBox()
+      return !!bounds && !!rect && rect.y >= bounds.y && rect.y + rect.height <= bounds.y + bounds.height
+    }).toBe(true)
+  }
+  await roster.getByRole('button', { name: 'Start timer', exact: true }).click()
+  await expect(roster.getByRole('button', { name: 'Pause timer', exact: true })).toBeVisible()
+  if (process.env.SCREENSHOT_DIR) await page.screenshot({ animations: 'disabled', path: `${process.env.SCREENSHOT_DIR}/lets-learn-timer-fixed.png` })
+  await roster.getByRole('button', { name: 'Close tool', exact: true }).click()
+  for (const tool of ['Groups', 'Noise Meter', 'Directions', 'Think - Pair - Share', 'Today', 'Music']) {
+    await roster.getByRole('button', { name: 'Toolkit', exact: true }).click()
+    await roster.getByRole('button', { name: tool, exact: true }).click()
+    await expect(roster.getByRole('button', { name: 'Close tool', exact: true })).toBeInViewport({ ratio: 1 })
+    const surface = area.locator(':scope > div').filter({ has: page.getByRole('button', { name: 'Close tool', exact: true }) })
+    await expect.poll(async () => surface.evaluate(element => getComputedStyle(element).overflowY)).toMatch(/auto|scroll/)
+    await roster.getByRole('button', { name: 'Close tool', exact: true }).click()
+  }
+})

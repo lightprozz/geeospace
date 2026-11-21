@@ -87,54 +87,58 @@ export function TimerTool({ onClose }: OverlayCloseProps) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-center p-6 backdrop-blur-md rounded-2xl"
+      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-start overflow-auto p-6 backdrop-blur-md rounded-2xl [&>*]:shrink-0"
     >
       <OverlayCloseButton onClose={onClose} />
-      <h3 className="text-2xl font-bold text-muted-foreground mb-8">
+      <h3 className="text-2xl font-bold text-muted-foreground mb-3">
         Timer
       </h3>
-      <div className="flex flex-col items-center mb-12">
+      <div className="flex flex-col items-center mb-4">
         <div className="flex items-center gap-4">
           <div className="flex flex-col items-center">
             <button
+              aria-label="Add one minute"
               onClick={() => setSeconds((v) => v + 60)}
               disabled={isActive}
               className="p-2 hover:bg-muted rounded-full transition-colors mb-2 disabled:opacity-30"
             >
-              <ChevronUp className="w-12 h-12 text-muted-foreground" />
+              <ChevronUp className="w-6 h-6 text-muted-foreground" />
             </button>
-            <div className="text-[8rem] font-mono font-bold leading-none tabular-nums text-foreground tracking-tight">
+            <div className="text-[4rem] font-mono font-bold leading-none tabular-nums text-foreground tracking-tight">
               {m}
             </div>
             <button
+              aria-label="Subtract one minute"
               onClick={() => setSeconds((v) => Math.max(0, v - 60))}
               disabled={isActive}
               className="p-2 hover:bg-muted rounded-full transition-colors mt-2 disabled:opacity-30"
             >
-              <ChevronDown className="w-12 h-12 text-muted-foreground" />
+              <ChevronDown className="w-6 h-6 text-muted-foreground" />
             </button>
           </div>
-          <div className="text-[8rem] font-mono font-bold leading-none tabular-nums text-foreground tracking-tight pb-12">
+          <div className="text-[4rem] font-mono font-bold leading-none tabular-nums text-foreground tracking-tight pb-0">
             :
           </div>
           <div className="flex flex-col items-center">
-            <div className="p-2 mb-2 invisible"><ChevronUp className="w-12 h-12" /></div>
-            <div className="text-[8rem] font-mono font-bold leading-none tabular-nums text-foreground tracking-tight">
+            <div className="p-2 mb-2 invisible"><ChevronUp className="w-6 h-6" /></div>
+            <div className="text-[4rem] font-mono font-bold leading-none tabular-nums text-foreground tracking-tight">
               {s}
             </div>
-            <div className="p-2 mt-2 invisible"><ChevronDown className="w-12 h-12" /></div>
+            <div className="p-2 mt-2 invisible"><ChevronDown className="w-6 h-6" /></div>
           </div>
         </div>
       </div>
       <div className="flex gap-6">
         <button
-          className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+          aria-label="Reset timer"
+          className="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
           onClick={() => { setIsActive(false); setSeconds(300) }}
         >
           <RotateCcw className="w-6 h-6" />
         </button>
         <button
-          className={`w-20 h-20 rounded-full flex items-center justify-center text-white transition-all shadow-lg hover:shadow-xl ${
+          aria-label={isActive ? 'Pause timer' : 'Start timer'}
+          className={`w-14 h-14 rounded-full flex items-center justify-center text-white transition-all shadow-lg hover:shadow-xl ${
             isActive
               ? 'bg-amber-500 hover:bg-amber-600 scale-95'
               : 'bg-primary hover:bg-primary/90 hover:scale-105'
@@ -167,7 +171,7 @@ export function NoiseMeterTool({ onClose }: OverlayCloseProps) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-center p-6 backdrop-blur-md rounded-2xl"
+      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-start overflow-auto p-6 backdrop-blur-md rounded-2xl [&>*]:shrink-0"
     >
       <OverlayCloseButton onClose={onClose} />
       <h3 className="text-2xl font-bold text-muted-foreground mb-12">
@@ -224,10 +228,10 @@ export function GroupTool({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 bg-background/95 z-40 flex flex-col p-8 backdrop-blur-md overflow-hidden rounded-2xl"
+      className="absolute inset-0 bg-background/95 z-40 flex flex-col p-8 backdrop-blur-md overflow-auto rounded-2xl"
     >
       <OverlayCloseButton onClose={onClose} />
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 mb-8">
         <h3 className="text-2xl font-bold text-foreground">Group Generator</h3>
         <div className="flex items-center gap-4 bg-card border border-border p-2 rounded-xl shadow-sm mr-16">
           <span className="text-sm font-medium px-2">Groups: {groupCount}</span>
@@ -277,10 +281,10 @@ export function DirectionsTool({ onClose }: OverlayCloseProps) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-center p-6 backdrop-blur-md rounded-2xl"
+      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-start overflow-auto p-6 backdrop-blur-md rounded-2xl [&>*]:shrink-0"
     >
       <OverlayCloseButton onClose={onClose} />
-      <h3 className="text-3xl font-bold text-foreground mb-12">Directions</h3>
+      <h3 className="text-3xl font-bold text-foreground mb-6">Directions</h3>
       <div className="w-full max-w-3xl space-y-4">
         {steps.map((st, i) => (
           <motion.div
@@ -314,19 +318,19 @@ export function ThinkPairShareTool({ onClose }: OverlayCloseProps) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-center p-6 backdrop-blur-md rounded-2xl"
+      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-start overflow-auto p-6 backdrop-blur-md rounded-2xl [&>*]:shrink-0"
     >
       <OverlayCloseButton onClose={onClose} />
-      <h3 className="text-2xl font-bold text-muted-foreground mb-16">
+      <h3 className="text-2xl font-bold text-muted-foreground mb-6">
         Think - Pair - Share
       </h3>
-      <div className="flex items-center justify-center gap-10 mb-16">
+      <div className="flex flex-wrap items-center justify-center gap-4 mb-6">
         {stages.map((st, i) => (
           <div
             key={i}
             className={`flex flex-col items-center gap-6 transition-all duration-500 ${stage === i ? 'scale-110 opacity-100' : 'scale-90 opacity-40 grayscale'}`}
           >
-            <div className={`w-36 h-36 rounded-[2rem] flex items-center justify-center shadow-lg text-white ${i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-blue-500' : 'bg-emerald-500'}`}>
+            <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center shadow-lg text-white ${i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-blue-500' : 'bg-emerald-500'}`}>
               {i === 0 ? <Sun className="w-16 h-16" /> : i === 1 ? <Users className="w-16 h-16" /> : <MessageCircle className="w-16 h-16" />}
             </div>
             <span className="text-xl font-bold">{st}</span>
@@ -361,13 +365,13 @@ export function TodayTool({ onClose }: OverlayCloseProps) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-center p-6 backdrop-blur-md rounded-2xl"
+      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-start overflow-auto p-6 backdrop-blur-md rounded-2xl [&>*]:shrink-0"
     >
       <OverlayCloseButton onClose={onClose} />
-      <div className="text-[8rem] font-bold text-foreground tracking-tighter leading-none mb-4 tabular-nums">
+      <div className="text-[clamp(2rem,8vw,6rem)] font-bold text-foreground tracking-tighter leading-none mb-4 tabular-nums">
         {now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
       </div>
-      <div className="text-4xl font-medium text-muted-foreground">
+      <div className="text-xl text-center font-medium text-muted-foreground">
         {now.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
       </div>
     </motion.div>
@@ -386,7 +390,7 @@ export function MusicTool({ onClose }: OverlayCloseProps) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-center p-6 backdrop-blur-md rounded-2xl"
+      className="absolute inset-0 bg-background/95 z-40 flex flex-col items-center justify-start overflow-auto p-6 backdrop-blur-md rounded-2xl [&>*]:shrink-0"
     >
       <OverlayCloseButton onClose={onClose} />
       <div className="relative">
@@ -399,22 +403,22 @@ export function MusicTool({ onClose }: OverlayCloseProps) {
           />
         )}
         <div
-          className={`relative z-10 w-64 h-64 rounded-full flex items-center justify-center shadow-2xl mb-12 transition-all duration-1000 ${
+          className={`relative z-10 w-32 h-32 rounded-full flex items-center justify-center shadow-2xl mb-4 transition-all duration-1000 ${
             isPlaying
               ? 'bg-gradient-to-tr from-pink-500 to-orange-400 rotate-180 scale-105'
               : 'bg-card border-4 border-border'
           }`}
         >
-          <Music className={`w-28 h-28 transition-colors ${isPlaying ? 'text-white' : 'text-muted-foreground'}`} />
+          <Music className={`w-16 h-16 transition-colors ${isPlaying ? 'text-white' : 'text-muted-foreground'}`} />
         </div>
       </div>
       <button
-        className="w-24 h-24 z-20 rounded-full flex items-center justify-center text-white bg-primary transition-all shadow-lg hover:shadow-xl hover:scale-105"
+        className="w-16 h-16 z-20 rounded-full flex items-center justify-center text-white bg-primary transition-all shadow-lg hover:shadow-xl hover:scale-105"
         onClick={() => setIsPlaying(!isPlaying)}
       >
         {isPlaying ? <Pause className="w-10 h-10 fill-current" /> : <Play className="w-10 h-10 fill-current ml-2" />}
       </button>
-      <span className="mt-8 text-xl text-muted-foreground font-medium">
+      <span className="mt-4 text-lg text-muted-foreground font-medium">
         Music demo — no audio source connected. {isPlaying ? 'Animation playing' : 'Paused'}
       </span>
     </motion.div>
@@ -462,10 +466,10 @@ export function ToolkitGrid({ onClose, onSelectTool, onRandomize }: ToolkitGridP
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="absolute inset-0 bg-background/95 z-30 flex items-center justify-center backdrop-blur-md rounded-b-2xl"
+      className="absolute inset-0 bg-background/95 z-30 flex flex-col items-center overflow-auto p-6 backdrop-blur-md rounded-b-2xl"
     >
       <OverlayCloseButton onClose={onClose} />
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-12 gap-y-16 mt-8">
+      <div className="grid shrink-0 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 my-auto py-8">
         <ToolkitItem onClick={() => onSelectTool('timer')} icon={AlarmClock} label="Timer" color="bg-violet-600" />
         <ToolkitItem onClick={() => { onClose(); onRandomize() }} icon={Shuffle} label="Random" color="bg-emerald-500" />
         <ToolkitItem onClick={() => onSelectTool('groups')} icon={Users} label="Groups" color="bg-red-500" />

@@ -204,7 +204,7 @@ export function StudentRosterDialog({
             </div>
 
             {/* ── Main Area ───────────────────────────────────────── */}
-            <div className="flex flex-col flex-1 relative overflow-hidden">
+            <div data-tool-area className="flex min-h-0 flex-col flex-1 relative overflow-hidden">
               {/* Tool Overlays */}
               {activeTool === 'toolkit' && (
                 <ToolkitGrid
@@ -262,7 +262,7 @@ export function StudentRosterDialog({
               </AnimatePresence>
 
               {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto p-6 md:p-8 shrink-0 relative z-10 w-full h-full">
+              <div className="min-h-0 flex-1 overflow-y-auto p-6 md:p-8 relative z-10 w-full">
                 {error ? <p role="alert">Unable to load students. Close the roster and try again later.</p> : isLoading ? (
                   <div className="flex items-center justify-center h-full">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
