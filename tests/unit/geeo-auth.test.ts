@@ -95,6 +95,22 @@ it("initializes expired sessions through refresh and clears orphaned claims with
   expect(store.getState()).toMatchObject({ isAuthenticated: false, isLoading: false });
   expect(fetch).toHaveBeenCalledTimes(2);
 });
+it.each([JSON.stringify(user), undefined, "bad", "null", "{}"])("initializes an expiring session when userinfo fails with cached claims %s", async cached => {
+  const { store, token } = await load();
+  session(Math.floor(Date.now() / 1000) + 60);
+  if (cached !== undefined) cookies.set("GEEO.USERINFO", cached);
+  vi.mocked(fetch).mockResolvedValueOnce(json(tokenResponse)).mockRejectedValueOnce(new Error("offline"));
+  await store.getState().initialize();
+  const restored = cached === JSON.stringify(user);
+  expect(store.getState()).toMatchObject({
+    isAuthenticated: restored, isLoading: false,
+    user: restored ? { ...user, roles: ["Teacher"] } : null,
+  });
+  expect(await token.getValidToken()).toBe("access-new");
+  const { usePermissionStore } = await import("@/stores/use-permission-store");
+  expect(usePermissionStore.getState().has("classes.read")).toBe(restored);
+  expect(fetch).toHaveBeenCalledTimes(2);
+});
 it("notifies auth-reset listeners on identity changes and logout, and supports unsubscribe", async () => {
   const { store } = await load();
   const { onAuthReset } = await import("@/stores/use-auth-store");

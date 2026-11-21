@@ -145,7 +145,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             if (version !== generation) return null;
             saveUser(info);
             set({ user: normalizeUser(info), isAuthenticated: true, isLoading: false });
-          } catch { /* Keep a valid refreshed token when userinfo is temporarily unavailable. */ }
+          } catch {
+            if (version !== generation) return null;
+            try {
+              const cached: unknown = JSON.parse(Cookies.get(COOKIE_USERINFO) ?? "null");
+              if (cached && typeof cached === "object" && "sub" in cached && typeof cached.sub === "string") {
+                const info = cached as UserInfo;
+                saveUser(info);
+                set({ user: normalizeUser(info), isAuthenticated: true, isLoading: false });
+              }
+            } catch { /* Keep a valid refreshed token when cached claims are unavailable. */ }
+          }
           if (version !== generation) return null;
           scheduleRefresh();
           return updated.access_token;
