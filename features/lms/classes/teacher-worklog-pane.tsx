@@ -90,6 +90,7 @@ import {
 import { useWorkLogsByLessonLog } from '@/features/lms/hooks/worklog/use-worklogs'
 import { isApprovedLockedError, isConcurrencyError } from '@/features/lms/lib/worklog/api'
 import { worklogKeys } from '@/features/lms/lib/worklog/query-keys'
+import { hasWorklogEditableChanges } from './worklog-edits'
 import { useCan } from '@/lib/use-can'
 import { PERMISSIONS } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
@@ -554,7 +555,7 @@ export function TeacherWorklogPane({ logId, classId }: TeacherWorklogPaneProps) 
               throw deleteError
             }
           }
-        } else {
+        } else if (hasWorklogEditableChanges(original!, w)) {
           await updateWorkLogMutation.mutateAsync({
             id: w.id,
             data: { score: w.score, comment: w.comment, evaluate: w.evaluate, order: w.order },
