@@ -3,8 +3,13 @@ import { expect, test } from "@playwright/test";
 const primitives = ["alert-dialog", "alert", "avatar", "badge", "breadcrumb", "button", "calendar", "card", "checkbox", "collapsible", "command", "dialog", "dropdown-menu", "field", "input-group", "input", "label", "popover", "progress", "scroll-area", "select", "separator", "sheet", "sidebar", "skeleton", "sonner", "sort-header", "spinner", "switch", "table", "tabs", "textarea", "tooltip"];
 
 for (const theme of ["light", "dark"] as const) {
-  test(`UI kit keeps ${theme} tokens and accent through portals without changing chrome`, async ({ page }) => {
-    await page.goto(`/ui-kit?theme=${theme}&accent=blue`);
+  test(`UI kit ${theme}: themed in development, unavailable in production`, async ({ page }, testInfo) => {
+    const response = await page.goto(`/ui-kit?theme=${theme}&accent=blue`);
+    if (testInfo.config.configFile.endsWith("playwright.worker.config.ts")) {
+      expect(response?.status()).toBe(404);
+      await expect(page.getByRole("heading", { name: "LMS UI kit" })).toHaveCount(0);
+      return;
+    }
     await expect(page.getByRole("heading", { name: "LMS UI kit" })).toBeVisible();
     for (const primitive of primitives) await expect(page.locator(`[data-primitive="${primitive}"]`)).toBeVisible();
     await expect(page.locator('[data-primitive="button"] button').first()).toHaveCSS("background-color", "rgb(73, 126, 206)");
