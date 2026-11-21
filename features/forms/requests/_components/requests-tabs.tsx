@@ -69,15 +69,15 @@ export function RequestsTabs({
     <Tabs
       value={current}
       onValueChange={(v) => setActiveTab(v as RequestTab)}
-      className="flex flex-1 flex-col overflow-hidden"
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
     >
-      <div className="shrink-0 px-4 pt-3 pb-2">
-        <TabsList className="h-8">
+      <div className="shrink-0 overflow-x-auto px-4 pt-3 pb-2">
+        <TabsList className="h-8 min-w-max">
           {tabs.map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="h-7 gap-1.5 px-3 text-xs"
+              className="h-7 shrink-0 gap-1.5 px-3 text-xs"
             >
               {(() => {
                 const Icon = tab.Icon
@@ -98,10 +98,10 @@ export function RequestsTabs({
         <TabsContent
           key={tab.value}
           value={tab.value}
-          className="m-0 h-full flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+          className="m-0 min-h-0 min-w-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
           {current === tab.value && (
-            <div className="flex flex-col h-full overflow-hidden">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               {toolbar}
               <div className="flex-1 min-h-0 overflow-hidden">
                 {table}

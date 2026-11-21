@@ -130,13 +130,13 @@ async function mockForms(page: Page) {
   return unexpected;
 }
 
-async function launch(page: Page, appId: string) {
+async function launch(page: Page, appId: string, maximize = true) {
   await page.locator(".os-dock").getByRole("button", { name: "Tất cả ứng dụng", exact: true }).click();
   const launcher = page.getByRole("dialog", { name: "Tất cả ứng dụng", exact: true });
   await launcher.locator('[role="option"][id$="-' + appId + '"]').click();
   const panel = page.locator('[data-app="' + appId + '"]');
   await expect(panel).toBeVisible();
-  await panel.locator(".os-light-max").click();
+  if (maximize) await panel.locator(".os-light-max").click();
   return panel;
 }
 
@@ -208,4 +208,43 @@ test("Requests and Form Templates render inside desktop windows", async ({ page 
   await screenshot(page, templatePanel, "triggers");
   expect(unexpected, "Every Forms API call must have an explicit fixture").toEqual([]);
   expect(errors, "Panels should not throw client runtime errors").toEqual([]);
+});
+
+test("Requests inbox fits default and narrow desktop windows", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "Forms desktop-window acceptance");
+  await page.setViewportSize({ width: 1280, height: 841 });
+  const unexpected = await mockForms(page);
+  await seedGeeo(page.context());
+  await mkdir(join(homedir(), "screens", "pr14"), { recursive: true });
+  await page.goto("/");
+  await expect(page.locator(".geeospace-os")).toHaveAttribute("data-ready", "true");
+  await expect(page.locator(".os-account-chip")).toContainText(mockUser.name);
+  const panel = await launch(page, "requests", false);
+  await expect(panel).toHaveAttribute("data-mode", "normal");
+  await expect.poll(async () => (await panel.boundingBox())?.width).toBe(1180);
+  await expect(panel.getByText(requests[0].subject, { exact: true })).toBeVisible();
+  await expect(panel.getByRole("tab", { name: /Viewer/ })).toBeInViewport({ ratio: 0.99 });
+  await expect(panel.getByRole("button", { name: "Last page", exact: true })).toBeInViewport({ ratio: 0.99 });
+  await screenshot(page, panel, "pr14/requests-default-fixed");
+
+  const resize = panel.locator('[data-edge="e"]');
+  await resize.focus();
+  for (let index = 0; index < 17; index++) await resize.press("Shift+ArrowLeft");
+  await expect.poll(async () => (await panel.boundingBox())?.width).toBe(500);
+  const viewer = panel.getByRole("tab", { name: /Viewer/ });
+  await viewer.click();
+  await expect(viewer).toHaveAttribute("aria-selected", "true");
+  await expect(viewer).toBeInViewport({ ratio: 0.99 });
+  await expect(panel.getByRole("button", { name: "Last page", exact: true })).toBeInViewport({ ratio: 0.99 });
+  const table = panel.getByRole("region", { name: "Requests table", exact: true });
+  expect(await table.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true);
+  const subject = await panel.getByRole("columnheader", { name: "Subject", exact: true }).boundingBox();
+  const template = await panel.getByRole("columnheader", { name: "Template", exact: true }).boundingBox();
+  expect(subject!.width).toBeGreaterThan(150);
+  expect(subject!.x + subject!.width).toBeLessThanOrEqual(template!.x);
+  await screenshot(page, panel, "pr14/requests-narrow-fixed");
+  await table.evaluate(element => { element.scrollLeft = element.scrollWidth; });
+  await expect(panel.getByRole("button", { name: "View request", exact: true }).first()).toBeInViewport({ ratio: 0.99 });
+  await screenshot(page, panel, "pr14/requests-narrow-scrolled");
+  expect(unexpected).toEqual([]);
 });

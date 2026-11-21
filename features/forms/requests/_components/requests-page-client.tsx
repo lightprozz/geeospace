@@ -222,7 +222,7 @@ export function RequestsPageClient() {
       </div>
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <RequestsTabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}

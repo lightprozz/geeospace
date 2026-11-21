@@ -46,7 +46,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { SortHeader } from '@/components/ui/sort-header'
 import {
   Tooltip,
@@ -190,7 +189,8 @@ export function RequestsTable({
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
-      <ScrollArea className="flex-1 min-h-0 w-full">
+      <div role="region" aria-label="Requests table" tabIndex={0} className="min-h-0 w-full flex-1 overflow-auto">
+        <div className="min-w-[1120px]">
         <Table className="w-full table-fixed">
           <TableHeader className="sticky top-0 z-10 bg-card">
             <TableRow className="hover:bg-transparent">
@@ -375,11 +375,12 @@ export function RequestsTable({
               })}
           </TableBody>
         </Table>
-      </ScrollArea>
+        </div>
+      </div>
 
       {/* Pagination footer */}
-      <div className="flex items-center justify-between px-4 py-2 border-t shrink-0 bg-card/80 backdrop-blur-sm">
-        <span className="text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 border-t shrink-0 bg-card/80 backdrop-blur-sm">
+        <span className="whitespace-nowrap text-xs text-muted-foreground">
           <span className="tabular-nums font-medium text-foreground">
             {Math.min((page - 1) * pageSize + 1, totalFiltered)}–
             {Math.min(page * pageSize, totalFiltered)}
@@ -389,7 +390,7 @@ export function RequestsTable({
           requests
         </span>
 
-        <div className="flex items-center gap-3">
+        <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-2">
           {/* Rows per page */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground">Rows</span>
@@ -411,7 +412,7 @@ export function RequestsTable({
           </div>
 
           {/* Page indicator */}
-          <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="whitespace-nowrap text-xs text-muted-foreground tabular-nums">
             Page {page} of {totalPages}
           </span>
 
