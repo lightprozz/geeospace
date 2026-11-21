@@ -36,3 +36,14 @@ it("prefers an exact campus name but does not guess between equally matching loo
   expect(parseAssignedCampuses("West Campus", ["West Campus", "West Campus"]).needsReview).toBe(true);
   expect(parseAssignedCampuses("west campus", ["West Campus"]).values).toEqual(["West Campus"]);
 });
+
+it("preserves the exact comma spacing when campus names would normalize identically", () => {
+  const names = ["Austin, TX", "Austin,TX"];
+  expect(parseAssignedCampuses("South, Austin, TX", [...names, "South"])).toEqual({
+    kind: "names",
+    values: ["South", "Austin, TX"],
+    needsReview: false,
+  });
+  expect(parseAssignedCampuses("Austin,TX", names).values).toEqual(["Austin,TX"]);
+  expect(parseAssignedCampuses("Austin , TX", names).needsReview).toBe(true);
+});

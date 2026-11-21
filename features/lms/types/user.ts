@@ -211,20 +211,22 @@ export function parseAssignedCampuses(
       return { kind: 'ids', values: ids.filter((id): id is string => typeof id === 'string' && !!id), needsReview: false }
     }
   } catch { /* Older accounts store comma-separated campus names. */ }
-  const split = (value: string) => value.split(',').map(part => part.trim())
+  const split = (value: string) => value.split(',')
   const catalog = new Map<string, { name: string; spelling: string }[]>()
   let maxParts = 0
   for (const name of campusNames) {
     if (typeof name !== 'string' || !name.trim()) continue
     const parts = split(name)
     maxParts = Math.max(maxParts, parts.length)
-    const spelling = parts.join(',')
-    const key = spelling.toLowerCase()
+    const spelling = name.trim()
+    const key = parts.map(part => part.trim().toLowerCase()).join(',')
     const names = catalog.get(key) ?? []
     names.push({ name, spelling })
     catalog.set(key, names)
   }
-  const parts = split(assignment)
+  const rawParts = split(assignment)
+  const parts = rawParts.map(part => part.trim())
+  const lowerParts = parts.map(part => part.toLowerCase())
   const best = new Array<{ missing: number; ambiguous: boolean; values: string[] }>(parts.length + 1)
   best[parts.length] = { missing: 0, ambiguous: false, values: [] }
   // Prefer parses that leave the fewest unknown names; keep candidates for read-only filtering.
@@ -234,9 +236,9 @@ export function parseAssignedCampuses(
       ? { ...fallback, missing: fallback.missing + 1, values: [parts[start], ...fallback.values] }
       : fallback
     for (let end = start + 1; end <= Math.min(start + maxParts, parts.length); end++) {
-      const spelling = parts.slice(start, end).join(',')
-      const names = catalog.get(spelling.toLowerCase())
+      const names = catalog.get(lowerParts.slice(start, end).join(','))
       if (!names) continue
+      const spelling = rawParts.slice(start, end).join(',').trim()
       const exact = names.filter(name => name.spelling === spelling)
       const matches = exact.length ? exact : names
       const rest = best[end]
