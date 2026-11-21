@@ -202,33 +202,49 @@ export function isUserActive(
 
 export function parseAssignedCampuses(
   assignment: string | null | undefined,
-  campusNames: readonly string[],
-): string[] {
-  if (!assignment) return []
+  campusNames: readonly (string | null | undefined)[],
+): { values: string[]; needsReview: boolean } {
+  if (!assignment?.trim()) return { values: [], needsReview: false }
   try {
     const ids: unknown = JSON.parse(assignment)
-    if (Array.isArray(ids)) return ids.filter((id): id is string => typeof id === 'string' && !!id)
+    if (Array.isArray(ids)) {
+      return { values: ids.filter((id): id is string => typeof id === 'string' && !!id), needsReview: false }
+    }
   } catch { /* Older accounts store comma-separated campus names. */ }
   const split = (value: string) => value.split(',').map(part => part.trim())
-  const compoundNames = campusNames
-    .filter(name => name.includes(','))
-    .map(name => ({ name, parts: split(name.toLowerCase()) }))
-    .sort((a, b) => b.parts.length - a.parts.length)
+  const catalog = new Map<string, string>()
+  let maxParts = 0
+  for (const name of campusNames) {
+    if (!name?.trim()) continue
+    const parts = split(name.toLowerCase())
+    maxParts = Math.max(maxParts, parts.length)
+    catalog.set(parts.join(','), name)
+  }
   const parts = split(assignment)
   const lowerParts = parts.map(part => part.toLowerCase())
-  const names: string[] = []
-  for (let i = 0; i < parts.length;) {
-    // Legacy comma-separated values are ambiguous; prefer the longest known campus.
-    const match = compoundNames.find(({ parts }) => parts.every((part, offset) => part === lowerParts[i + offset]))
-    if (match) {
-      names.push(match.name)
-      i += match.parts.length
-    } else {
-      if (parts[i]) names.push(parts[i])
-      i++
+  const best = new Array<{ missing: number; ambiguous: boolean; values: string[] }>(parts.length + 1)
+  best[parts.length] = { missing: 0, ambiguous: false, values: [] }
+  // Prefer parses that leave the fewest unknown names; keep candidates for read-only filtering.
+  for (let start = parts.length - 1; start >= 0; start--) {
+    const fallback = best[start + 1]
+    let choice = parts[start]
+      ? { ...fallback, missing: fallback.missing + 1, values: [parts[start], ...fallback.values] }
+      : fallback
+    for (let end = start + 1; end <= Math.min(start + maxParts, parts.length); end++) {
+      const name = catalog.get(lowerParts.slice(start, end).join(','))
+      if (!name) continue
+      const rest = best[end]
+      const values = [name, ...rest.values]
+      if (rest.missing < choice.missing) {
+        choice = { ...rest, values }
+      } else if (rest.missing === choice.missing) {
+        choice = { ...choice, ambiguous: true, values: [...new Set([...choice.values, ...values])] }
+      }
     }
+    best[start] = choice
   }
-  return names
+  const { missing, ambiguous, values } = best[0]
+  return { values, needsReview: ambiguous || missing > 0 }
 }
 
 /** Get initials from full name for Avatar fallback */

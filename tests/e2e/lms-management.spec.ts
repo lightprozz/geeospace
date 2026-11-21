@@ -109,6 +109,57 @@ test("users: recognizes campuses whose names contain commas", async ({ page }) =
   await expect(rows.first()).toContainText("Linh Tran");
 });
 
+test("users: finds a complete legacy campus match instead of a compound prefix", async ({ page }) => {
+  const { users, branches } = await mockManagement(page);
+  branches.push(
+    { ...branches[0], id: "a", name: "A" },
+    { ...branches[0], id: "ab", name: "A, B" },
+    { ...branches[0], id: "bc", name: "B, C" },
+  );
+  users[0].branch = "A, B, C";
+  await page.goto("/#lms-users");
+  const panel = page.locator('[data-app="lms-users"]');
+  const filter = panel.getByRole("combobox", { name: "Filter by branch" });
+  const user = panel.getByRole("row").filter({ hasText: "mai@example.test" });
+  for (const branch of ["A", "B, C"]) {
+    await filter.click();
+    await page.getByRole("option", { name: branch, exact: true }).click();
+    await expect(user).toBeVisible();
+  }
+  await filter.click();
+  await page.getByRole("option", { name: "A, B", exact: true }).click();
+  await expect(user).toBeHidden();
+});
+
+test("users: does not overwrite ambiguous legacy campus assignments without confirmation", async ({ page }) => {
+  const { users, branches, requests, routes } = await mockManagement(page);
+  branches.push(
+    { ...branches[0], id: "austin", name: "Austin" },
+    { ...branches[0], id: "tx", name: "TX" },
+    { ...branches[0], id: "austin-tx", name: "Austin, TX" },
+  );
+  users[0].assignedCampus = "Austin, TX";
+  await page.goto("/#lms-users");
+  const panel = page.locator('[data-app="lms-users"]');
+  await panel.getByRole("button", { name: "Actions for Mai Nguyen" }).click();
+  await page.getByRole("menuitem", { name: "Edit Role" }).click();
+  const dialog = page.getByRole("dialog", { name: "Edit Role & Campus" });
+  const save = dialog.getByRole("button", { name: "Save Changes" });
+  await expect(dialog.getByText(/Confirm the existing campus assignment/)).toBeVisible();
+  await expect(dialog.getByRole("checkbox", { name: "Austin, TX", exact: true })).not.toBeChecked();
+  await expect(save).toBeDisabled();
+  expect(requests.some(request => request.method === "PUT")).toBe(false);
+  await dialog.getByRole("checkbox", { name: "Austin", exact: true }).check();
+  await dialog.getByRole("checkbox", { name: "TX", exact: true }).check();
+  await save.click();
+  await expect(dialog).toBeHidden();
+  expect(requests).toContainEqual({
+    path: `${routes.users}/mai/role`,
+    method: "PUT",
+    body: { roleId: "role-teacher", assignedCampusIds: ["austin", "tx"] },
+  });
+});
+
 test("users: toggles a column sort from the keyboard and announces its direction", async ({ page }) => {
   const { users } = await mockManagement(page);
   users[1].isActive = true;

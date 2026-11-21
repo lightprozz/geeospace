@@ -190,8 +190,10 @@ export function UserInfoDialog({
     queryFn: () => fetchAccountInfo(userId!),
     enabled: !!userId && open,
   })
-  const assignedCampuses = parseAssignedCampuses(data?.assignedCampus, campuses.map(campus => campus.name))
-    .map(value => campuses.find(campus => campus.id === value)?.name ?? value)
+  const assignment = parseAssignedCampuses(data?.assignedCampus, campuses.map(campus => campus.name))
+  const assignedCampuses = assignment.needsReview && data?.assignedCampus
+    ? [data.assignedCampus]
+    : assignment.values.map(value => campuses.find(campus => campus.id === value)?.name ?? value)
 
   const handleOpenChange = useCallback(
     (o: boolean) => {

@@ -92,9 +92,10 @@ export function RoleCampusDialog({
   const failedQuery = [userQuery, rolesQuery, campusesQuery].find(query => query.isError)
   const isLoading = userQuery.isLoading || rolesQuery.isLoading || campusesQuery.isLoading
   const selectedRole = roleOverride ?? roles.find(role => role.normalizedName === userDetail?.roleId?.toUpperCase())?.id ?? ''
-  const assignedCampuses = parseAssignedCampuses(userDetail?.assignedCampus, campuses.map(campus => campus.name))
-  const initialCampusIds = new Set(assignedCampuses.map(value => campuses.find(campus => campus.name === value)?.id ?? value))
+  const assignment = parseAssignedCampuses(userDetail?.assignedCampus, campuses.map(campus => campus.name))
+  const initialCampusIds = new Set(assignment.needsReview ? [] : assignment.values.map(value => campuses.find(campus => campus.name === value)?.id ?? value))
   const selectedCampusIds = campusOverride ?? initialCampusIds
+  const mustConfirmCampuses = assignment.needsReview && campusOverride === undefined
 
   // ── Filter campuses by search ──────────────────────────────────
   const filteredCampuses = useMemo(() => {
@@ -112,7 +113,7 @@ export function RoleCampusDialog({
   // ── Mutation ─────────────────────────────────────────────────
   const { mutate: saveRole, isPending: isSaving } = useMutation({
     mutationFn: () => {
-      if (!canSaveRole || !userId || !userDetail || !selectedRole || isLoading || failedQuery) {
+      if (!canSaveRole || !userId || !userDetail || !selectedRole || isLoading || failedQuery || mustConfirmCampuses) {
         throw new Error('Role assignment is unavailable')
       }
 
@@ -155,7 +156,7 @@ export function RoleCampusDialog({
     })
   }
 
-  const showCampus = roleRequiresBranch(roles.find(role => role.id === selectedRole)?.name)
+  const showCampus = assignment.needsReview || roleRequiresBranch(roles.find(role => role.id === selectedRole)?.name)
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -203,6 +204,11 @@ export function RoleCampusDialog({
                 <Label className="text-xs text-muted-foreground">
                   Assigned Campus
                 </Label>
+                {mustConfirmCampuses && (
+                  <p role="status" className="text-xs text-muted-foreground">
+                    Confirm the existing campus assignment ({userDetail?.assignedCampus}) by selecting campuses or clearing the selection.
+                  </p>
+                )}
 
                 {/* Selected chips */}
                 {selectedCampuses.length > 0 && (
@@ -236,18 +242,22 @@ export function RoleCampusDialog({
                 />
 
                 {/* Quick actions */}
-                {filteredCampuses.length > 0 && (
+                {(filteredCampuses.length > 0 || mustConfirmCampuses) && (
                   <div className="flex gap-2 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCampusOverride(new Set([...selectedCampusIds, ...filteredCampuses.map((c) => c.id)]))
-                      }}
-                      className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-                    >
-                      Select all
-                    </button>
-                    <span className="text-muted-foreground">|</span>
+                    {filteredCampuses.length > 0 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCampusOverride(new Set([...selectedCampusIds, ...filteredCampuses.map((c) => c.id)]))
+                          }}
+                          className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                        >
+                          Select all
+                        </button>
+                        <span className="text-muted-foreground">|</span>
+                      </>
+                    )}
                     <button
                       type="button"
                       onClick={() => setCampusOverride(new Set())}
@@ -300,7 +310,7 @@ export function RoleCampusDialog({
             <Button
               size="sm"
               onClick={() => saveRole()}
-              disabled={isSaving || isLoading || !!failedQuery || !selectedRole}
+              disabled={isSaving || isLoading || !!failedQuery || !selectedRole || mustConfirmCampuses}
             >
               {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
