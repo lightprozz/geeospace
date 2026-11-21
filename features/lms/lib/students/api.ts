@@ -11,6 +11,7 @@ import type {
   ClassDropdownItem,
   StudentDetail,
   ParentInfo,
+  ParentEditFormInput,
   StudentPaymentInfo,
   StudentCourseEntry,
   StudentLearningOutcome,
@@ -114,9 +115,9 @@ export async function createParentForStudent(
 export async function linkParentToStudent(
   parentId: string,
   studentId: string,
-  _data: Record<string, unknown>,
+  { relation }: Pick<ParentEditFormInput, 'relation'>,
 ): Promise<void> {
-  await api.post(`${STUDENT_API}/${studentId}/parents/${parentId}/link`, { relation: 1 })
+  await api.post(`${STUDENT_API}/${studentId}/parents/${parentId}/link`, { relation })
 }
 
 /** PUT /api/v2/student/parents/{id} */

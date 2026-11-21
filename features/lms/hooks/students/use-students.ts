@@ -39,6 +39,7 @@ import type {
   ClassDropdownItem,
   StudentDetail,
   ParentInfo,
+  ParentEditFormInput,
   StudentPaymentInfo,
   StudentCourseEntry,
   StudentLearningOutcome,
@@ -305,7 +306,7 @@ export function useAllParents() {
 
 // ---------------------------------------------------------------------------
 // Link existing parent to student
-// PUT /api/Parents/{parentId}/{studentId}
+// POST /api/v2/student/students/{studentId}/parents/{parentId}/link
 // ---------------------------------------------------------------------------
 
 /**
@@ -315,7 +316,7 @@ export function useAllParents() {
 export function useLinkParentToStudent(studentId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ parentId, data }: { parentId: string; data: Record<string, unknown> }) =>
+    mutationFn: ({ parentId, data }: { parentId: string; data: Pick<ParentEditFormInput, 'relation'> }) =>
       linkParentToStudent(parentId, studentId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: studentKeys.parents(studentId) })

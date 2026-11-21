@@ -3,7 +3,7 @@ import { fetchAllTeachers, fetchStudentReport, saveStudentLessonLog } from "@/fe
 import { getWorksheetUrl, uploadWorksheet } from "@/features/lms/lib/curriculum/api";
 import { getMaterialViewUrl, uploadMaterialFile } from "@/features/lms/lib/materials/api";
 import { getErrorDetail, isConflictError } from "@/features/lms/lib/requests/api";
-import { fetchClassDropdown } from "@/features/lms/lib/students/api";
+import { fetchClassDropdown, linkParentToStudent } from "@/features/lms/lib/students/api";
 import { apiFetch, configureLmsTransport, queryPaged } from "@/features/lms/lib/transport";
 import { getUserFileUrl } from "@/features/lms/lib/users/api";
 import { getConflictUpdatedAt, isConcurrencyError, updateWorkLog } from "@/features/lms/lib/worklog/api";
@@ -97,6 +97,18 @@ describe("LMS domain transport boundary", () => {
       "https://lms.example/api/v2/users/Users/user-1/files/some%20file.pdf",
     );
     expect(request).not.toHaveBeenCalled();
+  });
+
+  it.each([1, 2])("links a parent with the selected relation (%i)", async (relation) => {
+    installAdapter();
+    const form = { name: "Parent", relation };
+
+    await linkParentToStudent("parent-1", "student-2", form);
+
+    expect(request).toHaveBeenCalledWith("/api/v2/student/students/student-2/parents/parent-1/link", {
+      method: "POST",
+      body: { relation },
+    });
   });
 
   it("preserves concurrency tokens and reads the adapter's problem details", async () => {
