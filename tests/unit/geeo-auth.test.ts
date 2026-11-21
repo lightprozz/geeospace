@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { QueryClient } from "@tanstack/react-query";
 
 const cookies = vi.hoisted(() => new Map<string, string>());
 vi.mock("js-cookie", () => ({ default: {
@@ -34,6 +35,52 @@ async function load() {
 function session(expires = Math.floor(Date.now() / 1000) + 900) {
   cookies.set("GEEO.AUTH", JSON.stringify({ access_token: "access-old", refresh_token: "refresh-old", token_type: "Bearer", expires_at: expires }));
 }
+it("clears the old tab's permissions and LMS cache even when another login has replaced the cookie", async () => {
+  const { store } = await load();
+  const { onAuthReset, watchAuthLogout } = await import("@/stores/use-auth-store");
+  const { usePermissionStore } = await import("@/stores/use-permission-store");
+  const tab = new EventTarget();
+  vi.stubGlobal("window", tab);
+  vi.stubGlobal("document", new EventTarget());
+  const client = new QueryClient();
+  const unsubscribe = onAuthReset(() => client.clear());
+  const stop = watchAuthLogout();
+  try {
+    session();
+    vi.mocked(fetch).mockResolvedValueOnce(json(user));
+    await store.getState().initialize();
+    expect(usePermissionStore.getState().permissions).toContain("classes.read");
+    client.setQueryData(["lms", "private"], "private rows");
+
+    expect(store.getState().isAuthenticated).toBe(true);
+    const newSession = { ...JSON.parse(cookies.get("GEEO.AUTH")!), access_token: "another-access" };
+    cookies.set("GEEO.AUTH", JSON.stringify(newSession));
+    tab.dispatchEvent(Object.assign(new Event("storage"), { key: "geeospace:auth-logout", newValue: "1" }));
+
+    expect(store.getState()).toMatchObject({ isAuthenticated: false, isLoading: false, user: null });
+    expect(usePermissionStore.getState().permissions).toEqual([]);
+    expect(client.getQueryData(["lms", "private"])).toBeUndefined();
+    expect(JSON.parse(cookies.get("GEEO.AUTH")!).access_token).toBe("another-access");
+  } finally {
+    stop();
+    unsubscribe();
+    client.clear();
+  }
+});
+
+it("does not restore the session if another tab signs out while refresh is in flight", async () => {
+  const { store } = await load();
+  session();
+  let complete!: (response: Response) => void;
+  vi.mocked(fetch).mockImplementationOnce(() => new Promise<Response>(resolve => { complete = resolve; }));
+  const refreshing = store.getState().refreshToken();
+  await vi.waitFor(() => expect(complete).toBeTypeOf("function"));
+  cookies.clear();
+  complete(json(tokenResponse));
+  await expect(refreshing).resolves.toBeNull();
+  expect(cookies.has("GEEO.AUTH")).toBe(false);
+  expect(store.getState().isAuthenticated).toBe(false);
+});
 it("wires LMS requests to the authenticated API, including void results and ProblemDetails", async () => {
   await load();
   session();
