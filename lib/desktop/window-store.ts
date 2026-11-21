@@ -1,13 +1,16 @@
 import { isDesktopApp, type DesktopAppId } from "./apps";
+import { isSafePath } from "./navigation";
 
 export type Rect = { x: number; y: number; width: number; height: number };
 export type Area = { width: number; height: number };
 export type WindowMode = "normal" | "maximized" | "left" | "right";
 export type ResizeEdge = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
-export type DesktopWindow = { rect: Rect; mode: WindowMode; open: boolean; minimized: boolean; order: number };
+export type DesktopWindow = { rect: Rect; mode: WindowMode; open: boolean; minimized: boolean; order: number; path: string; backStack: string[] };
 export type DesktopState = { windows: Partial<Record<DesktopAppId, DesktopWindow>> };
 export type WindowAction =
-  | { type: "open"; id: DesktopAppId; area: Area }
+  | { type: "open"; id: DesktopAppId; area: Area; path?: string }
+  | { type: "navigate"; id: DesktopAppId; path: string }
+  | { type: "back"; id: DesktopAppId }
   | { type: "focus" | "close" | "minimize" | "maximize"; id: DesktopAppId }
   | { type: "place"; id: DesktopAppId; rect: Rect; mode: WindowMode; area: Area }
   | { type: "resize-area"; area: Area }
@@ -60,9 +63,17 @@ export function windowReducer(state: DesktopState, action: WindowAction): Deskto
   }
   const previous = state.windows[action.id];
   const order = Math.max(0, ...Object.values(state.windows).map((win) => win!.order)) + 1;
-  if (action.type === "open") return { windows: { ...state.windows, [action.id]: { rect: previous?.rect ?? defaultRect(action.id, action.area), mode: previous?.mode ?? "normal", open: true, minimized: false, order } } };
+  if (action.type === "open") {
+    const path = action.path !== undefined && isSafePath(action.path) ? action.path : previous?.path ?? "";
+    return { windows: { ...state.windows, [action.id]: { rect: previous?.rect ?? defaultRect(action.id, action.area), mode: previous?.mode ?? "normal", open: true, minimized: false, order, path, backStack: action.path !== undefined && path !== previous?.path ? [] : previous?.backStack ?? [] } } };
+  }
   if (!previous) return state;
   let update = { ...previous };
+  if (action.type === "navigate") {
+    if (!isSafePath(action.path) || action.path === previous.path) return state;
+    update = { ...update, path: action.path, backStack: [...previous.backStack, previous.path].slice(-32) };
+  }
+  if (action.type === "back" && previous.backStack.length) update = { ...update, path: previous.backStack.at(-1)!, backStack: previous.backStack.slice(0, -1) };
   if (action.type === "close") update = { ...update, open: false, minimized: false };
   if (action.type === "minimize") update.minimized = true;
   if (action.type === "focus") update = { ...update, minimized: false, order };
@@ -75,7 +86,7 @@ export function initialDesktop(app?: DesktopAppId, area: Area = { width: 1440, h
   for (const id of app ? [app] : ["assistant", "today"] as const) state = windowReducer(state, { type: "open", id, area });
   return state;
 }
-/** Storage is untrusted and contains geometry only, never tokens or business records. */
+/** Storage is untrusted: window geometry and routes, never tokens or business records. */
 export function readLayout(raw: string | null, area: Area): DesktopState | undefined {
   try {
     const value: unknown = JSON.parse(raw ?? "null");
@@ -85,7 +96,7 @@ export function readLayout(raw: string | null, area: Area): DesktopState | undef
       if (!isDesktopApp(id) || !candidate || typeof candidate !== "object") continue;
       const win = candidate as DesktopWindow;
       if (!win.rect || ![win.rect.x, win.rect.y, win.rect.width, win.rect.height, win.order].every(Number.isFinite) || !["normal", "maximized", "left", "right"].includes(win.mode) || typeof win.open !== "boolean" || typeof win.minimized !== "boolean") continue;
-      windows[id] = { rect: fitRect(win.rect, area), mode: win.mode, open: win.open, minimized: win.minimized, order: Math.max(0, Math.min(10000, win.order)) };
+      windows[id] = { rect: fitRect(win.rect, area), mode: win.mode, open: win.open, minimized: win.minimized, order: Math.max(0, Math.min(10000, win.order)), path: isSafePath(win.path) ? win.path : "", backStack: Array.isArray(win.backStack) ? win.backStack.filter(isSafePath).slice(-32) : [] };
     }
     return { windows };
   } catch { return; }

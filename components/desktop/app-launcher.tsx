@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
-import { searchApps, type DesktopAppId } from "@/lib/desktop/apps";
+import { appGroups, searchApps, type DesktopAppId } from "@/lib/desktop/apps";
 import { useSpace } from "./space-context";
 import { AppGlyph } from "./app-glyph";
 import { exitOverlay, rememberLaunch } from "@/lib/desktop/motion";
@@ -14,12 +14,14 @@ export function AppLauncher({ mode, onOpen, onClose }: { mode: "launcher" | "sea
   const close = () => exitOverlay(backdrop.current, onClose);
   const open = (id: DesktopAppId) => { rememberLaunch(id); exitOverlay(backdrop.current, () => onOpen(id)); };
   const listId = useId();
-  const apps = searchApps(query);
+  const apps = searchApps(query).sort((a, b) => appGroups.findIndex(group => group.id === a.group) - appGroups.findIndex(group => group.id === b.group));
+  const groupLabel = (id: string) => { const group = appGroups.find(group => group.id === id)!; return t(group.label, group.english); };
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     root.current?.querySelector("input")?.focus();
     return () => { if (previous?.isConnected) previous.focus(); };
   }, []);
+  useEffect(() => { document.getElementById(`${listId}-${apps[selected]?.id}`)?.scrollIntoView({ block: "nearest" }); }, [selected, listId, apps]);
   return <div ref={backdrop} data-app-overlay className="os-overlay-backdrop" onPointerDown={(event) => { if (event.target === event.currentTarget) close(); }}><div ref={root} className={`os-launcher os-launcher-mode-${mode}`} role="dialog" aria-modal="true" aria-label={mode === "search" ? t("Tìm nhanh chức năng", "Quick feature search") : t("Tất cả ứng dụng", "All apps")} onKeyDown={(event) => {
     if (event.key === "Escape") { event.stopPropagation(); close(); }
     if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); setSelected((value) => (value + (event.key === "ArrowDown" ? 1 : -1) + Math.max(1, apps.length)) % Math.max(1, apps.length)); }
@@ -29,5 +31,5 @@ export function AppLauncher({ mode, onOpen, onClose }: { mode: "launcher" | "sea
       if (event.shiftKey && document.activeElement === elements[0]) { event.preventDefault(); elements.at(-1)?.focus(); }
       if (!event.shiftKey && document.activeElement === elements.at(-1)) { event.preventDefault(); elements[0]?.focus(); }
     }
-  }}><div className="os-launcher-search"><Search size={20} /><input role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId} aria-activedescendant={apps[selected] ? `${listId}-${apps[selected].id}` : undefined} aria-label={t("Tìm ứng dụng", "Search apps")} value={query} onChange={(event) => { setQuery(event.target.value); setSelected(0); }} placeholder={t("Tìm ứng dụng hoặc chức năng…", "Search apps or features…")} /><button aria-label={t("Đóng tìm kiếm", "Close search")} onClick={close}><X size={19} /></button></div><div className="os-launcher-heading"><span>{mode === "search" ? t("CHỨC NĂNG TRONG GEEOSPACE", "GEEOSPACE FEATURES") : t("TẤT CẢ ỨNG DỤNG", "ALL APPS")}</span><kbd>ESC</kbd></div><div className="os-launcher-results" id={listId} role="listbox" aria-label={t("Chức năng phù hợp", "Matching features")}>{apps.map((app, index) => <button key={app.id} id={`${listId}-${app.id}`} role="option" tabIndex={-1} aria-selected={index === selected} className={index === selected ? "is-selected" : ""} onFocus={() => setSelected(index)} onClick={() => open(app.id)}><AppGlyph id={app.id} /><span><strong>{label(app.id)}</strong>{mode === "search" && <small>{description(app.id)}</small>}</span></button>)}{!apps.length && <p className="os-no-results">{t("Không tìm thấy chức năng phù hợp.", "No matching features.")}</p>}</div><footer>{t("Chỉ tìm trong danh mục ứng dụng. Chưa tìm dữ liệu cá nhân.", "Searches the app directory only. Personal data search is not available yet.")}</footer></div></div>;
+  }}><div className="os-launcher-search"><Search size={20} /><input role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId} aria-activedescendant={apps[selected] ? `${listId}-${apps[selected].id}` : undefined} aria-label={t("Tìm ứng dụng", "Search apps")} value={query} onChange={(event) => { setQuery(event.target.value); setSelected(0); }} placeholder={t("Tìm ứng dụng hoặc chức năng…", "Search apps or features…")} /><button aria-label={t("Đóng tìm kiếm", "Close search")} onClick={close}><X size={19} /></button></div><div className="os-launcher-heading"><span>{mode === "search" ? t("CHỨC NĂNG TRONG GEEOSPACE", "GEEOSPACE FEATURES") : t("TẤT CẢ ỨNG DỤNG", "ALL APPS")}</span><kbd>ESC</kbd></div><div className="os-launcher-results" id={listId} role="listbox" aria-label={t("Chức năng phù hợp", "Matching features")}>{apps.map((app, index) => <Fragment key={app.id}>{!query.trim() && (index === 0 || apps[index - 1].group !== app.group) && <div className="os-launcher-group-heading" role="presentation">{groupLabel(app.group)}</div>}<button id={`${listId}-${app.id}`} role="option" tabIndex={-1} aria-selected={index === selected} className={index === selected ? "is-selected" : ""} onFocus={() => setSelected(index)} onClick={() => open(app.id)}><AppGlyph id={app.id} /><span><strong>{label(app.id)}</strong>{query.trim() ? <small>{groupLabel(app.group)} · {description(app.id)}</small> : mode === "search" && <small>{description(app.id)}</small>}</span></button></Fragment>)}{!apps.length && <p className="os-no-results">{t("Không tìm thấy chức năng phù hợp.", "No matching features.")}</p>}</div><footer>{t("Chỉ tìm trong danh mục ứng dụng. Chưa tìm dữ liệu cá nhân.", "Searches the app directory only. Personal data search is not available yet.")}</footer></div></div>;
 }

@@ -1,13 +1,38 @@
 import { appEnglish } from "./locale";
 import { modules } from "@/lib/platform/modules";
 
+export const appGroups = [
+  { id: "workspace", label: "Không gian làm việc", english: "Workspace" },
+  { id: "lms", label: "Gee-O LMS", english: "Gee-O LMS" },
+] as const;
+export type AppGroupId = (typeof appGroups)[number]["id"];
+export const lmsApps = [
+  { id: "lms-curriculum", group: "lms", label: "Giáo trình", english: ["Levels & Lessons", "Manage levels & lessons in Gee-O LMS."], description: "Quản lý giáo trình trong Gee-O LMS.", icon: "book" },
+  { id: "lms-materials", group: "lms", label: "Học liệu", english: ["Materials", "Manage materials in Gee-O LMS."], description: "Quản lý học liệu trong Gee-O LMS.", icon: "book" },
+  { id: "lms-students", group: "lms", label: "Học viên", english: ["Students", "Manage students in Gee-O LMS."], description: "Quản lý học viên trong Gee-O LMS.", icon: "user" },
+  { id: "lms-classes", group: "lms", label: "Lớp học", english: ["Classes", "Manage classes in Gee-O LMS."], description: "Quản lý lớp học trong Gee-O LMS.", icon: "school" },
+  { id: "lms-schedule", group: "lms", label: "Lịch học", english: ["Schedule", "Manage schedule in Gee-O LMS."], description: "Quản lý lịch học trong Gee-O LMS.", icon: "calendar" },
+  { id: "lms-timetable", group: "lms", label: "Thời khóa biểu", english: ["Timetable", "Manage timetable in Gee-O LMS."], description: "Quản lý thời khóa biểu trong Gee-O LMS.", icon: "calendar" },
+  { id: "lms-attendance", group: "lms", label: "Điểm danh", english: ["Attendance", "Manage attendance in Gee-O LMS."], description: "Quản lý điểm danh trong Gee-O LMS.", icon: "user" },
+  { id: "lms-holidays", group: "lms", label: "Ngày nghỉ", english: ["Holidays", "Manage holidays in Gee-O LMS."], description: "Quản lý ngày nghỉ trong Gee-O LMS.", icon: "calendar" },
+  { id: "lms-users", group: "lms", label: "Người dùng", english: ["Users", "Manage users in Gee-O LMS."], description: "Quản lý người dùng trong Gee-O LMS.", icon: "user" },
+  { id: "lms-roles", group: "lms", label: "Vai trò", english: ["Roles", "Manage roles in Gee-O LMS."], description: "Quản lý vai trò trong Gee-O LMS.", icon: "user" },
+  { id: "lms-branches", group: "lms", label: "Chi nhánh", english: ["Branches", "Manage branches in Gee-O LMS."], description: "Quản lý chi nhánh trong Gee-O LMS.", icon: "home" },
+  { id: "lms-worklog", group: "lms", label: "Nhật ký công việc", english: ["Worklog", "Manage worklog in Gee-O LMS."], description: "Quản lý nhật ký công việc trong Gee-O LMS.", icon: "clock" },
+  { id: "lms-requests", group: "lms", label: "Yêu cầu", english: ["Requests", "Manage requests in Gee-O LMS."], description: "Quản lý yêu cầu trong Gee-O LMS.", icon: "inbox" },
+  { id: "lms-form-templates", group: "lms", label: "Biểu mẫu", english: ["Form templates", "Manage form templates in Gee-O LMS."], description: "Quản lý biểu mẫu trong Gee-O LMS.", icon: "book" },
+  { id: "lms-lets-learn", group: "lms", label: "Cùng học", english: ["Let's Learn", "Manage let's learn in Gee-O LMS."], description: "Quản lý cùng học trong Gee-O LMS.", icon: "school" },
+] as const;
 export const desktopApps = [
-  ...modules,
-  { id: "lms", label: "Lớp & giảng dạy", description: "Mở giao diện LMS Gee-O theo quyền của bạn.", icon: "school" },
-  { id: "account", label: "Tài khoản", description: "Trạng thái kết nối Gee-O Auth.", icon: "user" },
-  { id: "appearance", label: "Giao diện", description: "Hình nền, chế độ màu và độ trong suốt.", icon: "palette" },
+  ...modules.map(app => ({ ...app, group: "workspace" as const })),
+  { id: "lms", group: "lms", label: "Gee-O LMS", description: "Các ứng dụng quản lý và giảng dạy.", icon: "school" },
+  { id: "account", group: "workspace", label: "Tài khoản", description: "Trạng thái kết nối Gee-O Auth.", icon: "user" },
+  { id: "appearance", group: "workspace", label: "Giao diện", description: "Hình nền, chế độ màu và độ trong suốt.", icon: "palette" },
+  ...lmsApps,
 ] as const;
 export type DesktopAppId = (typeof desktopApps)[number]["id"];
+export const dockApps = desktopApps.filter(app => app.id !== "appearance" && (app.group === "workspace" || app.id === "lms"));
+export function appsInGroup(group: AppGroupId) { return desktopApps.filter(app => app.group === group); }
 export function isDesktopApp(value: unknown): value is DesktopAppId {
   return typeof value === "string" && desktopApps.some((app) => app.id === value);
 }
@@ -18,7 +43,9 @@ export function searchApps(query: string) {
   const normalize = (value: string) => value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replaceAll("đ", "d").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
   const words = normalize(query).split(/\s+/).filter(Boolean);
   return desktopApps.filter((app) => {
-    const text = normalize(`${app.label} ${app.description} ${appEnglish[app.id].join(" ")}`);
+    const group = appGroups.find(group => group.id === app.group)!;
+    const english = "english" in app ? app.english : appEnglish[app.id];
+    const text = normalize(`${app.label} ${app.description} ${english.join(" ")} ${group.label} ${group.english}`);
     return words.every((word) => text.includes(word));
   });
 }

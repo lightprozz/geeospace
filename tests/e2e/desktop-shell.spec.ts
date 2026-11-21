@@ -61,8 +61,8 @@ test("OS shell: desktop windows or mobile Home, launcher, search and appearance"
     await dock.getByRole("button", { name: "Tất cả ứng dụng", exact: true }).click();
     const launcher = page.getByRole("dialog", { name: "Tất cả ứng dụng", exact: true });
     await expect(launcher).toBeVisible();
-    await launcher.getByRole("combobox", { name: "Tìm ứng dụng" }).fill("lop");
-    await launcher.getByRole("option", { name: "Lớp & giảng dạy", exact: true }).click();
+    await launcher.getByRole("combobox", { name: "Tìm ứng dụng" }).fill("Gee-O LMS");
+    await launcher.locator('[role="option"][id$="-lms"]').click();
     await expect(page.locator('[data-app="lms"]')).toBeVisible();
     await dock.getByRole("button", { name: "Giao diện", exact: true }).click();
   }

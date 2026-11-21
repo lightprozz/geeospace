@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, u
 import { flushSync } from "react-dom";
 import { exitOverlay, motion, motionDuration, prefersReducedMotion, rememberLaunch, rememberPress } from "@/lib/desktop/motion";
 import { Search, X } from "lucide-react";
-import { desktopApps, isDesktopApp, type DesktopAppId } from "@/lib/desktop/apps";
+import { desktopApps, dockApps, type DesktopAppId } from "@/lib/desktop/apps";
 import { activeWindow, frameRect, initialDesktop, layoutKey, readLayout, windowReducer, type Area, type WindowMode } from "@/lib/desktop/window-store";
 import { AppGlyph } from "./app-glyph";
 import { AppPanel } from "./app-panel";
@@ -16,9 +16,10 @@ import { DesktopDock } from "./desktop-dock";
 import { SpaceContext, useSpace } from "./space-context";
 import { Companion } from "./companion";
 import { VideoWallpaper } from "./video-wallpaper";
+import { formatAppHash, parseAppHash } from "@/lib/desktop/navigation";
+import { WindowNavigationContext } from "./window-navigation";
 import { accents } from "@/lib/desktop/appearance";
 
-const dockApps = desktopApps.filter((app) => app.id !== "appearance");
 const viewport = () => `${window.innerWidth}|${window.innerHeight}|${window.matchMedia("(prefers-color-scheme: dark)").matches}|${/Mac|iPhone|iPad/.test(navigator.platform)}`;
 function subscribeViewport(callback: () => void) {
   const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -57,12 +58,13 @@ export function DesktopWorkspace({ initialApp, initialTime, launch = false }: { 
     rememberLaunch(id);
     overlayTrigger.current = null;
     dispatch({ type: "open", id, area }); setOverlay(null);
-    if (window.location.hash !== `#${id}`) {
+    const hash = formatAppHash(id, state.windows[id]?.path);
+    if (window.location.hash !== hash) {
       const method = mobile && active ? "replaceState" : "pushState";
       const internalSheet = mobile && active ? window.history.state?.geeospaceSheet === true : mobile;
-      window.history[method]({ geeospaceSheet: internalSheet }, "", `/#${id}`);
+      window.history[method]({ geeospaceSheet: internalSheet }, "", `/${hash}`);
     }
-  }, [area, mobile, active]);
+  }, [area, mobile, active, state.windows]);
   const latestLook = useRef(look);
   useLayoutEffect(() => { latestLook.current = look; }, [look]);
   const changeLook = useCallback((next: Look | ((value: Look) => Look)) => {
@@ -91,20 +93,20 @@ export function DesktopWorkspace({ initialApp, initialTime, launch = false }: { 
     if (mobile) { goHome(); return; }
     dispatch({ type: "close", id });
     const next = activeWindow(windowReducer(state, { type: "close", id }));
-    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${next ? `#${next}` : ""}`);
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${next ? formatAppHash(next, state.windows[next]?.path) : ""}`);
   }, [mobile, goHome, state]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       const bounds = currentArea();
       const phone = window.innerWidth < 768;
-      const hash = window.location.hash.slice(1);
-      const requested = isDesktopApp(hash) ? hash : initialApp;
+      const route = parseAppHash(window.location.hash);
+      const requested = route?.id ?? initialApp;
       let restored = initialDesktop(undefined, bounds);
       try { restored = readLayout(localStorage.getItem(layoutKey), bounds) ?? restored; setLook(readLook(localStorage.getItem(lookKey))); }
       catch { setStorageWarning("restore"); }
       if (phone) restored = { windows: Object.fromEntries(Object.entries(restored.windows).map(([id, win]) => [id, { ...win, open: false }])) };
-      if (requested) restored = windowReducer(restored, { type: "open", id: requested, area: bounds });
+      if (requested) restored = windowReducer(restored, { type: "open", id: requested, path: route?.path, area: bounds });
       dispatch({ type: "restore", state: restored }); setReady(true);
     });
     const timer = window.setInterval(() => setClock(new Date().toISOString()), 30000);
@@ -129,23 +131,23 @@ export function DesktopWorkspace({ initialApp, initialTime, launch = false }: { 
       if (returningToDesktop) {
         let restored = initialDesktop(initialApp, area);
         try { restored = readLayout(localStorage.getItem(layoutKey), area) ?? restored; } catch { /* UI storage is optional. */ }
-        const hash = window.location.hash.slice(1);
-        if (isDesktopApp(hash)) restored = windowReducer(restored, { type: "open", id: hash, area });
+        const route = parseAppHash(window.location.hash);
+        if (route) restored = windowReducer(restored, { type: "open", ...route, area });
         dispatch({ type: "restore", state: restored });
       } else if (!mobile) dispatch({ type: "resize-area", area });
     });
     return () => cancelAnimationFrame(frame);
   }, [area, ready, mobile, initialApp]);
   useEffect(() => {
-    if (!ready || mobile) return;
-    const url = active ? `/#${active}` : "/";
-    if (`${window.location.pathname}${window.location.hash}` !== url) window.history.replaceState({ geeospaceSheet: false }, "", url);
-  }, [active, ready, mobile]);
+    if (!ready || (mobile && !active)) return;
+    const url = active ? `/${formatAppHash(active, state.windows[active]?.path)}` : "/";
+    if (`${window.location.pathname}${window.location.hash}` !== url) window.history.replaceState({ geeospaceSheet: mobile && window.history.state?.geeospaceSheet === true }, "", url);
+  }, [active, ready, mobile, state.windows]);
   useEffect(() => {
     const changed = () => {
-      const hash = window.location.hash.slice(1);
-      if (isDesktopApp(hash)) { dispatch({ type: "open", id: hash, area }); setOverlay(null); }
-      else if (!hash && mobile) { for (const app of desktopApps) dispatch({ type: "close", id: app.id }); }
+      const route = parseAppHash(window.location.hash);
+      if (route) { dispatch({ type: "open", ...route, area }); setOverlay(null); }
+      else if (!window.location.hash && mobile) { for (const app of desktopApps) dispatch({ type: "close", id: app.id }); }
     };
     window.addEventListener("hashchange", changed);
     return () => window.removeEventListener("hashchange", changed);
@@ -238,7 +240,7 @@ export function DesktopWorkspace({ initialApp, initialTime, launch = false }: { 
       {snap && <div className={`os-snap-preview os-snap-${snap}`} aria-hidden="true" />}
       {desktopApps.filter((app) => state.windows[app.id]).map((app) => {
         const win = state.windows[app.id]!;
-        return <DesktopWindow key={app.id} id={app.id} state={mobile && win.open && app.id !== active ? { ...win, minimized: true } : win} area={area} mobile={mobile} active={active === app.id} overview={win.open ? overviewStyle(app.id) : undefined} onFocus={() => { dispatch({ type: "focus", id: app.id }); setOverlay(null); }} onClose={() => closeApp(app.id)} onMinimize={() => minimizeApp(app.id)} onMaximize={() => dispatch({ type: "maximize", id: app.id })} onPlace={(rect, mode) => dispatch({ type: "place", id: app.id, rect, mode, area })} onSnap={setSnap}>{app.id === "appearance" ? <AppearancePanel look={look} onChange={changeLook} droppedFile={droppedFile} onDropConsumed={() => setDroppedFile(undefined)} /> : <AppPanel id={app.id} onOpen={openApp} />}</DesktopWindow>;
+        return <WindowNavigationContext key={app.id} value={{ path: win.path, canGoBack: win.backStack.length > 0, navigate: path => dispatch({ type: "navigate", id: app.id, path }), back: () => dispatch({ type: "back", id: app.id }) }}><DesktopWindow id={app.id} state={mobile && win.open && app.id !== active ? { ...win, minimized: true } : win} area={area} mobile={mobile} active={active === app.id} overview={win.open ? overviewStyle(app.id) : undefined} onFocus={() => { dispatch({ type: "focus", id: app.id }); setOverlay(null); }} onClose={() => closeApp(app.id)} onMinimize={() => minimizeApp(app.id)} onMaximize={() => dispatch({ type: "maximize", id: app.id })} onPlace={(rect, mode) => dispatch({ type: "place", id: app.id, rect, mode, area })} onSnap={setSnap}>{app.id === "appearance" ? <AppearancePanel look={look} onChange={changeLook} droppedFile={droppedFile} onDropConsumed={() => setDroppedFile(undefined)} /> : <AppPanel id={app.id} onOpen={openApp} />}</DesktopWindow></WindowNavigationContext>;
       })}
     </main>
     <DesktopDock state={state} active={active} overview={overlay === "overview"} inert={isModal} moving={look.motion} onLaunch={id => { if (active === id && !state.windows[id]?.minimized) minimizeApp(id); else openApp(id); }} onOverview={() => setOverlay(v => v === "overview" ? null : "overview")} onLauncher={() => setOverlay("launcher")} />
