@@ -19,6 +19,7 @@ import { VideoWallpaper } from "./video-wallpaper";
 import { formatAppHash, parseAppHash } from "@/lib/desktop/navigation";
 import { WindowNavigationContext } from "./window-navigation";
 import { accents } from "@/lib/desktop/appearance";
+import { AuthInitializer } from "@/components/providers/auth-initializer";
 
 const viewport = () => `${window.innerWidth}|${window.innerHeight}|${window.matchMedia("(prefers-color-scheme: dark)").matches}|${/Mac|iPhone|iPad/.test(navigator.platform)}`;
 function subscribeViewport(callback: () => void) {
@@ -221,7 +222,7 @@ export function DesktopWorkspace({ initialApp, initialTime, launch = false }: { 
   };
   const dismissOverlay = () => { setOverlay(null); brand.current?.focus(); };
   const style = { "--os-accent": accents[look.accent], "--os-media-dim": look.dim / 100, ...(look.wallpaper === "image" && look.image ? { "--os-custom-wallpaper": `url("${look.image}")` } : {}) } as CSSProperties;
-  return <SpaceContext value={look.locale}><div className="geeospace-os" data-theme={dark ? "dark" : "light"} data-wallpaper={look.wallpaper} data-glass={look.glass} data-ready={ready} data-has-sheet={!!active} data-overview={overlay === "overview"} data-material={!look.glass ? "opaque" : look.material === "auto" ? "frost" : look.material} data-motion={look.motion ? "full" : "reduce"} lang={look.locale} style={style} onClickCapture={event => {
+  return <SpaceContext value={look.locale}><AuthInitializer /><div className="geeospace-os" data-theme={dark ? "dark" : "light"} data-wallpaper={look.wallpaper} data-glass={look.glass} data-ready={ready} data-has-sheet={!!active} data-overview={overlay === "overview"} data-material={!look.glass ? "opaque" : look.material === "auto" ? "frost" : look.material} data-motion={look.motion ? "full" : "reduce"} lang={look.locale} style={style} onClickCapture={event => {
       rememberPress(event.target);
       const button = event.target instanceof Element ? event.target.closest<HTMLElement>("button") : null;
       if (button) recentActivation.current = { element: button, time: performance.now() };
