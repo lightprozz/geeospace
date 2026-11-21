@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { authBaseURL, mockGeeo, mockUser } from "./geeo-mocks";
+import { authBaseURL, mockGeeo, mockUser, seedGeeo } from "./geeo-mocks";
 
 test.use({ baseURL: authBaseURL });
 test.beforeEach(async ({ page }, info) => {
@@ -46,6 +46,25 @@ test("wrong password reports an error and does not unlock LMS", async ({ page })
   await expect(page.locator(".os-account-chip")).toContainText("Kết nối Gee-O");
   await page.goto("/#lms-classes");
   await expect(page.locator(".os-lms-gate")).toContainText("Đăng nhập Gee-O để dùng LMS");
+});
+test("all Gee-O groups gate signed-out users and unlock their hubs and apps", async ({ page }) => {
+  for (const id of ["lms", "staff", "admin", "requests", "work", "lms-worklog", "lms-form-templates", "lms-users", "lms-roles"]) {
+    await page.goto(`/#${id}`);
+    await expect(page.locator(`[data-app="${id}"] .os-lms-gate`)).toBeVisible();
+  }
+  await seedGeeo(page.context());
+  await page.reload();
+  for (const [id, child] of [["staff", "Yêu cầu của tôi"], ["admin", "Người dùng"]]) {
+    await page.goto(`/#${id}`);
+    await page.locator(`[data-app="${id}"]`).getByRole("button", { name: child, exact: true }).click();
+    await expect(page.locator(".os-window-active .os-lms-gate")).toHaveCount(0);
+  }
+  await page.goto("/#account");
+  await page.locator('[data-app="account"]').getByRole("button", { name: "Đăng xuất", exact: true }).click();
+  for (const id of ["staff", "admin", "requests", "work"]) {
+    await page.goto(`/#${id}`);
+    await expect(page.locator(`[data-app="${id}"] .os-lms-gate`)).toBeVisible();
+  }
 });
 test("unconfigured workspace stays usable without any Gee-O fetch", async ({ page }) => {
   const requests: string[] = [];

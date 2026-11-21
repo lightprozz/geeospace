@@ -30,15 +30,15 @@ function UnconnectedPanel({ id, onOpen }: PanelProps) {
 const LmsHub = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsHub })));
 const LmsPlaceholder = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsPlaceholder })));
 const panels: Partial<Record<DesktopAppId, ComponentType<PanelProps>>> = {
-  ...Object.fromEntries(desktopApps.filter(app => app.group === "lms").map(app => [app.id, LmsPlaceholder])),
-  account: props => isGeeoConfigured ? <AccountPanel /> : <UnconfiguredAccountPanel {...props} />, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub,
+  ...Object.fromEntries(desktopApps.filter(app => app.group !== "workspace" && app.id !== "requests" && app.id !== "work").map(app => [app.id, LmsPlaceholder])),
+  account: props => isGeeoConfigured ? <AccountPanel /> : <UnconfiguredAccountPanel {...props} />, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub, staff: LmsHub, admin: LmsHub,
 };
 export function AppPanel(props: PanelProps) {
-  const { t } = useSpace();
+  const { t, label } = useSpace();
   const authenticated = useAuthStore(state => state.isAuthenticated);
   const loading = useAuthStore(state => state.isLoading);
-  if (desktopApps.find(app => app.id === props.id)?.group === "lms" && !authenticated) {
-    return <div className="os-panel os-lms-gate">{loading ? <p role="status">{t("Đang tải phiên đăng nhập…", "Loading your session…")}</p> : <><h1>{t("Đăng nhập Gee-O để dùng LMS", "Sign in to Gee-O to use the LMS")}</h1><button className="os-button" onClick={() => props.onOpen("account")}>{t("Mở Tài khoản", "Open Account")}</button></>}</div>;
+  if (desktopApps.find(app => app.id === props.id)?.group !== "workspace" && !authenticated) {
+    return <div className="os-panel os-lms-gate"><h1>{label(props.id)}</h1>{loading ? <p role="status">{t("Đang tải phiên đăng nhập…", "Loading your session…")}</p> : <><h2>{t("Đăng nhập Gee-O để dùng LMS", "Sign in to Gee-O to use the LMS")}</h2><button className="os-button" onClick={() => props.onOpen("account")}>{t("Mở Tài khoản", "Open Account")}</button></>}</div>;
   }
   const Panel = panels[props.id] ?? UnconnectedPanel;
   return <Suspense fallback={<div className="os-panel" role="status">…</div>}><Panel {...props} /></Suspense>;
