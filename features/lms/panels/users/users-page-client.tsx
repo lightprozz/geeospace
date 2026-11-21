@@ -25,7 +25,7 @@ import {
 import { useClientTable, type ClientSort } from '@/hooks/use-client-table'
 import { fetchAllAccountList, updateUserStatus, fetchCampuses } from '@/features/lms/lib/users/api'
 import { userKeys } from '@/features/lms/lib/users/query-keys'
-import type { AccountListItem } from '@/features/lms/types/user'
+import { parseAssignedCampuses, type AccountListItem } from '@/features/lms/types/user'
 import { ManagementError } from '../management-error'
 import { UsersTable } from './users-table'
 import { RoleCampusDialog } from './role-campus-dialog'
@@ -87,8 +87,8 @@ export function UsersPageClient() {
 
       // Branch filter
       if (branchFilter !== 'all') {
-        const userBranch = (user.branch as string | null) ?? ''
-        if (!userBranch.toLowerCase().includes(branchFilter.toLowerCase())) return false
+        const selectedBranch = branchFilter.toLowerCase()
+        if (!parseAssignedCampuses(user.branch).some(branch => branch.toLowerCase() === selectedBranch)) return false
       }
 
       return true

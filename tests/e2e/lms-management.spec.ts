@@ -73,6 +73,21 @@ test("users: displays and sorts by the API's English names without shortening fu
   await expect(rows.last().getByRole("cell", { name: "Zoe", exact: true })).toBeVisible();
 });
 
+test("users: filters by whole campus name across multi-campus assignments", async ({ page }) => {
+  const { users } = await mockManagement(page);
+  users[0].branch = "South Campus, North Campus";
+  users[1].branch = "North Campus Annex";
+  users[1].isActive = true;
+  await page.goto("/#lms-users");
+  const panel = page.locator('[data-app="lms-users"]');
+  const rows = panel.locator("tbody tr");
+  await expect(rows).toHaveCount(2);
+  await panel.getByRole("combobox", { name: "Filter by branch" }).click();
+  await page.getByRole("option", { name: "North Campus", exact: true }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText("Mai Nguyen");
+});
+
 test("roles: filter, grant and revoke a permission on the selected role", async ({ page }) => {
   const { requests, routes } = await mockManagement(page);
   await page.goto("/#lms-roles");
