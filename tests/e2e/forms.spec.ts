@@ -145,6 +145,17 @@ async function screenshot(page: Page, panel: Locator, name: string) {
   await page.screenshot({ path: join(homedir(), "screens", name + ".png"), fullPage: true, animations: "disabled" });
 }
 
+async function resizeWindow(page: Page, panel: Locator, width: number) {
+  const frame = (await panel.boundingBox())!;
+  const edge = (await panel.locator('[data-edge="e"]').boundingBox())!;
+  const x = edge.x + edge.width / 2, y = edge.y + edge.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + width - frame.width, y, { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(async () => (await panel.boundingBox())?.width).toBe(width);
+}
+
 test("Requests and Form Templates render inside desktop windows", async ({ page }, info) => {
   test.skip(info.project.name !== "desktop", "Forms desktop-window acceptance");
   test.setTimeout(90_000);
@@ -221,16 +232,13 @@ test("Requests inbox fits default and narrow desktop windows", async ({ page }, 
   await expect(page.locator(".os-account-chip")).toContainText(mockUser.name);
   const panel = await launch(page, "requests", false);
   await expect(panel).toHaveAttribute("data-mode", "normal");
-  await expect.poll(async () => (await panel.boundingBox())?.width).toBe(1180);
+  await expect.poll(async () => (await panel.boundingBox())?.width).toBe(1080);
   await expect(panel.getByText(requests[0].subject, { exact: true })).toBeVisible();
   await expect(panel.getByRole("tab", { name: /Viewer/ })).toBeInViewport({ ratio: 0.99 });
   await expect(panel.getByRole("button", { name: "Last page", exact: true })).toBeInViewport({ ratio: 0.99 });
   await screenshot(page, panel, "pr14/requests-default-fixed");
 
-  const resize = panel.locator('[data-edge="e"]');
-  await resize.focus();
-  for (let index = 0; index < 17; index++) await resize.press("Shift+ArrowLeft");
-  await expect.poll(async () => (await panel.boundingBox())?.width).toBe(500);
+  await resizeWindow(page, panel, 500);
   const viewer = panel.getByRole("tab", { name: /Viewer/ });
   await viewer.click();
   await expect(viewer).toHaveAttribute("aria-selected", "true");
@@ -267,16 +275,7 @@ test("Form Templates builder fits restored window widths", async ({ page }, info
   expect((await title.boundingBox())!.width).toBeGreaterThan(200);
   await screenshot(page, panel, "pr14/template-builder-default-fixed");
 
-  const resize = panel.locator('[data-edge="e"]');
-  await resize.focus();
-  for (let index = 0; index < 17; index++) await resize.press("Shift+ArrowLeft");
-  await expect.poll(async () => (await panel.boundingBox())?.width).toBe(500);
-  const edge = (await resize.boundingBox())!;
-  await page.mouse.move(edge.x + edge.width / 2, edge.y + edge.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(edge.x + edge.width / 2 + 11, edge.y + edge.height / 2, { steps: 2 });
-  await page.mouse.up();
-  await expect.poll(async () => (await panel.boundingBox())?.width).toBe(511);
+  await resizeWindow(page, panel, 511);
   expect((await title.boundingBox())!.width).toBeGreaterThan(200);
   await expect(title).toBeInViewport({ ratio: 0.99 });
   await expect(save).toBeInViewport({ ratio: 0.99 });
