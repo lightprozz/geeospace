@@ -3,7 +3,8 @@ import { mkdir } from "node:fs/promises";
 import { authBaseURL, seedGeeo } from "./geeo-mocks";
 
 test.use({ baseURL: authBaseURL });
-test("launcher opens curriculum and materials with mocked APIs", async ({ page }) => {
+test("launcher opens curriculum and materials with mocked APIs", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "Curriculum and materials desktop window acceptance");
   const permissions = ["curriculum.read", "curriculum.create", "curriculum.update", "curriculum.delete", "content.material.read", "content.material.write", "content.material.approve"];
   await seedGeeo(page.context());
   await page.route("https://auth.geeo.test/connect/**", route => route.fulfill({ headers: { "access-control-allow-origin": "*" }, json: { sub: "teacher-1", name: "Mai Nguyen", permission: permissions, role: ["Teacher"] } }));
