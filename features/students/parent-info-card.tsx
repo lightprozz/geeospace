@@ -18,7 +18,8 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PARENT_RELATION_LABELS } from '@/features/lms/types/student'
-import { useStudentPermission } from './panel-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import type { ParentInfo } from '@/features/lms/types/student'
 
 // ---------------------------------------------------------------------------
@@ -85,8 +86,8 @@ function ParentEntry({
 // ---------------------------------------------------------------------------
 
 export function ParentInfoCard({ parents, address, isLoading, onEditFather, onEditMother }: ParentInfoCardProps) {
-  const { can } = useStudentPermission()
-  const canManageParent = can('student.parent.manage')
+  const { can } = usePermission()
+  const canManageParent = can(PERMISSIONS.STUDENT_PARENT_MANAGE)
   const father = parents.find((p) => p.relation === 1)
   const mother = parents.find((p) => p.relation === 2)
 

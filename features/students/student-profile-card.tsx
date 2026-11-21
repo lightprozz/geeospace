@@ -26,7 +26,8 @@ import {
   formatStudentDate,
   CLASS_TYPE,
 } from '@/features/lms/types/student'
-import { useStudentPermission } from './panel-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import type { StudentDetail, StudentStatus } from '@/features/lms/types/student'
 
 // ---------------------------------------------------------------------------
@@ -91,8 +92,8 @@ export function StudentProfileCard({
   currentStudentType,
   onEdit,
 }: StudentProfileCardProps) {
-  const { can } = useStudentPermission()
-  const canUpdateStudent = can('student.update')
+  const { can } = usePermission()
+  const canUpdateStudent = can(PERMISSIONS.STUDENT_UPDATE)
   const initials = getStudentInitials(student.studentName)
   const typeLabel = getStudentTypeLabel(currentStudentType)
   const typeBadgeClass = getStudentTypeBadgeClass(currentStudentType)

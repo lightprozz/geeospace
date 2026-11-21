@@ -10,7 +10,8 @@ import {
   User,
 } from 'lucide-react'
 
-import { useStudentPermission } from './panel-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import { renderStudentsHeader } from './panel-support'
 import {
   Breadcrumb,
@@ -58,7 +59,7 @@ interface StudentInfoClientProps {
 
 export function StudentInfoClient({ studentId }: StudentInfoClientProps) {
   const router = useStudentNavigation()
-  const { can } = useStudentPermission()
+  const { can } = usePermission()
 
   // ── Dialog state ───────────────────────────────────────────────────────
   const [editStudentOpen, setEditStudentOpen] = useState(false)
@@ -164,7 +165,7 @@ export function StudentInfoClient({ studentId }: StudentInfoClientProps) {
             <ArrowLeft data-icon="inline-start" />
             Back
           </Button>
-          {can('student.update') && (
+          {can(PERMISSIONS.STUDENT_UPDATE) && (
             <>
               <Button variant="outline" size="sm" onClick={handleRenew} className="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400 dark:hover:bg-amber-950/50">
                 <RefreshCw data-icon="inline-start" />
@@ -179,7 +180,6 @@ export function StudentInfoClient({ studentId }: StudentInfoClientProps) {
         </div>
       ) : undefined,
     },
-    student ? `${student.studentName}-${student.englishName}-${status}` : 'loading',
   )
 
   // ── Loading state ──────────────────────────────────────────────────────

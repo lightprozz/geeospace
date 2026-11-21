@@ -231,7 +231,7 @@ export function ParentEditDialog({
 
   // ── Submit ──────────────────────────────────────────────────────────────
   const onSubmit = async (data: ParentEditFormInput) => {
-    const payload: Record<string, unknown> = { ...data }
+    const payload = { ...data }
 
     if (isLinkingDifferent && selectedExisting) {
       // Case: User picked a DIFFERENT existing parent → re-link

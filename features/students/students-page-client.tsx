@@ -31,10 +31,10 @@ import {
 import { renderStudentsHeader } from './panel-support'
 import { useStudentStore } from '@/features/lms/stores/use-student-store'
 import { useAllStudentsV2 } from '@/features/lms/hooks/students/use-students'
-import { useStudentPermission } from './panel-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import {
   STUDENT_TYPE_OPTIONS,
-  CLASS_TYPE,
   type StudentAllItem,
 } from '@/features/lms/types/student'
 
@@ -44,9 +44,9 @@ export function StudentsPageClient() {
   // ── Auth ───────────────────────────────────────────────────────────
 
   // ── Permissions ──────────────────────────────────────────────────
-  const { can } = useStudentPermission()
-  const canEnrollStudent = can('student.enroll')
-  const canUpdateStudent = can('student.update')
+  const { can } = usePermission()
+  const canEnrollStudent = can(PERMISSIONS.STUDENT_ENROLL)
+  const canUpdateStudent = can(PERMISSIONS.STUDENT_UPDATE)
 
   // ── Store (filter + pagination state) ─────────────────────────────
   const {
@@ -71,7 +71,6 @@ export function StudentsPageClient() {
 
   // ── Sentinel for "All" select items (Radix doesn't accept value="") ─
   const ALL = '__all__'
-  const toApi = (v: string) => (v === ALL ? '' : v)
 
   // ── Data — fetch ALL students (V2 API) ────────────────────────────
   const { data: allStudents = [], isLoading, isError, refetch } = useAllStudentsV2()
@@ -292,11 +291,11 @@ export function StudentsPageClient() {
     router.push(`/students/${id}`)
   }, [router])
 
-  const handleRenew = useCallback((_id: string) => {
+  const handleRenew = useCallback(() => {
     toast.info('Renew flow coming soon')
   }, [])
 
-  const handleReserve = useCallback((_id: string) => {
+  const handleReserve = useCallback(() => {
     toast.info('Reserve flow coming soon')
   }, [])
 
