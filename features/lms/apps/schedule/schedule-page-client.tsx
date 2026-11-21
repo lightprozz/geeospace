@@ -191,7 +191,7 @@ export function SchedulePageClient({ onOpen }: { onOpen: (id: DesktopAppId) => v
           >
             {/* Tab bar + search */}
             <div className="px-4 pt-3 pb-2 space-y-2 border-b shrink-0">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-3 @xl/lms-panel:flex-row @xl/lms-panel:items-center">
                 <TabsList className="h-8">
                   <TabsTrigger
                     value="active"
@@ -208,7 +208,7 @@ export function SchedulePageClient({ onOpen }: { onOpen: (id: DesktopAppId) => v
                 </TabsList>
 
                 {/* Search */}
-                <div className="relative flex-1 max-w-xs">
+                <div className="relative min-w-0 flex-1 @xl/lms-panel:max-w-xs">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     placeholder="Search schedules, class, room..."

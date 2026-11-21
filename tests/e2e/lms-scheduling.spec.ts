@@ -72,14 +72,14 @@ async function setup(page: Page, { empty = false, writable = true } = {}) {
   return unexpected;
 }
 
-async function launch(page: Page, query: string, id: string) {
+async function launch(page: Page, query: string, id: string, maximize = true) {
   await page.keyboard.press("Control+k");
   const launcher = page.getByRole("dialog", { name: "Tìm nhanh chức năng" });
   await launcher.getByRole("combobox").fill(query);
   await page.keyboard.press("Enter");
   const panel = page.locator(`[data-app="${id}"]`);
   await expect(panel).toBeVisible();
-  if (await panel.getAttribute("data-mode") !== "maximized") {
+  if (maximize && await panel.getAttribute("data-mode") !== "maximized") {
     await panel.getByRole("button", { name: /Phóng to hoặc khôi phục/ }).click();
   }
   return panel;
@@ -139,7 +139,9 @@ test("read-only permissions hide write actions while deep links still render dat
   await expect(panel.getByText("Evening Starters", { exact: true })).toBeVisible();
   await expect(panel.getByRole("button", { name: "Set Schedule" })).toHaveCount(0);
   await panel.getByRole("button", { name: "View Timetable" }).click();
-  await expect(page.locator('[data-app="lms-timetable"]').getByText("Starters A", { exact: true }).first()).toBeVisible();
+  const timetable = page.locator('[data-app="lms-timetable"]');
+  await timetable.getByRole("button", { name: "List view", exact: true }).click();
+  await expect(timetable.getByText("Starters A", { exact: true }).first()).toBeVisible();
   expect(unexpected).toEqual([]);
 });
 
@@ -148,5 +150,61 @@ test("empty API data keeps the schedule usable", async ({ page }) => {
   const panel = await launch(page, "Lịch học", "lms-schedule");
   await expect(panel.getByText("No schedules found", { exact: false })).toBeVisible();
   await expect(panel.getByRole("button", { name: "Set Schedule" })).toBeVisible();
+  expect(unexpected).toEqual([]);
+});
+
+test("default-size windows use narrow layouts on a desktop viewport", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const unexpected = await setup(page);
+  for (const [query, id, name] of [
+    ["Lịch học", "lms-schedule", "schedule"],
+    ["Timetable", "lms-timetable", "timetable"],
+    ["Attendance", "lms-attendance", "attendance"],
+    ["Holidays", "lms-holidays", "holidays"],
+  ]) {
+    const panel = await launch(page, query, id, false);
+    await expect(panel).toHaveAttribute("data-mode", "normal");
+    await expect(panel).toHaveAttribute("data-phase", "visible");
+    expect((await panel.boundingBox())?.width).toBe(510);
+    const scope = panel.locator(".lms-ui").first();
+    await expect(scope).toHaveCSS("container-type", "inline-size");
+
+    if (name === "schedule") {
+      await expect(panel.getByRole("cell", { name: "Evening Starters", exact: true })).toBeVisible();
+      const search = panel.getByPlaceholder("Search schedules, class, room...");
+      expect((await search.boundingBox())!.width).toBeGreaterThan(400);
+      await expect(panel.getByRole("button", { name: "Last page" })).toBeVisible();
+      await expect(panel.getByRole("button", { name: "Last page" })).toBeInViewport({ ratio: 1 });
+    } else if (name === "timetable") {
+      const list = panel.getByRole("button", { name: "List view", exact: true });
+      await expect(list).toBeVisible();
+      await list.click();
+      await expect(panel.getByText("Starters A", { exact: true }).first()).toBeVisible();
+      await panel.getByRole("button", { name: "Calendar view", exact: true }).click();
+      await expect(panel.getByRole("button", { name: "Next month", exact: true })).toBeInViewport({ ratio: 1 });
+      const weekdays = panel.getByText(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/, { exact: true });
+      await expect(weekdays).toHaveCount(7);
+      for (const day of await weekdays.all()) {
+        await expect(day).toBeVisible();
+        expect((await day.boundingBox())!.width).toBeGreaterThan(60);
+      }
+    } else if (name === "attendance") {
+      await expect(panel.getByText("Anna", { exact: true })).toBeVisible();
+      await expect(panel.getByText("Absent Students", { exact: true })).toBeInViewport({ ratio: 1 });
+      const absent = (await panel.getByText("Absent Students", { exact: true }).boundingBox())!;
+      const events = (await panel.getByText("Scheduled Events", { exact: true }).boundingBox())!;
+      expect(events.y).toBeGreaterThan(absent.y + absent.height);
+      await expect(panel.getByRole("cell", { name: "Speaking Workshop", exact: true })).toBeVisible();
+    } else {
+      await expect(panel.getByText("2026-12-25", { exact: true })).toBeVisible();
+      const picker = panel.getByRole("combobox");
+      await expect(picker).toBeVisible();
+      await expect(picker).toBeInViewport({ ratio: 1 });
+      expect((await picker.boundingBox())!.width).toBeGreaterThan(400);
+    }
+    expect(await scope.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await screenshot(page, `narrow-${name}`);
+    await panel.locator(".os-light-close").click();
+  }
   expect(unexpected).toEqual([]);
 });

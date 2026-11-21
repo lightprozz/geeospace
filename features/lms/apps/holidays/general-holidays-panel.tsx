@@ -91,7 +91,7 @@ export function GeneralHolidaysPanel({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 p-2 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 p-2 @3xl/lms-panel:grid-cols-2 @5xl/lms-panel:grid-cols-3">
             {currentYearDates.map((date) => (
               <HolidayDateCard
                 key={date}

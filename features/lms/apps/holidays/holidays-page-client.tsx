@@ -216,11 +216,11 @@ export function HolidaysPageClient() {
   // ── Loading state ──────────────────────────────────────────────
   if (isLoading || !editedData) {
     return (
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 p-4 animate-in fade-in duration-300">
-        <div className="xl:col-span-3">
+      <div className="grid grid-cols-1 @5xl/lms-panel:grid-cols-4 gap-4 p-4 animate-in fade-in duration-300">
+        <div className="min-w-0 @5xl/lms-panel:col-span-3">
           <Skeleton className="h-96 rounded-xl" />
         </div>
-        <div className="xl:col-span-1">
+        <div className="min-w-0 @5xl/lms-panel:col-span-1">
           <Skeleton className="h-96 rounded-xl" />
         </div>
       </div>
@@ -232,9 +232,9 @@ export function HolidaysPageClient() {
     <>
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b px-4 py-3"><h1 className="text-base font-semibold">Holidays & Days Off</h1>{headerActions}</header>
       <div className="flex-1 overflow-auto min-h-0">
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 p-4">
+        <div className="grid grid-cols-1 @5xl/lms-panel:grid-cols-4 gap-4 p-4">
           {/* Left column: General Holidays — 3/4 width */}
-          <div className="xl:col-span-3">
+          <div className="min-w-0 @5xl/lms-panel:col-span-3">
             <GeneralHolidaysPanel
               holidays={editedData.generalHolidays}
               onRemoveDate={handleRemoveGeneralHoliday}
@@ -243,7 +243,7 @@ export function HolidaysPageClient() {
           </div>
 
           {/* Right column: Class Exceptions — 1/4 width */}
-          <div className="xl:col-span-1">
+          <div className="min-w-0 @5xl/lms-panel:col-span-1">
             <ClassExceptionsPanel
               classes={classes}
               selectedClassId={selectedClassId}

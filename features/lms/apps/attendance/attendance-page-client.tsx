@@ -65,14 +65,14 @@ export function AttendancePageClient() {
   return (
     <div className="flex-1 overflow-auto min-h-0">
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b px-4 py-3"><h1 className="text-base font-semibold">Attendance & Catch-up</h1>{headerActions}</header>
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 p-4">
+      <div className="grid grid-cols-1 @5xl/lms-panel:grid-cols-4 gap-4 p-4">
         {/* Left column — 1/4 width: Absent Students */}
-        <div className="xl:col-span-1">
+        <div className="min-w-0 @5xl/lms-panel:col-span-1">
           <AbsentStudentsPanel teacherId={teacherId} dateRange={dateRange} />
         </div>
 
         {/* Right column — 3/4 width: Events Table */}
-        <div className="xl:col-span-3">
+        <div className="min-w-0 @5xl/lms-panel:col-span-3">
           <EventsTablePanel />
         </div>
       </div>

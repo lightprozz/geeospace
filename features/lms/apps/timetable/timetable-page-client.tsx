@@ -154,7 +154,7 @@ export function TimetablePageClient({ onOpen }: { onOpen: (id: DesktopAppId) => 
           placeholder="Filter class..."
           value={classNameFilter}
           onChange={(e) => setClassNameFilter(e.target.value)}
-          className="w-full sm:w-[160px] h-8 text-xs"
+          className="w-full @sm/lms-panel:w-[160px] h-8 text-xs"
         />
 
         {/* Shift Filter */}
@@ -205,8 +205,8 @@ export function TimetablePageClient({ onOpen }: { onOpen: (id: DesktopAppId) => 
             className="h-7 px-2 text-xs font-medium"
             onClick={handleToday}
           >
-            <span className="hidden sm:inline">Today</span>
-            <span className="inline sm:hidden">🗓</span>
+            <span className="hidden @sm/lms-panel:inline">Today</span>
+            <span className="inline @sm/lms-panel:hidden">🗓</span>
           </Button>
           <Button
             variant="ghost"
@@ -222,11 +222,12 @@ export function TimetablePageClient({ onOpen }: { onOpen: (id: DesktopAppId) => 
         <div className="flex-1" />
 
         {/* Mobile view toggle */}
-        <div className="flex items-center gap-1 lg:hidden">
+        <div className="flex items-center gap-1 @5xl/lms-panel:hidden">
           <Button
             variant={viewMode === 'calendar' ? 'secondary' : 'ghost'}
             size="icon"
             className="h-8 w-8"
+            aria-label="Calendar view"
             onClick={() => setViewMode('calendar')}
           >
             <CalendarDays className="h-4 w-4" />
@@ -235,6 +236,7 @@ export function TimetablePageClient({ onOpen }: { onOpen: (id: DesktopAppId) => 
             variant={viewMode === 'list' ? 'secondary' : 'ghost'}
             size="icon"
             className="h-8 w-8"
+            aria-label="List view"
             onClick={() => setViewMode('list')}
           >
             <List className="h-4 w-4" />
@@ -243,11 +245,11 @@ export function TimetablePageClient({ onOpen }: { onOpen: (id: DesktopAppId) => 
       </div>
 
       {/* Split pane */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Left: Daily session list */}
         <div
-          className={`w-full lg:w-80 xl:w-96 lg:border-r shrink-0 overflow-hidden ${
-            viewMode === 'list' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'
+          className={`w-full @5xl/lms-panel:w-80 @7xl/lms-panel:w-96 @5xl/lms-panel:border-r shrink-0 overflow-hidden ${
+            viewMode === 'list' ? 'flex flex-col' : 'hidden @5xl/lms-panel:flex @5xl/lms-panel:flex-col'
           }`}
         >
           <DailySessionList
@@ -258,8 +260,8 @@ export function TimetablePageClient({ onOpen }: { onOpen: (id: DesktopAppId) => 
 
         {/* Right: Month calendar grid */}
         <div
-          className={`flex-1 overflow-hidden ${
-            viewMode === 'calendar' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'
+          className={`min-w-0 flex-1 overflow-hidden ${
+            viewMode === 'calendar' ? 'flex flex-col' : 'hidden @5xl/lms-panel:flex @5xl/lms-panel:flex-col'
           }`}
         >
           <MonthCalendarGrid

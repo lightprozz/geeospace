@@ -110,7 +110,7 @@ export function MonthCalendarGrid({
   )
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-0 flex-col h-full overflow-y-auto">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
         <h3 className="font-semibold text-sm">{monthName}</h3>
@@ -119,6 +119,7 @@ export function MonthCalendarGrid({
             variant="ghost"
             size="icon"
             className="h-7 w-7"
+            aria-label="Previous month"
             onClick={onPrevMonth}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -127,6 +128,7 @@ export function MonthCalendarGrid({
             variant="ghost"
             size="icon"
             className="h-7 w-7"
+            aria-label="Next month"
             onClick={onNextMonth}
           >
             <ChevronRight className="h-4 w-4" />
@@ -159,7 +161,7 @@ export function MonthCalendarGrid({
               key={idx}
               onClick={() => onDateSelect(day.date)}
               className={cn(
-                'relative flex flex-col items-start p-1.5 border-b border-r text-left transition-colors min-h-[60px] lg:min-h-[80px]',
+                'relative min-w-0 flex flex-col items-start p-1.5 border-b border-r text-left transition-colors min-h-[60px] @5xl/lms-panel:min-h-[80px]',
                 !day.isCurrentMonth && 'bg-muted/30 text-muted-foreground',
                 day.isCurrentMonth && 'hover:bg-accent/50',
                 selected && 'ring-1 ring-primary ring-inset bg-primary/5',
@@ -192,7 +194,7 @@ export function MonthCalendarGrid({
                       <span className="font-mono font-semibold mr-1">
                         {session.shiftCode}
                       </span>
-                      <span className="hidden xl:inline">
+                      <span className="hidden @7xl/lms-panel:inline">
                         {session.className}
                       </span>
                     </div>

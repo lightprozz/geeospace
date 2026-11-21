@@ -34,7 +34,7 @@ export function AbsentStudentsPanel({
 
   return (
     <Card className="flex h-full flex-col gap-0 overflow-hidden py-0">
-      <CardHeader className="flex h-9 shrink-0 items-center border-b px-4">
+      <CardHeader className="flex h-9 shrink-0 items-center border-b px-4 [.border-b]:pb-0">
         <CardTitle className="flex items-center gap-2 text-sm">
           <Users className="h-4 w-4 text-primary" />
           Absent Students

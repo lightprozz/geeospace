@@ -168,7 +168,7 @@ export function EventUpsertDialog() {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeEventDialog()}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="@container/event-dialog max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditMode ? 'Edit Event' : 'Create New Event'}
@@ -184,7 +184,7 @@ export function EventUpsertDialog() {
         )}
 
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 @2xl/event-dialog:grid-cols-2">
             {/* Left Column */}
             <FieldGroup>
               <Field>

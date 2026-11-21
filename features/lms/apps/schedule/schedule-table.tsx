@@ -143,6 +143,7 @@ export function ScheduleTable({
     <div className="flex flex-col h-full">
       {/* ── Table body ── */}
       <div className="flex-1 overflow-auto">
+      <div className="min-w-[1000px] @5xl/lms-panel:min-w-0">
       <Table className="table-fixed w-full">
         <TableHeader className="sticky top-0 bg-card z-10">
           <TableRow className="hover:bg-transparent h-10">
@@ -338,9 +339,10 @@ export function ScheduleTable({
         </TableBody>
       </Table>
       </div>
+      </div>
 
       {/* ── Sticky Footer: summary + pagination ── */}
-      <div className="shrink-0 border-t bg-card/80 backdrop-blur-sm px-4 py-2 flex items-center justify-between gap-4">
+      <div className="shrink-0 border-t bg-card/80 backdrop-blur-sm px-4 py-2 flex flex-wrap items-center justify-between gap-2 @xl/lms-panel:gap-4">
         {/* Left: summary info */}
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="font-medium tabular-nums">

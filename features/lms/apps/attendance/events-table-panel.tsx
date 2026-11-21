@@ -144,7 +144,7 @@ export function EventsTablePanel() {
   return (
     <>
       <Card className="flex h-full flex-col gap-0 overflow-hidden py-0">
-        <CardHeader className="flex h-9 shrink-0 items-center border-b px-4">
+        <CardHeader className="flex h-9 shrink-0 items-center border-b px-4 [.border-b]:pb-0">
           <div className="flex w-full items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-sm">
               <CalendarIcon className="h-4 w-4 text-primary" />
@@ -171,6 +171,7 @@ export function EventsTablePanel() {
             <AttendanceEmptyState type="events" />
           ) : (
             <div className="h-full overflow-auto">
+              <div className="min-w-[760px]">
               <Table>
                 <TableHeader className="sticky top-0 bg-card z-10">
                   <TableRow>
@@ -310,6 +311,7 @@ export function EventsTablePanel() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </div>
           )}
         </CardContent>
