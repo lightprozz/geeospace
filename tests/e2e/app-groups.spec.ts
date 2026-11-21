@@ -76,10 +76,10 @@ test("launcher groups, cross-group search, keyboard navigation and focus trap", 
 test("search selects an app match before group-only matches", async ({ page }) => {
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog", { name: "Tìm nhanh chức năng" });
-  await dialog.getByRole("combobox").fill("work");
-  await expect(dialog.getByRole("option").nth(0)).toContainText("Công & lương");
+  await dialog.getByRole("combobox").fill("Administration");
+  await expect(dialog.getByRole("option").nth(0)).toContainText("Quản trị");
   await page.keyboard.press("Enter");
-  await expect(page.locator('[data-app="work"]')).toBeVisible();
+  await expect(page.locator('[data-app="admin"]')).toBeVisible();
 });
 
 test("deep links, navigate, back and hashchange keep the window path", async ({ page }) => {

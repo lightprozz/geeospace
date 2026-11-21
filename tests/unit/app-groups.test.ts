@@ -24,10 +24,15 @@ it("searches across groups and handles empty and unmatched queries", () => {
 });
 it("ranks app matches above group-only matches while preserving group searches", () => {
   const work = searchApps("work").map(app => app.id);
-  expect(work[0]).toBe("work");
+  expect(work.slice(0, 2)).toEqual(["staff", "work"]);
   expect(work.indexOf("today")).toBeGreaterThan(work.indexOf("lms-worklog"));
   for (const query of ["LMS", "Gee-O LMS"]) expect(searchApps(query).map(app => app.id)).toEqual(appsInGroup("lms").map(app => app.id));
   expect(searchApps("workspace")).toHaveLength(appsInGroup("workspace").length);
+});
+it("ranks exact and prefix titles ahead of descriptions", () => {
+  expect(searchApps("Administration")[0].id).toBe("admin");
+  expect(searchApps("Admin")[0].id).toBe("admin");
+  expect(searchApps("Quản trị")[0].id).toBe("admin");
 });
 it("round trips hashes and rejects malformed or unsafe routes", () => {
   for (const path of ["", "123", "123/overview", "học-viên"]) expect(parseAppHash(formatAppHash("lms-classes", path))).toEqual({ id: "lms-classes", path });

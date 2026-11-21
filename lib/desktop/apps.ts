@@ -46,12 +46,14 @@ export function appDefinition(id: DesktopAppId) {
 export function searchApps(query: string) {
   const normalize = (value: string) => value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replaceAll("đ", "d").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
   const words = normalize(query).split(/\s+/).filter(Boolean);
+  const titleQuery = normalize(query);
   return desktopApps.map((app) => {
     const group = appGroups.find(group => group.id === app.group)!;
     const english = "english" in app ? app.english : appEnglish[app.id];
     const text = normalize(`${app.label} ${app.description} ${english.join(" ")}`);
     const groupedText = `${text} ${normalize(`${group.label} ${group.english}`)}`;
-    const relevance = words.every(word => text.includes(word)) ? 2 : words.every(word => groupedText.includes(word)) ? 1 : 0;
+    const titles = [app.label, english[0]].map(normalize);
+    const relevance = titleQuery && titles.some(title => title === titleQuery) ? 4 : titleQuery && titles.some(title => title.startsWith(titleQuery)) ? 3 : words.every(word => text.includes(word)) ? 2 : words.every(word => groupedText.includes(word)) ? 1 : 0;
     return { app, relevance };
   }).filter(result => result.relevance > 0).sort((a, b) => b.relevance - a.relevance).map(result => result.app);
 }

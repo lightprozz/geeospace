@@ -22,7 +22,9 @@ test("OS shell: desktop windows or mobile Home, launcher, search and appearance"
     await expect(dock).toBeVisible();
     await expect(page.locator('[data-app="today"]')).toBeVisible();
     await expect(page.locator('[data-app="assistant"]')).toBeVisible();
-    await dock.getByRole("button", { name: "Yêu cầu của tôi", exact: true }).click();
+    await page.keyboard.press("Control+k");
+    await page.getByRole("combobox").fill("yeu cau cua toi");
+    await page.keyboard.press("Enter");
     const win = page.locator('[data-app="requests"]');
     await expect(win).toHaveAttribute("data-phase", "visible");
     const original = (await win.boundingBox())!;
@@ -45,7 +47,9 @@ test("OS shell: desktop windows or mobile Home, launcher, search and appearance"
     await expect.poll(async () => (await win.boundingBox())!.y).toBeLessThan(beforeNorth.y - 30);
     await win.getByRole("button", { name: "Thu nhỏ Yêu cầu của tôi", exact: true }).click();
     await expect(win).toBeHidden();
-    await dock.getByRole("button", { name: "Yêu cầu của tôi", exact: true }).click();
+    await page.keyboard.press("Control+k");
+    await page.getByRole("combobox").fill("yeu cau cua toi");
+    await page.keyboard.press("Enter");
     await expect(win).toBeVisible();
     await win.getByRole("button", { name: "Phóng to hoặc khôi phục Yêu cầu của tôi" }).click();
     await expect(win).toHaveAttribute("data-mode", "maximized");
@@ -118,8 +122,9 @@ test("OS persistence: minimize survives reload and mobile Home preserves the des
   test.skip(isMobile, "This regression starts with a desktop layout and crosses to phone.");
   await page.goto("/");
   await expect(page.locator(".geeospace-os")).toHaveAttribute("data-ready", "true");
-  const dock = page.getByRole("navigation", { name: "Dock ứng dụng" });
-  await dock.getByRole("button", { name: "Yêu cầu của tôi", exact: true }).click();
+  await page.keyboard.press("Control+k");
+    await page.getByRole("combobox").fill("yeu cau cua toi");
+    await page.keyboard.press("Enter");
   const win = page.locator('[data-app="requests"]');
   await win.getByRole("button", { name: "Thu nhỏ Yêu cầu của tôi" }).click();
   await expect(page).not.toHaveURL(/#requests$/);
