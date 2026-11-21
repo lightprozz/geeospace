@@ -9,7 +9,7 @@ export function useSpace(override?: Locale) {
   const locale = override ?? context;
   return {
     locale, t: (vi: string, en: string) => locale === "vi" ? vi : en,
-    label: (id: DesktopAppId) => locale === "vi" ? appDefinition(id).label : appEnglish[id][0],
-    description: (id: DesktopAppId) => locale === "vi" ? appDefinition(id).description : appEnglish[id][1],
+    label: (id: DesktopAppId) => { const app = appDefinition(id); return locale === "vi" ? app.label : ("english" in app ? app.english : appEnglish[app.id])[0]; },
+    description: (id: DesktopAppId) => { const app = appDefinition(id); return locale === "vi" ? app.description : ("english" in app ? app.english : appEnglish[app.id])[1]; },
   };
 }

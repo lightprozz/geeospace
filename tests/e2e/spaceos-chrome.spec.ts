@@ -5,16 +5,16 @@ test("chrome preserves work on arrange and dock toggle; magnification has no ove
   test.skip(isMobile, "Desktop window and dock geometry");
   await page.goto("/requests"); await ready(page);
   const dock = page.getByRole("navigation", { name: "Dock ứng dụng" });
-  await dock.getByRole("button", { name: "Công & lương", exact: true }).click();
-  const win = page.locator('[data-app="work"]'); await expect(win).toHaveAttribute("data-phase", "visible");
-  await dock.getByRole("button", { name: "Công & lương", exact: true }).click(); await expect(win).toBeHidden();
+  await dock.getByRole("button", { name: "Công việc", exact: true }).click();
+  const win = page.locator('[data-app="staff"]'); await expect(win).toHaveAttribute("data-phase", "visible");
+  await dock.getByRole("button", { name: "Công việc", exact: true }).click(); await expect(win).toBeHidden();
   const opened = await page.locator('.os-window').evaluateAll(els => els.map(el => [el.getAttribute("data-app"), (el as HTMLElement).hidden]));
   await page.getByRole("button", { name: "Menu Geeospace" }).click(); await page.getByRole("menuitem", { name: "Sắp lại cửa sổ" }).click();
   expect(await page.locator('.os-window').evaluateAll(els => els.map(el => [el.getAttribute("data-app"), (el as HTMLElement).hidden]))).toEqual(opened);
-  await dock.getByRole("button", { name: "Công & lương", exact: true }).click(); await expect(win).toHaveAttribute("data-phase", "visible");
+  await dock.getByRole("button", { name: "Công việc", exact: true }).click(); await expect(win).toHaveAttribute("data-phase", "visible");
   await page.keyboard.press("Alt+ArrowRight"); await expect(win).toHaveAttribute("data-mode", "right"); await page.keyboard.press("Alt+ArrowRight"); await expect(win).toHaveAttribute("data-mode", "normal");
   const dockHeight = (await dock.boundingBox())!.height;
-  for (const name of ["Hôm nay", "Công & lương", "Tất cả ứng dụng"]) {
+  for (const name of ["Hôm nay", "Công việc", "Tất cả ứng dụng"]) {
     await dock.getByRole("button", { name, exact: true }).hover();
     expect((await dock.boundingBox())!.height).toBe(dockHeight);
     await expect.poll(() => dock.locator(".os-glyph").evaluateAll(els => els.slice(1).every((el, i) => els[i].getBoundingClientRect().right <= el.getBoundingClientRect().left))).toBe(true);

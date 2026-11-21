@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* App directory */
+.os-app-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 24px; }
+.os-app-group-grid button { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px 8px; border-radius: 12px; background: var(--os-selected); color: inherit; cursor: pointer; }
+.os-app-group-grid button:hover { background: var(--os-selected); }
+.os-launcher-group-heading { grid-column: 1 / -1; padding: 16px 12px 8px; font-size: 12px; font-weight: 650; opacity: .7; }
+.os-launcher-results { grid-auto-rows: max-content; }
+.os-window-back { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; color: inherit; cursor: pointer; }
+
 :root {
   --background: oklch(1 0 0); --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0); --muted: oklch(0.967 0.001 286.375); --muted-foreground: oklch(0.46 0.01 286);

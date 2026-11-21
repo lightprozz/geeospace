@@ -3,6 +3,8 @@ import { ArrowLeft, ExternalLink, Minus, Plus, X } from "lucide-react";
 import { type DesktopAppId } from "@/lib/desktop/apps";
 import { fitRect, frameRect, resizeRect, type ResizeEdge as Edge, type Area, type DesktopWindow as WindowState, type Rect, type WindowMode } from "@/lib/desktop/window-store";
 import { useSpace } from "./space-context";
+import { useWindowNavigation } from "./window-navigation";
+import { formatAppHash } from "@/lib/desktop/navigation";
 import { useWindowMotion } from "./use-window-motion";
 
 type Props = {
@@ -25,6 +27,7 @@ export function DesktopWindow({ id, state, area, mobile, active, overview, child
   const animation = useWindowMotion(section, { id, visible, minimized: state.minimized, mobile, rect: frame, overview });
   const { t, label } = useSpace();
   const title = label(id);
+  const { path, back, canGoBack } = useWindowNavigation();
   useEffect(() => () => {
     cancelAnimationFrame(raf.current);
     gesture.current = null;
@@ -103,7 +106,8 @@ export function DesktopWindow({ id, state, area, mobile, active, overview, child
       }}>
         <div className="os-traffic-lights"><button className="os-light-close" aria-label={`${t("Đóng", "Close")} ${title}`} onClick={onClose}><X size={11} /></button><button className="os-light-min" aria-label={`${t("Thu nhỏ", "Minimize")} ${title}`} onClick={onMinimize}><Minus size={11} /></button><button className="os-light-max" aria-label={`${t("Phóng to hoặc khôi phục", "Maximize or restore")} ${title}`} onClick={onMaximize}><Plus size={11} /></button></div>
         <button className="os-mobile-back" onClick={onClose} aria-label={t("Về màn hình chính", "Back to home")}><ArrowLeft size={19} /><span>{t("Trang chủ", "Home")}</span></button>
-        <span className="os-window-name">{title}</span><a className="os-window-permalink" href={id === "account" ? "/sign-in" : id === "appearance" ? "/#appearance" : `/${id}`} aria-label={`${t("Mở liên kết", "Open link to")} ${title}`}><ExternalLink size={14} /></a>
+        {canGoBack && <button className="os-window-back" onClick={back} aria-label={t("Quay lại", "Go back")}><ArrowLeft size={17} /></button>}
+        <span className="os-window-name">{title}</span><a className="os-window-permalink" href={id === "account" ? "/sign-in" : `/${formatAppHash(id, path)}`} aria-label={`${t("Mở liên kết", "Open link to")} ${title}`}><ExternalLink size={14} /></a>
       </header>
       <span id={helpId} className="sr-only">{t("Dùng phím mũi tên để di chuyển cửa sổ. Giữ Shift để di chuyển xa hơn. Alt và mũi tên để chia màn hình hoặc phóng to.", "Use arrow keys to move this window. Hold Shift for larger steps. Alt and arrows tile or maximize it.")}</span>
       <div className="os-window-body">{children}</div>
