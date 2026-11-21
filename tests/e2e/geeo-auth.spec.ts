@@ -48,17 +48,23 @@ test("wrong password reports an error and does not unlock LMS", async ({ page })
   await expect(page.locator(".os-lms-gate")).toContainText("Đăng nhập Gee-O để dùng LMS");
 });
 test("all Gee-O groups gate signed-out users and unlock their hubs and apps", async ({ page }) => {
-  let navigation = 0;
+  const focused = (id: string) => page.locator(`[data-app="${id}"].is-focused`);
   const open = async (id: string) => {
-    await page.goto(`/?auth-check=${++navigation}#${id}`);
-    return page.locator(`[data-app="${id}"].is-focused`);
+    await page.evaluate(target => { window.location.hash = target; }, id);
+    const app = focused(id);
+    await expect(app).toBeVisible();
+    return app;
   };
-  for (const id of ["lms", "staff", "admin", "requests", "work", "lms-worklog", "lms-form-templates", "lms-users", "lms-roles"]) {
+  await page.goto("/#lms");
+  await expect(focused("lms").locator(".os-lms-gate")).toBeVisible();
+  for (const id of ["staff", "admin", "requests", "work", "lms-worklog", "lms-form-templates", "lms-users", "lms-roles"]) {
     const app = await open(id);
     await expect(app.locator(".os-lms-gate")).toBeVisible();
   }
   await seedGeeo(page.context());
   await page.reload();
+  await expect(focused("lms-roles")).toBeVisible();
+  await expect(page.locator(".os-account-chip")).toContainText(mockUser.name);
   for (const [id, child, childId] of [["staff", "Yêu cầu của tôi", "requests"], ["admin", "Người dùng", "lms-users"]]) {
     const app = await open(id);
     await app.getByRole("button", { name: child, exact: true }).click();
