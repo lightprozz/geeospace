@@ -237,7 +237,7 @@ export function RequestSubmitClient({ templateId }: RequestSubmitClientProps) {
       </div>
 
       {/* Form body */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1">
         <div className="px-6 py-8">
           <PaperCanvas
             title={name}

@@ -4,6 +4,11 @@
 /* these are the necessary styles for React/Svelte Flow, they get used by base.css and style.css */
 .react-flow {
   direction: ltr;
+  --xy-controls-button-background-color: var(--card);
+  --xy-controls-button-background-color-hover: var(--muted);
+  --xy-controls-button-color: var(--foreground);
+  --xy-controls-button-color-hover: var(--foreground);
+  --xy-controls-button-border-color: var(--border);
 
   --xy-edge-stroke-default: #b1b1b7;
   --xy-edge-stroke-width-default: 1;

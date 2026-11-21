@@ -33,7 +33,7 @@ function StatusBadge({ formStatus }: { formStatus: number }) {
         formStatus === 3 && "bg-green-100 text-green-700",
         formStatus === 4 && "bg-red-100 text-red-700",
         (formStatus === 5 || formStatus === 6) && "bg-muted text-muted-foreground",
-        formStatus === 2 && "bg-blue-100 text-blue-700",
+        formStatus === 2 && "bg-primary/10 text-primary",
         formStatus === 1 && "bg-yellow-100 text-yellow-700",
         formStatus === 100 && "bg-gray-100 text-gray-600"
       )}

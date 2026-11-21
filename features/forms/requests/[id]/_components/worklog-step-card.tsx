@@ -96,7 +96,7 @@ export function WorklogStepCard({
 
   if (templateQuery.isLoading) {
     return (
-      <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
         <div className="mb-3 flex items-center gap-2">
           <Skeleton className="h-4 w-32" />
         </div>
@@ -120,11 +120,11 @@ export function WorklogStepCard({
   const isSaving = saveMutation.isPending
 
   return (
-    <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
       {/* Header */}
       <div className="mb-3 flex items-center justify-between">
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-blue-600">
+          <span className="text-xs font-semibold uppercase tracking-wide text-primary">
             Current Action Required
           </span>
           <h3 className="text-sm font-semibold text-foreground">{name}</h3>

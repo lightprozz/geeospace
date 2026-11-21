@@ -70,7 +70,7 @@ export function RequestProcessStepper({
                   "relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors",
                   isCompleted && "border-green-500 bg-green-500 text-white",
                   isDenied && "border-red-500 bg-red-500 text-white",
-                  isCurrent && "border-blue-600 bg-white text-blue-600",
+                  isCurrent && "border-primary bg-background text-primary",
                   isPending && "border-muted-foreground/30 bg-muted text-muted-foreground"
                 )}
               >
@@ -79,7 +79,7 @@ export function RequestProcessStepper({
                 ) : isDenied ? (
                   <X className="h-4 w-4" />
                 ) : isCurrent ? (
-                  <span className="absolute -inset-0.5 animate-ping rounded-full border border-blue-400 bg-blue-400/20 opacity-75" />
+                  <span className="absolute -inset-0.5 animate-ping rounded-full border border-primary bg-primary/20 opacity-75" />
                 ) : null}
                 {!(isCompleted || isDenied) && <span>{i + 1}</span>}
               </div>
@@ -89,7 +89,7 @@ export function RequestProcessStepper({
                 <span
                   className={cn(
                     "text-xs font-medium",
-                    isCurrent && "text-blue-600",
+                    isCurrent && "text-primary",
                     isCompleted && "text-green-600",
                     isDenied && "text-red-600",
                     isPending && "text-muted-foreground"

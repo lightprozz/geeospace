@@ -98,11 +98,11 @@ export function WorkflowBuilderClient({ templateId }: WorkflowBuilderClientProps
   }
 
   return (
-    <div className="relative h-[calc(100vh-8rem)] overflow-hidden rounded-lg border">
-      {/* Canvas fills the page; the list is a slim navigator that stays put. */}
+    <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border">
       <WorkflowDiagramCanvas
         templateId={templateId}
         selectedStepId={selectedStepId}
+        className="ml-64"
         onStepSelect={(id) => (id ? openEditor(id) : closeEditor())}
       />
 

@@ -5,6 +5,7 @@ import {
   type ComponentProps, type Dispatch, type ReactNode, type SetStateAction,
 } from "react"
 import { useWindowNavigation } from "@/components/desktop/window-navigation"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 type HeaderConfig = { breadcrumbs: ReactNode; actions?: ReactNode }
 const HeaderValue = createContext<HeaderConfig | null>(null)
@@ -36,12 +37,14 @@ export function FormsWindowAdapter({ base, params = {}, children }: { base: stri
       <RouteParams.Provider value={params}>
         <QueryState.Provider value={query}>
           <HeaderSetter.Provider value={setHeader}>
-            <HeaderValue.Provider value={header}>
-              <div data-forms-window={base} className="flex min-h-0 flex-1 flex-col">
-                <FormsHeader />
-                {children}
-              </div>
-            </HeaderValue.Provider>
+            <TooltipProvider>
+              <HeaderValue.Provider value={header}>
+                <div data-forms-window={base} className="flex min-h-0 flex-1 flex-col">
+                  <FormsHeader />
+                  {children}
+                </div>
+              </HeaderValue.Provider>
+            </TooltipProvider>
           </HeaderSetter.Provider>
         </QueryState.Provider>
       </RouteParams.Provider>

@@ -269,9 +269,9 @@ export function RequestDetailClient({ id }: RequestDetailClientProps) {
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
-      <div className="flex flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
         {/* Left: narrative column */}
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-5">
+        <div className="flex min-h-0 min-w-0 shrink-0 flex-col gap-4 px-6 py-5 lg:flex-1 lg:overflow-y-auto">
           {/* Process stepper */}
           <RequestProcessStepper
             processes={detail.processes}
