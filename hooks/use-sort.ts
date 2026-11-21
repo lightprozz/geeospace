@@ -59,7 +59,11 @@ export function useSort<TColumn extends string>(
   // Persist to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(storageKey, JSON.stringify(sortConfig))
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(sortConfig))
+      } catch {
+        // storage blocked or full; sorting still works without persistence
+      }
     }
   }, [storageKey, sortConfig])
 
