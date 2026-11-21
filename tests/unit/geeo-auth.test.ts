@@ -51,6 +51,33 @@ it("parses token cookies safely and checks the 120-second expiry boundary", asyn
   expect(token.getAuthHeaders()).toEqual({ Authorization: "Bearer access-old" });
   expect(fetch).not.toHaveBeenCalled();
 });
+it.each([
+  ["explicit.pdf", 'attachment; filename="server.pdf"', "explicit.pdf"],
+  ["", 'attachment; filename="server.pdf"', ""],
+  [undefined, "attachment; filename=plain.pdf", "plain.pdf"],
+  [undefined, 'attachment; filename="a;b.pdf"', "a;b.pdf"],
+  [undefined, "attachment; filename=plain.pdf; filename*=UTF-8''caf%C3%A9.pdf", "café.pdf"],
+  [undefined, "attachment; filename*=UTF-8''bad%ZZ; filename=fallback.pdf", "fallback.pdf"],
+  [undefined, "attachment; filename*=UTF-8''bad%ZZ", ""],
+  [undefined, null, ""],
+])("downloads blobs with filename %s / %s", async (fileName, disposition, expected) => {
+  const { client } = await load();
+  session();
+  const anchor = { href: "", download: undefined as string | undefined, rel: "", style: { display: "" }, click: vi.fn(), remove: vi.fn() };
+  vi.stubGlobal("document", { createElement: vi.fn(() => anchor), body: { appendChild: vi.fn() } });
+  vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:test");
+  const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+  vi.useFakeTimers();
+  vi.mocked(fetch).mockResolvedValueOnce(new Response("pdf", { headers: disposition ? { "Content-Disposition": disposition } : {} }));
+  await client.downloadAuthenticated("/file", fileName ?? undefined);
+  expect(anchor.download).toBe(expected);
+  expect(anchor.href).toBe("blob:test");
+  expect(anchor.click).toHaveBeenCalledOnce();
+  expect(anchor.remove).toHaveBeenCalledOnce();
+  await vi.runOnlyPendingTimersAsync();
+  expect(revoke).toHaveBeenCalledWith("blob:test");
+  vi.restoreAllMocks();
+});
 it("posts form-encoded token and userinfo payloads, including error cases", async () => {
   const { postToken, fetchUserInfo } = await import("@/lib/auth/api");
   vi.mocked(fetch).mockResolvedValueOnce(json(tokenResponse)).mockResolvedValueOnce(json(user));

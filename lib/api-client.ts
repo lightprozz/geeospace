@@ -242,6 +242,16 @@ export async function apiFetch<T = unknown>(
  * `fileName` is the display name to save under; without it the browser uses
  * the name carried by the response headers.
  */
+function downloadFileName(disposition: string | null): string | undefined {
+  if (!disposition) return undefined
+  const extended = disposition.match(/(?:^|;)\s*filename\*\s*=\s*UTF-8'[^']*'([^;]*)/i)
+  if (extended) {
+    try { return decodeURIComponent(extended[1].trim()) } catch { /* Fall back to filename. */ }
+  }
+  const plain = disposition.match(/(?:^|;)\s*filename\s*=\s*(?:"((?:[^"\\]|\\.)*)"|([^;]*))/i)
+  return plain ? (plain[1]?.replace(/\\(.)/g, "$1") ?? plain[2].trim()) : undefined
+}
+
 export async function downloadAuthenticated(
   url: string,
   fileName?: string,
@@ -263,7 +273,7 @@ export async function downloadAuthenticated(
 
   const anchor = document.createElement("a")
   anchor.href = objectUrl
-  if (fileName) anchor.download = fileName
+  anchor.download = fileName ?? downloadFileName(res.headers.get("Content-Disposition")) ?? ""
   anchor.rel = "noreferrer"
   anchor.style.display = "none"
   document.body.appendChild(anchor)
