@@ -17,7 +17,7 @@ test("users: filter, view a profile, assign a campus and deactivate", async ({ p
   await panel.getByRole("textbox", { name: "Search users" }).fill("missing");
   await expect(panel.getByText("No users found")).toBeVisible();
   await panel.getByRole("textbox", { name: "Search users" }).fill("mai@example.test");
-  await row.getByRole("button", { name: "Mai", exact: true }).click();
+  await row.getByRole("button", { name: "Mai Nguyen", exact: true }).click();
   const info = page.getByRole("dialog", { name: "User Information" });
   await expect(info.getByText("Mai Nguyen")).toBeVisible();
   await expect(info.getByText("Active", { exact: true })).toBeVisible();
@@ -57,6 +57,20 @@ test("users: finds accounts from later API pages", async ({ page }) => {
   await expect(panel.getByRole("row").filter({ hasText: "linh@example.test" })).toBeVisible();
   expect(requests.filter(request => request.path === routes.users + "/query").map(request => request.body))
     .toEqual([expect.objectContaining({ page: 1 }), expect.objectContaining({ page: 2 })]);
+});
+
+test("users: displays and sorts by the API's English names without shortening full names", async ({ page }) => {
+  const { users } = await mockManagement(page);
+  users[1].isActive = true;
+  await page.goto("/#lms-users");
+  const panel = page.locator('[data-app="lms-users"]');
+  const rows = panel.locator("tbody tr");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText("Linh Tran");
+  await panel.getByRole("columnheader", { name: "English Name" }).click();
+  await expect(rows.first()).toContainText("Mai Nguyen");
+  await expect(rows.first().getByRole("cell", { name: "Amy", exact: true })).toBeVisible();
+  await expect(rows.last().getByRole("cell", { name: "Zoe", exact: true })).toBeVisible();
 });
 
 test("roles: filter, grant and revoke a permission on the selected role", async ({ page }) => {

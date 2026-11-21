@@ -155,6 +155,7 @@ export interface AccountInfo {
 export interface AccountListItem {
   id: string
   fullName: string | null
+  englishName: string | null
   email: string | null
   /** Role NAME (not ID) — from AspNetRoles.Name via AccountService line 47 */
   roleId: string | null

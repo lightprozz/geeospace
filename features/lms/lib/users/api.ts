@@ -27,7 +27,6 @@ export async function fetchAccountList(
   signal?: AbortSignal,
 ): Promise<PagedResult<AccountListItem>> {
   // V2 API returns { id, fullName, englishName, email, roleName, branch, isActive, employeeCode }
-  // We need to map to AccountListItem shape { id, fullName, email, roleId, branch, status }
   const result = await queryPaged<Record<string, unknown>>(USERS_API + '/query', {
     page: request?.page ?? 1,
     pageSize: request?.pageSize ?? 20,
@@ -39,6 +38,7 @@ export async function fetchAccountList(
     items: result.items.map((item) => ({
       id: item.id as string,
       fullName: (item.fullName as string) ?? null,
+      englishName: (item.englishName as string) ?? null,
       email: (item.email as string) ?? null,
       roleId: (item.roleName as string) ?? null,
       branch: (item.branch as string) ?? null,

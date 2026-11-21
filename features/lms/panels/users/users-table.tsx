@@ -81,20 +81,6 @@ function getRoleBadgeClass(role: string | null): string {
   }
 }
 
-/**
- * Split fullName into Vietnamese name (all parts except last) and English name (last part).
- * e.g. "Lạc Minh Tuấn Jun" → { vn: "Lạc Minh Tuấn", en: "Jun" }
- */
-function splitName(fullName: string | null): { vn: string; en: string } {
-  if (!fullName) return { vn: '—', en: '—' }
-  const parts = fullName.trim().split(/\s+/)
-  if (parts.length <= 1) return { vn: fullName, en: '—' }
-  return {
-    vn: parts.slice(0, -1).join(' '),
-    en: parts[parts.length - 1],
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -195,14 +181,12 @@ export function UsersTable({
             ) : (
               users.map((user) => {
                 const active = isUserActive(user)
-                const { vn, en } = splitName(user.fullName)
                 return (
                   <TableRow
                     key={user.id}
                     className="cursor-pointer group hover:bg-muted/50 h-12"
                     onClick={() => onViewInfo(user)}
                   >
-                    {/* Vietnamese Name + Avatar */}
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
@@ -215,14 +199,13 @@ export function UsersTable({
                           className="truncate text-left text-sm font-medium hover:underline"
                           onClick={event => { event.stopPropagation(); onViewInfo(user) }}
                         >
-                          {vn}
+                          {user.fullName || '—'}
                         </button>
                       </div>
                     </TableCell>
 
-                    {/* English Name (last word from fullName) */}
                     <TableCell className="text-sm text-muted-foreground truncate max-w-[160px]">
-                      {en}
+                      {user.englishName || '—'}
                     </TableCell>
 
                     {/* Email */}

@@ -98,7 +98,7 @@ export function UsersPageClient() {
 
   const table = useClientTable<UserRecord>({
     data: allUsers as UserRecord[],
-    searchFields: ['fullName', 'email'] as (keyof UserRecord)[],
+    searchFields: ['fullName', 'englishName', 'email'],
     searchQuery,
     filterPredicate,
     sort,

@@ -32,8 +32,8 @@ export async function mockManagement(page: Page, permissions = managementPermiss
   const state = { usersStatus: 200, usersPageSize: 100, roomsStatus: 200 };
   let sequence = 0;
   const users = [
-    { id: "mai", fullName: "Mai Nguyen", email: "mai@example.test", roleName: "Teacher", branch: campus.name, isActive: true, assignedCampus: '["north"]', avatarImage: "profile.png", degreeCertificate: "degree.pdf" },
-    { id: "linh", fullName: "Linh Tran", email: "linh@example.test", roleName: "Planner", branch: south.name, isActive: false, assignedCampus: '["south"]' },
+    { id: "mai", fullName: "Mai Nguyen", englishName: "Amy", email: "mai@example.test", roleName: "Teacher", branch: campus.name, isActive: true, assignedCampus: '["north"]', avatarImage: "profile.png", degreeCertificate: "degree.pdf" },
+    { id: "linh", fullName: "Linh Tran", englishName: "Zoe", email: "linh@example.test", roleName: "Planner", branch: south.name, isActive: false, assignedCampus: '["south"]' },
   ];
   const roles = [teacher, planner];
   const roleClaims = new Map([
@@ -134,5 +134,5 @@ export async function mockManagement(page: Page, permissions = managementPermiss
     }
     return json({ title: "Unmocked API request" }, 404);
   });
-  return { requests, state, routes };
+  return { requests, state, routes, users };
 }
