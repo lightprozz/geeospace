@@ -47,6 +47,18 @@ test("users: filter, view a profile, assign a campus and deactivate", async ({ p
   expect(requests).toContainEqual({ path: `${routes.users}/mai/status`, method: "PATCH", body: { isActive: false } });
 });
 
+test("users: finds accounts from later API pages", async ({ page }) => {
+  const { requests, routes, state } = await mockManagement(page);
+  state.usersPageSize = 1;
+  await page.goto("/#lms-users");
+  const panel = page.locator('[data-app="lms-users"]');
+  await panel.getByRole("tab", { name: "Inactive", exact: true }).click();
+  await panel.getByRole("textbox", { name: "Search users" }).fill("linh@example.test");
+  await expect(panel.getByRole("row").filter({ hasText: "linh@example.test" })).toBeVisible();
+  expect(requests.filter(request => request.path === routes.users + "/query").map(request => request.body))
+    .toEqual([expect.objectContaining({ page: 1 }), expect.objectContaining({ page: 2 })]);
+});
+
 test("roles: filter, grant and revoke a permission on the selected role", async ({ page }) => {
   const { requests, routes } = await mockManagement(page);
   await page.goto("/#lms-roles");

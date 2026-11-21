@@ -61,10 +61,9 @@ export function UsersPageClient() {
   const canManageStatus = useCan(PERMISSIONS.ADMIN_USERS_MANAGE)
   const canManageRoles = useCan(PERMISSIONS.ADMIN_ROLES_MANAGE)
 
-  // ── Data — fetch ALL users (1 API call) ──────────────────────────
   const { data: allUsers = [], isLoading, error, refetch } = useQuery({
     queryKey: userKeys.accountList(),
-    queryFn: fetchAllAccountList,
+    queryFn: ({ signal }) => fetchAllAccountList(signal),
   })
 
   const { data: campuses = [], error: campusesError, refetch: refetchCampuses } = useQuery({

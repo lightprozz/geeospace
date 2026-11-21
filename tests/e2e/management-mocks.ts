@@ -29,7 +29,7 @@ function paged<T>(items: T[]) {
 
 export async function mockManagement(page: Page, permissions = managementPermissions) {
   const requests: Array<{ path: string; method: string; body: unknown }> = [];
-  const state = { usersStatus: 200, roomsStatus: 200 };
+  const state = { usersStatus: 200, usersPageSize: 100, roomsStatus: 200 };
   let sequence = 0;
   const users = [
     { id: "mai", fullName: "Mai Nguyen", email: "mai@example.test", roleName: "Teacher", branch: campus.name, isActive: true, assignedCampus: '["north"]', avatarImage: "profile.png", degreeCertificate: "degree.pdf" },
@@ -62,7 +62,10 @@ export async function mockManagement(page: Page, permissions = managementPermiss
     const id = path.split("/").at(-1);
 
     if (path === routes.users + "/query") {
-      return state.usersStatus === 200 ? json(paged(users)) : json({ title: "Unavailable" }, state.usersStatus);
+      if (state.usersStatus !== 200) return json({ title: "Unavailable" }, state.usersStatus);
+      const page: number = body.page;
+      const pageSize = state.usersPageSize;
+      return json({ items: users.slice((page - 1) * pageSize, page * pageSize), total: users.length, page, pageSize, hasNext: page * pageSize < users.length });
     }
     if (path === routes.lookups + "/roles") return json(roles);
     if (path === routes.lookups + "/campuses") return json(branches);
