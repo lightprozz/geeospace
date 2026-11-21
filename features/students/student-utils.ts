@@ -1,5 +1,5 @@
 import type { StudentAllItem } from '@/features/lms/types/student'
-import { sortWithBirthdayPriority, type SortConfig } from '@/hooks/use-sort'
+import { parseDateForSort, sortWithBirthdayPriority, type SortConfig } from '@/hooks/use-sort'
 
 export type StudentSortColumn = 'name' | 'englishName' | 'birthday' | 'startDate'
 
@@ -83,12 +83,12 @@ export function sortStudents(students: StudentAllItem[], sortConfig: SortConfig<
       bVal = b.englishName || ''
       break
     case 'birthday':
-      aVal = a.birthday || ''
-      bVal = b.birthday || ''
+      aVal = parseDateForSort(a.birthday)
+      bVal = parseDateForSort(b.birthday)
       break
     case 'startDate':
-      aVal = a.beginDate || ''
-      bVal = b.beginDate || ''
+      aVal = parseDateForSort(a.beginDate)
+      bVal = parseDateForSort(b.beginDate)
       break
     default:
       return 0
