@@ -52,11 +52,13 @@ interface UnitPlanPageClientProps {
   lesson: LessonDetail
 }
 
+const EMPTY_UNITS: UnitListItem[] = []
+
 export function UnitPlanPageClient({ lessonId, lesson }: UnitPlanPageClientProps) {
   const { can } = usePermission()
   const canCreateUnit = can(PERMISSIONS.CURRICULUM_CREATE)
   const canUpdateUnit = can(PERMISSIONS.CURRICULUM_UPDATE)
-  const { data: units = [], isLoading, isError } = useUnitsByLesson(lessonId)
+  const { data: units = EMPTY_UNITS, isLoading, isError } = useUnitsByLesson(lessonId)
   const { mutate: reorder } = useReorderUnitPlans(lessonId)
   const { mutate: deleteUnit, isPending: isDeleting } = useDeleteUnitPlan(lessonId)
 
