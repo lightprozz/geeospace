@@ -113,7 +113,7 @@ export function BranchListPanel({
                     {branch.name ?? 'Unnamed'} {branch.address && <span className="font-normal text-muted-foreground">— {branch.address}</span>}
                   </p>
                   {canManageFacilities && (
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="ghost"

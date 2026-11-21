@@ -272,6 +272,7 @@ export function UsersPageClient() {
 
       {/* Dialogs */}
       <UserInfoDialog
+        campuses={campuses}
         userId={viewUserId}
         open={!!viewUserId}
         onClose={handleCloseViewDialog}

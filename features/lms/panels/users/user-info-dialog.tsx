@@ -34,6 +34,7 @@ import { userKeys } from '@/features/lms/lib/users/query-keys'
 import {
   getInitials,
   isUserActive,
+  parseAssignedCampuses,
   roleRequiresBranch,
   DOCUMENT_TYPES,
 } from '@/features/lms/types/user'
@@ -169,6 +170,7 @@ function FileField({
 
 interface UserInfoDialogProps {
   userId: string | null
+  campuses: readonly { id: string; name: string }[]
   open: boolean
   onClose: () => void
 }
@@ -179,6 +181,7 @@ interface UserInfoDialogProps {
 
 export function UserInfoDialog({
   userId,
+  campuses,
   open,
   onClose,
 }: UserInfoDialogProps) {
@@ -187,6 +190,8 @@ export function UserInfoDialog({
     queryFn: () => fetchAccountInfo(userId!),
     enabled: !!userId && open,
   })
+  const assignedCampuses = parseAssignedCampuses(data?.assignedCampus)
+    .map(value => campuses.find(campus => campus.id === value)?.name ?? value)
 
   const handleOpenChange = useCallback(
     (o: boolean) => {
@@ -267,14 +272,14 @@ export function UserInfoDialog({
                 {roleRequiresBranch(data.roleId) && (
                   <InfoField
                     label="Assigned Campus"
-                    value={data.assignedCampus}
+                    value={assignedCampuses.join(', ')}
                     colSpan={2}
                   />
                 )}
               </InfoSection>
 
               {/* Campus Warning - for users with role requiring campus but no assignment */}
-              {roleRequiresBranch(data.roleId) && !data.assignedCampus && (
+              {roleRequiresBranch(data.roleId) && assignedCampuses.length === 0 && (
                 <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-md p-3 text-sm text-amber-800 dark:text-amber-200">
                   <p className="font-medium">Campus Not Assigned</p>
                   <p className="text-xs mt-1">

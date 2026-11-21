@@ -39,20 +39,10 @@ import {
   updateUserRole,
 } from '@/features/lms/lib/users/api'
 import { userKeys } from '@/features/lms/lib/users/query-keys'
-import { roleRequiresBranch } from '@/features/lms/types/user'
+import { parseAssignedCampuses, roleRequiresBranch } from '@/features/lms/types/user'
 import { ManagementError } from '../management-error'
 
 const EMPTY_CAMPUSES: Awaited<ReturnType<typeof fetchCampuses>> = []
-
-function parseCampusAssignment(assignment: string | null | undefined, campuses: typeof EMPTY_CAMPUSES) {
-  if (!assignment) return new Set<string>()
-  try {
-    const ids: unknown = JSON.parse(assignment)
-    if (Array.isArray(ids)) return new Set(ids.map(String))
-  } catch { /* Older accounts store comma-separated campus names. */ }
-  const names = assignment.split(',').map(name => name.trim())
-  return new Set(campuses.filter(campus => names.includes(campus.name)).map(campus => campus.id))
-}
 
 // ---------------------------------------------------------------------------
 // Props
@@ -102,7 +92,8 @@ export function RoleCampusDialog({
   const failedQuery = [userQuery, rolesQuery, campusesQuery].find(query => query.isError)
   const isLoading = userQuery.isLoading || rolesQuery.isLoading || campusesQuery.isLoading
   const selectedRole = roleOverride ?? roles.find(role => role.normalizedName === userDetail?.roleId?.toUpperCase())?.id ?? ''
-  const initialCampusIds = parseCampusAssignment(userDetail?.assignedCampus, campuses)
+  const assignedCampuses = parseAssignedCampuses(userDetail?.assignedCampus)
+  const initialCampusIds = new Set(assignedCampuses.map(value => campuses.find(campus => campus.name === value)?.id ?? value))
   const selectedCampusIds = campusOverride ?? initialCampusIds
 
   // ── Filter campuses by search ──────────────────────────────────

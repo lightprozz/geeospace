@@ -20,6 +20,8 @@ test("users: filter, view a profile, assign a campus and deactivate", async ({ p
   await row.getByRole("button", { name: "Mai", exact: true }).click();
   const info = page.getByRole("dialog", { name: "User Information" });
   await expect(info.getByText("Mai Nguyen")).toBeVisible();
+  await expect(info.getByText("Active", { exact: true })).toBeVisible();
+  await expect(info.getByText("North Campus", { exact: true })).toBeVisible();
   await expect(info.getByRole("img", { name: "Mai Nguyen" })).toBeVisible();
   const download = page.waitForEvent("download");
   await info.getByRole("button", { name: "degree.pdf" }).click();
@@ -33,6 +35,7 @@ test("users: filter, view a profile, assign a campus and deactivate", async ({ p
   await assignment.getByRole("checkbox", { name: "South Campus" }).check();
   await assignment.getByRole("button", { name: "Save Changes" }).click();
   await expect(assignment).toBeHidden();
+  await expect(page.locator("body")).not.toHaveCSS("pointer-events", "none");
   await expect(row).toContainText("South Campus");
   expect(requests).toContainEqual({ path: `${routes.users}/mai/role`, method: "PUT", body: { roleId: "role-teacher", assignedCampusIds: ["north", "south"] } });
 

@@ -196,7 +196,16 @@ export function isUserActive(
   user: Pick<AccountListItem, 'status'> | Pick<AccountInfo, 'isDisabled'>,
 ): boolean {
   if ('status' in user) return user.status === true
-  return user.isDisabled === true
+  return user.isDisabled === false
+}
+
+export function parseAssignedCampuses(assignment: string | null | undefined): string[] {
+  if (!assignment) return []
+  try {
+    const ids: unknown = JSON.parse(assignment)
+    if (Array.isArray(ids)) return ids.filter((id): id is string => typeof id === 'string' && !!id)
+  } catch { /* Older accounts store comma-separated campus names. */ }
+  return assignment.split(',').map(name => name.trim()).filter(Boolean)
 }
 
 /** Get initials from full name for Avatar fallback */

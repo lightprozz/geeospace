@@ -269,7 +269,7 @@ export function UsersTable({
                         with nothing to manage would be a dangling no-op button. */}
                     <TableCell>
                       {hasRowActions && (
-                        <DropdownMenu>
+                        <DropdownMenu modal={false}>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
