@@ -8,5 +8,8 @@ export default defineConfig({
   reporter: "list",
   projects: browserSmoke.projects,
   use: { baseURL: "http://127.0.0.1:8787", trace: "retain-on-failure" },
-  webServer: { command: "npm run cf:preview", url: "http://127.0.0.1:8787/api/health", reuseExistingServer: false, timeout: 90000 }
+  webServer: [
+    ...[browserSmoke.webServer ?? []].flat(),
+    { command: "npm run cf:preview", url: "http://127.0.0.1:8787/api/health", reuseExistingServer: false, timeout: 90000 },
+  ]
 });
