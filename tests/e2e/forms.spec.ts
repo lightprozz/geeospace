@@ -9,7 +9,14 @@ import { authBaseURL, mockGeeo, mockUser, seedGeeo } from "./geeo-mocks";
 
 test.use({ baseURL: authBaseURL });
 
-const timestamp = "2026-10-20T08:00:00Z";
+const now = Date.now();
+const hour = 3_600_000;
+const timestamp = new Date(now - 12 * hour).toISOString();
+const requestIds = [
+  "a3f98c21-2e47-4bd6-98c0-7d356fa41208",
+  "b7d24e60-81c5-4f32-a917-6e0c842d539b",
+  "c9e513a4-6b72-4d80-b325-1fa946e078dc",
+];
 const user = { id: mockUser.sub, fullName: mockUser.name, email: mockUser.email };
 const fields: Field[] = [
   { id: "reason", fieldName: "reason", inputKey: "reason", label: "Lý do nghỉ phép",
@@ -36,10 +43,10 @@ const processes: ProcessStepDto[] = ["Trưởng nhóm duyệt", "Nhân sự xác
   approvers: [{ id: "approver-" + index, kind: "User", resourceId: user.id, resourceName: user.fullName }],
 }));
 const requests: RequestListItem[] = ["Nghỉ phép ngày 24–25/11", "Mua màn hình phòng giáo viên", "Đăng ký khóa đào tạo"].map((subject, index) => ({
-  id: "request-" + (index + 1), subject, templateId: templates[index].id, templateName: templates[index].name,
+  id: requestIds[index], subject, templateId: templates[index].id, templateName: templates[index].name,
   collectionId: "staff", collectionName: "Nhân sự", formStatus: index === 2 ? 3 : 2,
   createdById: user.id, createdByName: user.fullName, createdDate: timestamp,
-  expiredDate: "2030-12-31T08:00:00Z", updatedAt: timestamp, isArchived: false,
+  expiredDate: new Date(now + [35.5, 17.5, 5.5][index] * hour).toISOString(), updatedAt: timestamp, isArchived: false,
   currentStepName: processes[0].processName, currentStepIndex: 0, canApprove: index < 2,
 }));
 const detail: RequestDetail = {
@@ -68,24 +75,25 @@ async function mockForms(page: Page) {
     };
     if (method === "OPTIONS") { await route.fulfill({ status: 204, headers }); return; }
     const runtime = "/api/v2/forms/requests";
+    const requestPath = runtime + "/" + requests[0].id;
     const builder = "/api/v2/form-builder";
     const paged = (items: unknown[]) => ({ items, page: 1, pageSize: 25, total: items.length, hasNext: false });
     let json: unknown;
     if (method === "POST" && pathname === runtime + "/query") json = paged(requests);
     else if (method === "POST" && pathname === runtime + "/query/counts") json = { action: 2, created: 3, viewer: 3 };
-    else if (method === "POST" && pathname === runtime + "/request-1/open") json = { updatedAt: timestamp };
+    else if (method === "POST" && pathname === requestPath + "/open") json = { updatedAt: timestamp };
     else if (method === "GET") {
-      if (pathname === runtime + "/request-1") json = detail;
-      else if (pathname === runtime + "/request-1/comments") json = [{
+      if (pathname === requestPath) json = detail;
+      else if (pathname === requestPath + "/comments") json = [{
         id: "comment-1", userId: user.id, fullName: user.fullName, content: "Đã bàn giao lịch giảng dạy cho nhóm.",
         rootId: null, attachments: [], createdDate: timestamp,
       }];
-      else if (pathname === runtime + "/request-1/activities") json = [{
+      else if (pathname === requestPath + "/activities") json = [{
         id: "activity-1", userId: user.id, fullName: user.fullName, formStatus: 2,
         note: "Yêu cầu đã được gửi đến trưởng nhóm.", createdDate: timestamp,
       }];
-      else if (pathname === runtime + "/request-1/worklogs") json = [];
-      else if (pathname === runtime + "/request-1/worklog-step/step-1") json = {
+      else if (pathname === requestPath + "/worklogs") json = [];
+      else if (pathname === requestPath + "/worklog-step/step-1") json = {
         id: "review-note", name: "Xác nhận lịch nghỉ", description: "Ghi nhận kết quả kiểm tra.",
         fields: [{ ...fields[0], id: "review", inputKey: "review", fieldName: "review", label: "Ghi chú xét duyệt", required: false, value: "" }],
       };
@@ -152,9 +160,15 @@ test("Requests and Form Templates render inside desktop windows", async ({ page 
   const requestPanel = await launch(page, "requests");
   await expect(requestPanel.getByText(requests[0].subject, { exact: true })).toBeVisible();
   await expect(requestPanel.getByText(requests[1].subject, { exact: true })).toBeVisible();
+  for (const code of ["#a3f98c21", "#b7d24e60", "#c9e513a4"]) {
+    await expect(requestPanel.getByRole("cell", { name: code, exact: true })).toBeVisible();
+  }
+  for (const remaining of ["1d remaining", "17h remaining", "5h remaining"]) {
+    await expect(requestPanel.getByRole("cell", { name: remaining, exact: true })).toBeVisible();
+  }
   await screenshot(page, requestPanel, "requests-inbox");
   await requestPanel.getByText(requests[0].subject, { exact: true }).click();
-  await expect(page).toHaveURL(/#requests\/request-1$/);
+  await expect(page).toHaveURL(new RegExp("#requests/" + requests[0].id + "$"));
   await expect(requestPanel.getByText(requests[0].subject, { exact: true })).toBeVisible();
   await expect(requestPanel.getByText(processes[0].processName, { exact: true }).first()).toBeVisible();
   await expect(requestPanel.getByText("Family appointment", { exact: true })).toBeVisible();
