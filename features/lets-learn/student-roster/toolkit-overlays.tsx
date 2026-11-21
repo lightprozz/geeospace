@@ -56,6 +56,7 @@ interface StudentForGroup {
 function OverlayCloseButton({ onClose }: OverlayCloseProps) {
   return (
     <button
+      aria-label="Close tool"
       onClick={onClose}
       className="absolute top-6 right-6 p-2 bg-muted rounded-full hover:bg-muted-foreground/20 text-foreground transition-colors z-50"
     >
@@ -415,7 +416,7 @@ export function MusicTool({ onClose }: OverlayCloseProps) {
         {isPlaying ? <Pause className="w-10 h-10 fill-current" /> : <Play className="w-10 h-10 fill-current ml-2" />}
       </button>
       <span className="mt-8 text-xl text-muted-foreground font-medium">
-        {isPlaying ? 'Playing upbeat background music...' : 'Paused'}
+        Music demo — no audio source connected. {isPlaying ? 'Animation playing' : 'Paused'}
       </span>
     </motion.div>
   )

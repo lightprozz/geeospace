@@ -3,12 +3,14 @@
 import { LmsUiScope } from '@/components/ui/lms-ui-scope'
 import { useWindowNavigation } from '@/components/desktop/window-navigation'
 import { LetsLearnClient } from './lets-learn-client'
+import { PermissionGuard } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 
 export default function LetsLearnPanel() {
   const { path, navigate } = useWindowNavigation()
   const [id, classId, mode] = path.split('/')
   return <LmsUiScope className="relative flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground">
-    {id ? <LetsLearnClient key={path} id={id} classId={classId || undefined} source={mode === 'lessonPlan' ? 'lessonPlan' : 'classLesson'} isPreview /> :
+    {id ? <PermissionGuard permission={PERMISSIONS.LESSON_LIVE_READ}><LetsLearnClient key={path} id={id} classId={classId || undefined} source={mode === 'lessonPlan' ? 'lessonPlan' : 'classLesson'} isPreview /></PermissionGuard> :
       <div className="m-auto w-full max-w-lg space-y-6 overflow-auto p-6">
         <h1 className="text-2xl font-bold">Let&apos;s Learn</h1>
         <p>Enter a class lesson ID to start presenting. Maximize this window for more space.</p>
