@@ -184,6 +184,15 @@ it("retries API 401 once with the refreshed token, preserving body and idempoten
   expect(store.getState().isAuthenticated).toBe(false);
   expect(cookies.size).toBe(0);
 });
+it("keeps DELETE as the method even when caller options specify another method", async () => {
+  const { client } = await load();
+  session();
+  vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
+  await client.api.delete("/example", { method: "POST", headers: { "X-Test": "preserved" } });
+  expect(fetch).toHaveBeenCalledWith("https://api.geeo.test/example", expect.objectContaining({
+    method: "DELETE", headers: expect.objectContaining({ "x-test": "preserved" }),
+  }));
+});
 it("maps ProblemDetails, supports interceptors, and accepts any empty successful response", async () => {
   const { client } = await load();
   session();

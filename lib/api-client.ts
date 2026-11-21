@@ -291,7 +291,7 @@ export const api = {
     apiFetch<T>(path, { ...opts, method: "PATCH", body }),
 
   delete: <T = unknown>(path: string, opts?: ApiClientOptions) =>
-    apiFetch<T>(path, { ...opts, method: "DELETE", ...opts }),
+    apiFetch<T>(path, { ...opts, method: "DELETE" }),
 }
 
 // ---- Query helper (POST query → PagedResult) -------------------------------
