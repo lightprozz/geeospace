@@ -14,6 +14,7 @@ const QueryState = createContext<{
   setValues: Dispatch<SetStateAction<Record<string, string>>>
 } | null>(null)
 const RouteBase = createContext("/requests")
+const RouteParams = createContext<Record<string, string>>({})
 
 export function toWindowPath(href: string, base: string): string {
   const [pathname] = href.split("?")
@@ -23,7 +24,7 @@ export function toWindowPath(href: string, base: string): string {
   throw new Error("Cannot navigate outside this forms window")
 }
 
-export function FormsWindowAdapter({ base, children }: { base: string; children: ReactNode }) {
+export function FormsWindowAdapter({ base, params = {}, children }: { base: string; params?: Record<string, string>; children: ReactNode }) {
   const [header, setHeader] = useState<HeaderConfig | null>(null)
   const { path } = useWindowNavigation()
   const [values, setValues] = useState<Record<string, string>>(
@@ -32,14 +33,18 @@ export function FormsWindowAdapter({ base, children }: { base: string; children:
   const query = useMemo(() => ({ values, setValues }), [values])
   return (
     <RouteBase.Provider value={base}>
-      <QueryState.Provider value={query}>
-        <HeaderSetter.Provider value={setHeader}>
-          <HeaderValue.Provider value={header}>
-            <FormsHeader />
-          </HeaderValue.Provider>
-          {children}
-        </HeaderSetter.Provider>
-      </QueryState.Provider>
+      <RouteParams.Provider value={params}>
+        <QueryState.Provider value={query}>
+          <HeaderSetter.Provider value={setHeader}>
+            <HeaderValue.Provider value={header}>
+              <div data-forms-window={base} className="flex min-h-0 flex-1 flex-col">
+                <FormsHeader />
+                {children}
+              </div>
+            </HeaderValue.Provider>
+          </HeaderSetter.Provider>
+        </QueryState.Provider>
+      </RouteParams.Provider>
     </RouteBase.Provider>
   )
 }
@@ -77,19 +82,35 @@ export function useQueryState(key: string): [string | null, (value: string | nul
 }
 
 export function useRouter() {
-  const { navigate, back } = useWindowNavigation()
+  const { path: currentPath, navigate, back } = useWindowNavigation()
   const base = useContext(RouteBase)
   const setValues = useContext(QueryState)?.setValues
-  return useMemo(() => ({
-    push(href: string) {
+  return useMemo(() => {
+    const prepare = (href: string) => {
       const path = toWindowPath(href, base)
       if (href.includes("?")) {
         setValues?.(Object.fromEntries(new URLSearchParams(href.split("?")[1])))
       }
-      navigate(path)
-    },
-    back,
-  }), [navigate, back, base, setValues])
+      return path
+    }
+    return {
+      push(href: string) { navigate(prepare(href)) },
+      replace(href: string) {
+        const path = prepare(href)
+        if (path !== currentPath.split("?")[0]) navigate(path)
+      },
+      back,
+    }
+  }, [currentPath, navigate, back, base, setValues])
+}
+
+export function useParams() {
+  return useContext(RouteParams)
+}
+
+export function useSearchParams() {
+  const values = useContext(QueryState)?.values
+  return useMemo(() => new URLSearchParams(values), [values])
 }
 
 export function WindowLink({ href = "", onClick, children, ...props }: ComponentProps<"a">) {

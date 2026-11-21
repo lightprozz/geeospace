@@ -29,10 +29,12 @@ function UnconnectedPanel({ id, onOpen }: PanelProps) {
 
 const LmsHub = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsHub })));
 const RequestsPanel = lazy(() => import("@/features/forms/requests/requests-panel").then(module => ({ default: module.RequestsPanel })));
+const FormTemplatesPanel = lazy(() => import("@/features/forms/form-templates/form-templates-panel").then(module => ({ default: module.FormTemplatesPanel })));
 const LmsPlaceholder = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsPlaceholder })));
 const panels: Partial<Record<DesktopAppId, ComponentType<PanelProps>>> = {
   ...Object.fromEntries(desktopApps.filter(app => app.group !== "workspace" && app.id !== "requests" && app.id !== "work").map(app => [app.id, LmsPlaceholder])),
   requests: RequestsPanel,
+  "lms-form-templates": FormTemplatesPanel,
   account: props => isGeeoConfigured ? <AccountPanel /> : <UnconfiguredAccountPanel {...props} />, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub, staff: LmsHub, admin: LmsHub,
 };
 export function AppPanel(props: PanelProps) {
