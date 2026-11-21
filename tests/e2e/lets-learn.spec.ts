@@ -15,19 +15,26 @@ test.beforeEach(async ({ page }) => {
     const path = new URL(route.request().url()).pathname
     if (path === '/mock/lesson.svg') return route.fulfill({ contentType: 'image/svg+xml', body: illustration })
     if (path.endsWith('/students')) return route.fulfill({ json: [{ id: 's1', studentName: 'Mai Nguyen', englishName: 'Mia' }, { id: 's2', studentName: 'An Tran', englishName: 'Andy' }] })
-    return route.fulfill({ json: [unit, { ...unit, id: 'unit-2', procedures: 'Practice together', material: null }] })
+    return route.fulfill({ json: [unit, { ...unit, id: 'unit-2', unitId: 'u2', procedures: 'Practice together', material: null }] })
   })
 })
 
-test('launcher → lesson → roster and toolkit → end session', async ({ page }) => {
+test('launcher → lesson → roster and toolkit → end session', async ({ page, isMobile }) => {
   const externalAvatarRequests: string[] = []
   page.on('request', request => { if (request.url().includes('dicebear')) externalAvatarRequests.push(request.url()) })
   await page.goto('/')
-  await page.locator('.os-dock').getByRole('button', { name: 'Tất cả ứng dụng', exact: true }).click()
+  await page.addStyleTag({ content: 'nextjs-portal { display: none; }' })
+  await expect(page.locator('.geeospace-os')).toHaveAttribute('data-ready', 'true')
+  if (isMobile) {
+    await page.getByRole('button', { name: 'Menu Geeospace', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Tất cả ứng dụng', exact: true }).click()
+  } else {
+    await page.locator('.os-dock').getByRole('button', { name: 'Tất cả ứng dụng', exact: true }).click()
+  }
   await page.getByRole('dialog', { name: 'Tất cả ứng dụng', exact: true }).getByRole('option', { name: /Cùng học/ }).click()
   const panel = page.locator('[data-app="lms-lets-learn"]')
   await expect(panel.getByRole('heading', { name: "Let's Learn" })).toBeVisible()
-  await panel.getByRole('button', { name: /Phóng to/ }).click()
+  if (!isMobile) await panel.getByRole('button', { name: /Phóng to/ }).click()
   if (process.env.SCREENSHOT_DIR) await page.screenshot({ animations: 'disabled', path: `${process.env.SCREENSHOT_DIR}/lets-learn-entry.png` })
   await panel.getByLabel('Class lesson ID', { exact: true }).fill('lesson-1')
   await panel.getByLabel('Class ID (optional, for student roster)').fill('class-1')
