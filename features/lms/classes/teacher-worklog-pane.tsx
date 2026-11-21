@@ -91,6 +91,7 @@ import { useWorkLogsByLessonLog } from '@/features/lms/hooks/worklog/use-worklog
 import { isApprovedLockedError, isConcurrencyError } from '@/features/lms/lib/worklog/api'
 import { worklogKeys } from '@/features/lms/lib/worklog/query-keys'
 import { hasWorklogEditableChanges } from './worklog-edits'
+import { withMissingTeacherDrafts } from './worklog-teacher-drafts'
 import { useCan } from '@/lib/use-can'
 import { PERMISSIONS } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
@@ -325,17 +326,13 @@ export function TeacherWorklogPane({ logId, classId }: TeacherWorklogPaneProps) 
       setEditing(false)
       return
     }
-    if (mergedItems.length === 0) {
-      // No worklogs → create defaults from class teachers.
-      const defaults = classTeachers.map((ct) => emptyDraft({ teacherId: ct.teacherId }))
-      setWorkLogs(defaults)
-      setWorkLogsAudit([])
-      setEditing(true)
-    } else {
-      setWorkLogs(mergedItems.map(toDraft))
-      setWorkLogsAudit(mergedItems)
-      setEditing(false)
-    }
+    setWorkLogs(withMissingTeacherDrafts(
+      mergedItems.map(toDraft),
+      classTeachers.map(ct => ct.teacherId),
+      teacherId => emptyDraft({ teacherId }),
+    ))
+    setWorkLogsAudit(mergedItems)
+    setEditing(mergedItems.length === 0)
   }, [mergedItems, classTeachers, logId, loadingWL, loadingSO, wlError, saving])
 
   // ── Derived data ──────────────────────────────────────────────────────
@@ -457,12 +454,16 @@ export function TeacherWorklogPane({ logId, classId }: TeacherWorklogPaneProps) 
 
   const handleCancel = useCallback(() => {
     if (workLogsAudit.length > 0) {
-      setWorkLogs(workLogsAudit.map(toDraft))
+      setWorkLogs(withMissingTeacherDrafts(
+        workLogsAudit.map(toDraft),
+        classTeachers.map(ct => ct.teacherId),
+        teacherId => emptyDraft({ teacherId }),
+      ))
       setEditing(false)
     } else {
       refetchWorkLogs()
     }
-  }, [workLogsAudit, refetchWorkLogs])
+  }, [workLogsAudit, refetchWorkLogs, classTeachers])
 
   /**
    * Creates a worklog for `w`, attributed via `targetTeacherId` (Amendment
