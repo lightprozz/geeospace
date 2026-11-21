@@ -87,6 +87,18 @@ describe("curriculum", () => {
 });
 
 describe("materials", () => {
+  it("cycles sorting ascending, descending, then unsorted", async () => {
+    localStorage.removeItem("materials-table-sort");
+    mount(h(MaterialsPageClient));
+    await screen.findByText("Counting video");
+    const name = screen.getByRole("columnheader", { name: "Name" });
+    fireEvent.click(name);
+    expect(JSON.parse(localStorage.getItem("materials-table-sort")!)).toEqual({ field: "name", desc: false });
+    fireEvent.click(name);
+    expect(JSON.parse(localStorage.getItem("materials-table-sort")!)).toEqual({ field: "name", desc: true });
+    fireEvent.click(name);
+    expect(localStorage.getItem("materials-table-sort")).toBeNull();
+  });
   it("renders an empty library", async () => {
     request.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, hasNext: false });
     mount(h(MaterialsPageClient));

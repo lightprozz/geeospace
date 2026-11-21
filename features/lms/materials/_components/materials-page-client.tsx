@@ -89,7 +89,7 @@ export function MaterialsPageClient() {
   const handleSortChange = (field: string) => {
     const newDesc = sortField === field ? !sortDesc : false
 
-    if (sortField === field && !sortDesc) {
+    if (sortField === field && sortDesc) {
       // Toggle off if already desc
       setSortField(undefined)
       setSortDesc(false)
