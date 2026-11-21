@@ -124,9 +124,8 @@ export function StudentRosterDialog({
     setActiveTool('none')
   }
 
-  // Students for Group tool (need id, name, seed)
   const studentsForGroups = useMemo(
-    () => rosterStudents.map((s) => ({ id: s.id, name: s.name, seed: s.seed })),
+    () => rosterStudents.map((s) => ({ id: s.id, name: s.name })),
     [rosterStudents],
   )
 

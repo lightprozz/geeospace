@@ -11,7 +11,6 @@ test.beforeEach(async ({ page }) => {
   await mockGeeo(page)
   await page.route('https://auth.geeo.test/connect/userinfo', route => route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: { ...mockUser, permission: ['lesson.live.read'] } }))
   await seedGeeo(page.context())
-  await page.route('https://api.dicebear.com/**', route => route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="40" fill="#91c9b2"/><text x="18" y="55" font-size="45">☺</text></svg>' }))
   await page.route('https://api.geeo.test/**', route => {
     const path = new URL(route.request().url()).pathname
     if (path === '/mock/lesson.svg') return route.fulfill({ contentType: 'image/svg+xml', body: illustration })
@@ -21,6 +20,8 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('launcher → lesson → roster and toolkit → end session', async ({ page }) => {
+  const externalAvatarRequests: string[] = []
+  page.on('request', request => { if (request.url().includes('dicebear')) externalAvatarRequests.push(request.url()) })
   await page.goto('/')
   await page.locator('.os-dock').getByRole('button', { name: 'Tất cả ứng dụng', exact: true }).click()
   await page.getByRole('dialog', { name: 'Tất cả ứng dụng', exact: true }).getByRole('option', { name: /Cùng học/ }).click()
@@ -48,6 +49,7 @@ test('launcher → lesson → roster and toolkit → end session', async ({ page
   await expect(panel.getByRole('heading', { name: /Good bye/ })).toBeVisible()
   await panel.getByRole('button', { name: 'End Session' }).click()
   await expect(panel.getByRole('button', { name: 'Start lesson' })).toBeVisible()
+  expect(externalAvatarRequests).toEqual([])
 })
 
 test('deep links show empty and error states without closing the workspace', async ({ page }) => {

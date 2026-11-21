@@ -13,6 +13,7 @@ import {
   Lightbulb,
 } from 'lucide-react'
 import type { ClassStudentGrid } from '@/features/lms/types/class-student'
+import { StudentAvatar } from './student-avatar'
 
 // ---------------------------------------------------------------------------
 // Badge config
@@ -32,17 +33,15 @@ export const AVAILABLE_BADGES = [
 export interface RosterStudent {
   id: string
   name: string
-  seed: string
   isClassEntry?: boolean // true = "Whole Class" card
 }
 
 /** Convert API students to roster display format */
 export function toRosterStudents(students: ClassStudentGrid[]): RosterStudent[] {
-  const classEntry: RosterStudent = { id: 's0', name: 'Whole Class', seed: 'class', isClassEntry: true }
+  const classEntry: RosterStudent = { id: 's0', name: 'Whole Class', isClassEntry: true }
   const mapped: RosterStudent[] = students.map((s) => ({
     id: s.id,
     name: s.englishName || s.studentName || 'Unknown',
-    seed: (s.englishName || s.studentName || 'x').toLowerCase().replace(/\s+/g, ''),
   }))
   return [classEntry, ...mapped]
 }
@@ -211,10 +210,9 @@ export function StudentGrid({
             <h3 className="text-3xl font-bold text-muted-foreground mb-8">
               Selected Student:
             </h3>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`https://api.dicebear.com/9.x/bottts/svg?seed=${students.find((s) => s.id === randomlySelected)?.seed}&backgroundColor=transparent`}
-              alt="Selected student"
+            <StudentAvatar
+              id={randomlySelected ?? ''}
+              name={students.find((s) => s.id === randomlySelected)?.name ?? 'Unknown'}
               className="w-64 h-64 drop-shadow-2xl mb-8 border-8 border-primary rounded-full bg-primary/5"
             />
             <div className="text-6xl font-black text-foreground">
@@ -275,21 +273,19 @@ export function StudentGrid({
                   {student.isClassEntry ? (
                     <div className="w-full h-full relative flex items-center justify-center ml-2">
                       {students.filter((s) => !s.isClassEntry).slice(0, 3).map((s, i) => (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
+                        <StudentAvatar
                           key={s.id}
-                          src={`https://api.dicebear.com/9.x/bottts/svg?seed=${s.seed}&backgroundColor=transparent`}
-                          alt="avatar"
+                          id={s.id}
+                          name={s.name}
                           className={`w-24 h-24 absolute object-contain filter drop-shadow-md transition-all duration-300 ${i === 0 ? 'top-0 left-4 z-20 scale-110' : i === 1 ? 'bottom-2 -left-4 z-10 opacity-90' : 'bottom-2 right-4 z-0 opacity-80'
                             }`}
                         />
                       ))}
                     </div>
                   ) : (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={`https://api.dicebear.com/9.x/bottts/svg?seed=${student.seed}&backgroundColor=transparent`}
-                      alt={student.name}
+                    <StudentAvatar
+                      id={student.id}
+                      name={student.name}
                       className="w-full h-full object-contain filter drop-shadow-sm"
                     />
                   )}

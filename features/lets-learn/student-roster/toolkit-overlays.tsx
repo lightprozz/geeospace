@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useReducer } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { StudentAvatar } from './student-avatar'
 import {
   X,
   ChevronUp,
@@ -46,7 +47,6 @@ interface OverlayCloseProps {
 interface StudentForGroup {
   id: string
   name: string
-  seed: string
 }
 
 // ---------------------------------------------------------------------------
@@ -247,10 +247,9 @@ export function GroupTool({
             <div className="flex flex-wrap justify-center gap-2">
               {g.map((s) => (
                 <div key={s.id} className="relative group/stu">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`https://api.dicebear.com/9.x/bottts/svg?seed=${s.seed}&backgroundColor=transparent`}
-                    alt={s.name}
+                  <StudentAvatar
+                    id={s.id}
+                    name={s.name}
                     className="w-14 h-14 rounded-full border-2 border-border shadow-sm group-hover/stu:scale-110 transition-transform bg-white/50"
                   />
                   <div className="absolute -bottom-2 -left-2 -right-2 text-center bg-card text-[10px] font-bold rounded shadow-sm border border-border truncate px-1 py-0.5">

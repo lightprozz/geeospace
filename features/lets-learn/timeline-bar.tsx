@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import { useRef, useEffect } from 'react'
-import { Check, Clock, AlertTriangle } from 'lucide-react'
+import { Check, Clock, AlertTriangle, Users } from 'lucide-react'
 import type { LessonUnit } from '@/features/lms/types/lets-learn'
 
 // ---------------------------------------------------------------------------
@@ -166,23 +166,7 @@ export function TimelineBar({
             onClick={onOpenRoster}
             className="flex items-center gap-2 h-7 px-2.5 rounded-md bg-secondary/50 text-secondary-foreground hover:bg-secondary border border-border shadow-sm transition-all"
           >
-            <div className="flex -space-x-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://api.dicebear.com/9.x/bottts/svg?seed=bill"
-                className="w-4 h-4 rounded-full border border-card bg-muted"
-                alt="Student"
-              />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://api.dicebear.com/9.x/bottts/svg?seed=mia"
-                className="w-4 h-4 rounded-full border border-card bg-muted"
-                alt="Student"
-              />
-              <div className="w-4 h-4 rounded-full border border-card bg-background flex items-center justify-center text-[7px] font-bold text-muted-foreground">
-                +8
-              </div>
-            </div>
+            <Users className="w-4 h-4" aria-hidden="true" />
             <span className="text-[10px] font-semibold hidden sm:block">
               Class
             </span>

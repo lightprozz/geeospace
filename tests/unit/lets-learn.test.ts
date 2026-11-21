@@ -58,7 +58,7 @@ it.each([
 })
 
 it('builds an empty roster without inventing students', () => {
-  expect(toRosterStudents([])).toEqual([{ id: 's0', name: 'Whole Class', seed: 'class', isClassEntry: true }])
+  expect(toRosterStudents([])).toEqual([{ id: 's0', name: 'Whole Class', isClassEntry: true }])
 })
 
 it('accepts the short deep link, preserves roster and rejects unsafe paths', () => {
