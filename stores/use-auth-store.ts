@@ -19,6 +19,7 @@ interface AuthState {
 }
 
 const COOKIE_USERINFO = "GEEO.USERINFO";
+const AUTH_LOGOUT_KEY = "geeospace:auth-logout";
 const resetListeners = new Set<() => void>();
 export function onAuthReset(listener: () => void): () => void {
   resetListeners.add(listener);
@@ -54,6 +55,42 @@ let timer: ReturnType<typeof setTimeout> | undefined;
 let refreshPromise: Promise<string | null> | null = null;
 let initializePromise: Promise<void> | null = null;
 let generation = 0;
+
+function resetAuthState() {
+  generation++;
+  clearTimeout(timer);
+  usePermissionStore.setState({ permissions: [], isLoaded: true });
+  useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false });
+  notifyAuthReset();
+}
+
+function hasCurrentSession(version: number) {
+  if (version !== generation) return false;
+  if (getAuthCookie()) return true;
+  resetAuthState();
+  return false;
+}
+
+export function watchAuthLogout(): () => void {
+  if (!isGeeoConfigured) return () => {};
+  const checkCookie = () => {
+    if (useAuthStore.getState().isAuthenticated && !getAuthCookie()) resetAuthState();
+  };
+  const handleLogout = (event: StorageEvent) => {
+    if (event.key === AUTH_LOGOUT_KEY && event.newValue !== null) resetAuthState();
+  };
+  window.addEventListener("storage", handleLogout);
+  window.addEventListener("focus", checkCookie);
+  window.addEventListener("pageshow", checkCookie);
+  document.addEventListener("visibilitychange", checkCookie);
+  return () => {
+    window.removeEventListener("storage", handleLogout);
+    window.removeEventListener("focus", checkCookie);
+    window.removeEventListener("pageshow", checkCookie);
+    document.removeEventListener("visibilitychange", checkCookie);
+  };
+}
+
 function scheduleRefresh() {
   clearTimeout(timer);
   const auth = getAuthCookie();
@@ -100,7 +137,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           await get().refreshToken();
         } else {
           const info = await fetchUserInfo(auth.access_token);
-          if (version !== generation) return;
+          if (!hasCurrentSession(version)) return;
           saveUser(info);
           set({ user: normalizeUser(info), isAuthenticated: true });
           scheduleRefresh();
@@ -116,12 +153,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: (username, password) => signIn({ grant_type: GrantType.PASSWORD, username, password }),
   loginWithGoogle: authCode => signIn({ grant_type: GrantType.EXTERNAL_API, username: "", password: "", auth_code: authCode }),
   logout: () => {
-    generation++;
-    clearTimeout(timer);
+    const hadSession = get().isAuthenticated || !!getAuthCookie();
     for (const key of [COOKIE_AUTH, COOKIE_USERINFO]) Cookies.remove(key, cookieOptions());
-    usePermissionStore.setState({ permissions: [], isLoaded: true });
-    set({ user: null, isAuthenticated: false, isLoading: false });
-    notifyAuthReset();
+    resetAuthState();
+    if (hadSession) {
+      try {
+        window.localStorage.setItem(AUTH_LOGOUT_KEY, String(Date.now()));
+        window.localStorage.removeItem(AUTH_LOGOUT_KEY);
+      } catch { /* Tabs check the shared cookie again when they become visible. */ }
+    }
   },
   refreshToken: () => {
     if (refreshPromise) return refreshPromise;
@@ -137,16 +177,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             client_id: CLIENT_ID, grant_type: GrantType.REFRESH_TOKEN,
             refresh_token: auth.refresh_token, scope: SCOPES,
           });
-          if (version !== generation) return null;
+          if (!hasCurrentSession(version)) return null;
           const updated = authCookie(data, auth.refresh_token);
           saveAuth(updated);
           try {
             const info = await fetchUserInfo(updated.access_token);
-            if (version !== generation) return null;
+            if (!hasCurrentSession(version)) return null;
             saveUser(info);
             set({ user: normalizeUser(info), isAuthenticated: true, isLoading: false });
           } catch {
-            if (version !== generation) return null;
+            if (!hasCurrentSession(version)) return null;
             try {
               const cached: unknown = JSON.parse(Cookies.get(COOKIE_USERINFO) ?? "null");
               if (cached && typeof cached === "object" && "sub" in cached && typeof cached.sub === "string") {
@@ -156,7 +196,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               }
             } catch { /* Keep a valid refreshed token when cached claims are unavailable. */ }
           }
-          if (version !== generation) return null;
+          if (!hasCurrentSession(version)) return null;
           scheduleRefresh();
           return updated.access_token;
         } catch (error) {
@@ -165,7 +205,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           if (latest && latest.refresh_token !== auth.refresh_token && latest.expires_at > Math.floor(Date.now() / 1000)) {
             try {
               const info = await fetchUserInfo(latest.access_token);
-              if (version !== generation) return null;
+              if (!hasCurrentSession(version)) return null;
               saveUser(info);
               set({ user: normalizeUser(info), isAuthenticated: true, isLoading: false });
               scheduleRefresh();
