@@ -64,6 +64,25 @@ describe('parseLiteral', () => {
 })
 
 describe('serializeConditions', () => {
+  it.each(['"5"', '"true"', '"false"', '"null"', '" 5 "'])('preserves the original string literal %s when another property changes', literal => {
+    const rows = parseConditions('code == ' + literal + ' && amount > 10')
+    rows[1].value = '20'
+    rows[0].operator = '!='
+    expect(serializeConditions(rows)).toBe('code != ' + literal + ' && amount > 20')
+  })
+
+  it('keeps bare numbers and booleans bare after another row changes', () => {
+    const rows = parseConditions('amount == 5 && approved == true && note == "old"')
+    rows[2].value = 'new'
+    expect(serializeConditions(rows)).toBe('amount == 5 && approved == true && note == "new"')
+  })
+
+  it('infers the literal type when the value itself changes', () => {
+    const rows = parseConditions('code == "5"')
+    rows[0].value = 'true'
+    expect(serializeConditions(rows)).toBe('code == true')
+  })
+
   it('returns an empty string when there is no usable row', () => {
     expect(serializeConditions([])).toBe('')
     expect(serializeConditions([row({ inputKey: '  ' })])).toBe('')

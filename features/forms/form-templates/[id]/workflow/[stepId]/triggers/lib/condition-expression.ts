@@ -41,6 +41,8 @@ export interface ConditionRow {
   operator: ConditionOperator
   /** Compared literal, as typed by the user. Empty for `exists`. */
   value: string
+  /** Parsed token, reused while its displayed value is unchanged. */
+  originalLiteral?: string
   /** How this row joins with the row above it. The first row ignores it. */
   logic: ConditionLogic
 }
@@ -129,7 +131,10 @@ export function serializeConditions(rows: ConditionRow[]): string {
   return usable
     .map((row, index) => {
       const op = row.operator
-      const operand = op === 'exists' ? '' : ` ${formatLiteral(row.value)}`
+      const literal = row.originalLiteral !== undefined && parseLiteral(row.originalLiteral) === row.value
+        ? row.originalLiteral
+        : formatLiteral(row.value)
+      const operand = op === 'exists' ? '' : ` ${literal}`
       const term = `${row.inputKey.trim()} ${op}${operand}`
       if (index === 0) return term
       return `${row.logic === 'OR' ? ' || ' : ' && '}${term}`
@@ -211,6 +216,7 @@ function parseComparison(term: string): {
   inputKey: string
   operator: ConditionOperator
   value: string
+  originalLiteral: string
 } | null {
   const trimmed = term.trim()
   if (trimmed === '') return null
@@ -226,7 +232,7 @@ function parseComparison(term: string): {
 
   const rawValue = match[3].trim()
   const value = operator === 'exists' ? '' : parseLiteral(rawValue)
-  return { inputKey: match[1], operator, value }
+  return { inputKey: match[1], operator, value, originalLiteral: rawValue }
 }
 
 /**
