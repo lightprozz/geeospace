@@ -29,8 +29,13 @@ function UnconnectedPanel({ id, onOpen }: PanelProps) {
 
 const LmsHub = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsHub })));
 const LmsPlaceholder = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsPlaceholder })));
+const SchedulePanel = lazy(() => import("@/features/lms/apps/schedule/panel"));
+const TimetablePanel = lazy(() => import("@/features/lms/apps/timetable/panel"));
+const AttendancePanel = lazy(() => import("@/features/lms/apps/attendance/panel"));
+const HolidaysPanel = lazy(() => import("@/features/lms/apps/holidays/panel"));
 const panels: Partial<Record<DesktopAppId, ComponentType<PanelProps>>> = {
   ...Object.fromEntries(desktopApps.filter(app => app.group !== "workspace" && app.id !== "requests" && app.id !== "work").map(app => [app.id, LmsPlaceholder])),
+  "lms-schedule": SchedulePanel, "lms-timetable": TimetablePanel, "lms-attendance": AttendancePanel, "lms-holidays": HolidaysPanel,
   account: props => isGeeoConfigured ? <AccountPanel /> : <UnconfiguredAccountPanel {...props} />, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub, staff: LmsHub, admin: LmsHub,
 };
 export function AppPanel(props: PanelProps) {
