@@ -35,6 +35,7 @@ import { UserInfoDialog } from './user-info-dialog'
 // Record constraint for useClientTable
 // ---------------------------------------------------------------------------
 type UserRecord = AccountListItem & Record<string, unknown>
+const defaultSort = { field: 'fullName', desc: false } as const
 
 export function UsersPageClient() {
   // ── Filter state ─────────────────────────────────────────────────
@@ -104,7 +105,7 @@ export function UsersPageClient() {
     sort,
     sortStorageKey: 'users-table-sort',
     onSortChange: setSort,
-    defaultSort: { field: 'fullName' as keyof UserRecord, desc: false },
+    defaultSort,
     page,
     pageSize,
   })
@@ -182,8 +183,8 @@ export function UsersPageClient() {
       setPageSize(size)
       setPage(1)
     },
-    sortField: sort?.field as string | undefined,
-    sortDesc: sort?.desc ?? false,
+    sortField: String((sort ?? defaultSort).field),
+    sortDesc: (sort ?? defaultSort).desc,
     onSortChange: handleSortChange,
   }
 

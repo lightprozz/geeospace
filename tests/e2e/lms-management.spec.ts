@@ -67,7 +67,7 @@ test("users: displays and sorts by the API's English names without shortening fu
   const rows = panel.locator("tbody tr");
   await expect(rows).toHaveCount(2);
   await expect(rows.first()).toContainText("Linh Tran");
-  await panel.getByRole("columnheader", { name: "English Name" }).click();
+  await panel.getByRole("button", { name: "English Name" }).click();
   await expect(rows.first()).toContainText("Mai Nguyen");
   await expect(rows.first().getByRole("cell", { name: "Amy", exact: true })).toBeVisible();
   await expect(rows.last().getByRole("cell", { name: "Zoe", exact: true })).toBeVisible();
@@ -86,6 +86,23 @@ test("users: filters by whole campus name across multi-campus assignments", asyn
   await page.getByRole("option", { name: "North Campus", exact: true }).click();
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText("Mai Nguyen");
+});
+
+test("users: toggles a column sort from the keyboard and announces its direction", async ({ page }) => {
+  const { users } = await mockManagement(page);
+  users[1].isActive = true;
+  await page.goto("/#lms-users");
+  const panel = page.locator('[data-app="lms-users"]');
+  await expect(panel.getByRole("columnheader", { name: "Full Name" })).toHaveAttribute("aria-sort", "ascending");
+  const header = panel.getByRole("columnheader", { name: "Email", exact: true });
+  const sortButton = header.getByRole("button", { name: "Email", exact: true });
+  await sortButton.focus();
+  await page.keyboard.press("Enter");
+  await expect(header).toHaveAttribute("aria-sort", "ascending");
+  await expect(panel.locator("tbody tr").first()).toContainText("linh@example.test");
+  await page.keyboard.press("Space");
+  await expect(header).toHaveAttribute("aria-sort", "descending");
+  await expect(panel.locator("tbody tr").first()).toContainText("mai@example.test");
 });
 
 test("roles: filter, grant and revoke a permission on the selected role", async ({ page }) => {

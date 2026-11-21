@@ -140,15 +140,19 @@ export function UsersTable({
     return sortDesc ? <ArrowDown className="ml-2 h-3 w-3 inline-block" /> : <ArrowUp className="ml-2 h-3 w-3 inline-block" />
   }
 
-  const renderSortableHead = (label: string, field: string, className?: string) => (
+  const renderSortableHead = (label: string, field: string, className: string) => (
     <TableHead
-      className={`cursor-pointer hover:text-primary transition-colors select-none ${className || ''}`}
-      onClick={() => onSortChange?.(field)}
+      className={className}
+      aria-sort={sortField === field ? (sortDesc ? 'descending' : 'ascending') : undefined}
     >
-      <div className="flex items-center">
+      <button
+        type="button"
+        className="flex min-h-8 items-center rounded-sm text-left hover:text-primary focus-visible:outline-2 focus-visible:outline-ring"
+        onClick={() => onSortChange?.(field)}
+      >
         {label}
         <SortIcon field={field} />
-      </div>
+      </button>
     </TableHead>
   )
 
