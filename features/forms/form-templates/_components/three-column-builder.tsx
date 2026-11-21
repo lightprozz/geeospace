@@ -10,9 +10,8 @@
 // surfaces that the canvas reads from and writes to through callbacks.
 //
 // Responsive behaviour:
-//   · Below `lg` the left rail collapses into a "Settings" sheet.
-//   · Below `md` the right rail collapses away and the Save/Cancel actions move
-//     into a sticky bar pinned to the bottom of the viewport.
+//   · Below 1024px of window width the left rail becomes a "Settings" sheet.
+//   · Below 768px the blocks become a sheet and Save/Cancel stay in a footer.
 //
 // `readOnly` turns the whole shell into a static summary: the title and
 // description become plain text, the rails lose their editing affordances and
@@ -86,9 +85,10 @@ export function ThreeColumnBuilder({
   const hasActions = Boolean(onSave)
 
   return (
-    <div className="relative flex h-full w-full overflow-hidden">
+    <div className="@container/builder relative flex h-full w-full min-w-0 flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
       {/* Left: form settings (per design mockup) */}
-      <aside className="hidden h-full w-72 shrink-0 flex-col overflow-y-auto border-r bg-card lg:flex">
+      <aside className="hidden h-full w-72 shrink-0 flex-col overflow-y-auto border-r bg-card @[1024px]/builder:flex">
         <div className="sticky top-0 z-10 flex items-center gap-2 border-b bg-muted/10 p-4 backdrop-blur">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
             <Layers className="h-4 w-4 text-primary" />
@@ -106,7 +106,7 @@ export function ThreeColumnBuilder({
 
       {/* Center: paper canvas */}
       <main
-        className="relative flex-1 overflow-y-auto bg-[#f8f9fc] dark:bg-[#09090b]"
+        className="relative min-w-0 flex-1 overflow-y-auto bg-[#f8f9fc] dark:bg-[#09090b]"
         onClick={(e) => e.stopPropagation()}
       >
         <div
@@ -114,9 +114,7 @@ export function ThreeColumnBuilder({
           className="pointer-events-none absolute inset-0 opacity-40 bg-[radial-gradient(#d1d5db_1px,transparent_1px)] [background-size:20px_20px] dark:bg-[radial-gradient(#333_1px,transparent_1px)]"
         />
 
-        {/* Settings trigger — sticky at the top of the canvas below `lg`,
-            where the left rail is no longer visible. */}
-        <div className="sticky top-0 z-20 flex justify-end px-4 pt-4 lg:hidden">
+        <div className="sticky top-0 z-20 flex justify-end gap-2 px-4 pt-4 @[1024px]/builder:hidden">
           <SettingsSheet
             settings={settings}
             onSettingsChange={onSettingsChange}
@@ -124,6 +122,21 @@ export function ThreeColumnBuilder({
             isSaving={isSaving}
             readOnly={readOnly}
           />
+          {!readOnly ? (
+            <div className="@[768px]/builder:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button type="button" variant="outline" size="sm">Building Blocks</Button>
+                </SheetTrigger>
+                <SheetContent side="right">
+                  <SheetHeader><SheetTitle>Building Blocks</SheetTitle></SheetHeader>
+                  <ScrollArea className="min-h-0 flex-1 p-4">
+                    <BuildingBlocksGrid onSelect={onAddField} />
+                  </ScrollArea>
+                </SheetContent>
+              </Sheet>
+            </div>
+          ) : null}
         </div>
 
         <div className="relative z-10 mx-auto my-8 w-full max-w-2xl px-4 pb-32">
@@ -181,7 +194,7 @@ export function ThreeColumnBuilder({
       </main>
 
       {/* Right: building blocks (per design mockup) */}
-      <aside className="hidden h-full w-72 shrink-0 flex-col border-l bg-card md:flex">
+      <aside className="hidden h-full w-72 shrink-0 flex-col border-l bg-card @[768px]/builder:flex">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-muted/10 p-4 backdrop-blur">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
             <MoreVertical className="h-4 w-4 text-primary" />
@@ -230,7 +243,7 @@ export function ThreeColumnBuilder({
         </ScrollArea>
 
         {onSave ? (
-          <div className="hidden shrink-0 items-center justify-end gap-2 border-t bg-card p-3 md:flex">
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t bg-card p-3">
             {onCancel ? (
               <Button variant="outline" onClick={onCancel} disabled={isSaving}>
                 Hủy
@@ -243,10 +256,10 @@ export function ThreeColumnBuilder({
           </div>
         ) : null}
       </aside>
+      </div>
 
-      {/* Sticky action bar — the Save/Cancel actions below `md`. */}
       {hasActions ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-end gap-2 border-t bg-card/95 p-3 backdrop-blur md:hidden">
+        <div className="z-30 flex shrink-0 items-center justify-end gap-2 border-t bg-card/95 p-3 backdrop-blur @[768px]/builder:hidden">
           {onCancel ? (
             <Button variant="outline" onClick={onCancel} disabled={isSaving}>
               Hủy
@@ -263,7 +276,7 @@ export function ThreeColumnBuilder({
 }
 
 /**
- * The left settings rail, presented as a side sheet below `lg` where the
+ * The left settings rail, presented as a side sheet in narrow windows where the
  * rail itself is no longer visible.
  */
 function SettingsSheet({
