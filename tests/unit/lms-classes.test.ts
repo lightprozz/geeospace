@@ -1,13 +1,21 @@
 import { createElement, type ComponentProps } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { parseClassPath } from '@/features/lms/classes/navigation'
+import { classExternalHash, classLessonPreviewHash, parseClassPath } from '@/features/lms/classes/navigation'
+import { parseAppHash } from '@/lib/desktop/navigation'
 import { shortenName } from '@/features/lms/classes/shorten-name'
 import { A4Page } from '@/features/lms/classes/exam-print-templates/a4-page'
 import { DefaultTemplate } from '@/features/lms/classes/exam-print-templates/default-template'
 import type { PrintTemplateProps } from '@/features/lms/types/exam-result'
 
 describe('Classes window navigation', () => {
+  it('retains external destination identifiers and lesson preview context in safe desktop paths', () => {
+    expect(parseAppHash(classExternalHash('/timetable?classId=class-1&returnTo=/classes')!)).toEqual({ id: 'lms-timetable', path: 'class-1' })
+    expect(parseAppHash(classExternalHash('/students/student-1')!)).toEqual({ id: 'lms-students', path: 'student-1' })
+    expect(parseAppHash(classLessonPreviewHash('lesson-1', 'class-1'))).toEqual({ id: 'lms-lets-learn', path: 'lesson-1/preview/classLesson/class-1' })
+    expect(classExternalHash('/timetable')).toBe('#lms-timetable')
+    expect(classExternalHash('/other')).toBeNull()
+  })
   it('maps list, detail and tab paths', () => {
     expect(parseClassPath('')).toEqual({ classId: null, tab: 'lessons' })
     expect(parseClassPath('class-1')).toEqual({ classId: 'class-1', tab: 'lessons' })

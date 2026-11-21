@@ -60,3 +60,15 @@ test('empty classes and API failure are distinct states', async ({ page }) => {
   await panel.getByRole('button', { name: 'Retry', exact: true }).click()
   await expect(panel.getByText('Starters A', { exact: true })).toBeVisible()
 })
+
+test('cross-app links retain class and lesson preview identifiers', async ({ page }) => {
+  await seedGeeo(page.context())
+  await page.goto('/#lms-classes')
+  const panel = page.locator('[data-app="lms-classes"]')
+  await panel.locator('.os-window-title').dblclick()
+  await panel.getByRole('button', { name: 'Timetable of Starters A', exact: true }).click()
+  await expect(page).toHaveURL(/#lms-timetable\/class-1$/)
+  await page.goto('/#lms-classes/class-1/lessons')
+  await panel.getByRole('button', { name: 'Preview lesson', exact: true }).click()
+  await expect(page).toHaveURL(/#lms-lets-learn\/class-lesson-1\/preview\/classLesson\/class-1$/)
+})

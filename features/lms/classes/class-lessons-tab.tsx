@@ -1,4 +1,6 @@
 'use client'
+
+import { classLessonPreviewHash } from './navigation'
 // ---------------------------------------------------------------------------
 // _components/class-lessons-tab.tsx
 // Lessons tab inside Class Detail — split-pane: lesson table + detail panel
@@ -171,7 +173,7 @@ export function ClassLessonsTab({
 
   const handleLetsLearn = (e: React.MouseEvent, lesson: ClassLessonGrid) => {
     e.stopPropagation()
-    window.location.assign(`#lms-lets-learn/${lesson.id}`)
+    window.location.assign(classLessonPreviewHash(lesson.id, classId))
   }
 
   const handleViewPlan = (e: React.MouseEvent, lesson: ClassLessonGrid) => {
