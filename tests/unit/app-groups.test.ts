@@ -47,6 +47,20 @@ it("navigates and goes back without affecting other windows or accepting invalid
   state = windowReducer(state, { type: "open", id: "lms-classes", area, path: "456" });
   expect(state.windows["lms-classes"]).toMatchObject({ path: "456", backStack: [] });
 });
+it("resumes desktop geometry with current navigation, including mobile-only windows", () => {
+  const saved = initialDesktop("lms-classes", area);
+  let mobile = windowReducer(saved, { type: "navigate", id: "lms-classes", path: "123" });
+  mobile = windowReducer(mobile, { type: "open", id: "lms-students", area: { width: 390, height: 712 } });
+  mobile = windowReducer(mobile, { type: "navigate", id: "lms-students", path: "456" });
+  const resumed = windowReducer(mobile, { type: "resume-desktop", state: saved, area, route: { id: "lms-students", path: "456" } });
+  expect(resumed.windows["lms-classes"]).toMatchObject({ ...saved.windows["lms-classes"], path: "123", backStack: [""] });
+  expect(resumed.windows["lms-students"]).toMatchObject({ open: true, path: "456", backStack: [""] });
+  expect(windowReducer(resumed, { type: "back", id: "lms-students" }).windows["lms-students"]).toMatchObject({ path: "", backStack: [] });
+  expect(saved.windows["lms-classes"]).toMatchObject({ path: "", backStack: [] });
+  expect(windowReducer(mobile, { type: "resume-desktop", state: saved, area }).windows["lms-students"]).toMatchObject({ open: false, path: "456", backStack: [""] });
+  expect(windowReducer(mobile, { type: "resume-desktop", state: saved, area, route: { id: "lms-students", path: "other" } }).windows["lms-students"]).toMatchObject({ path: "other", backStack: [] });
+  expect(windowReducer({ windows: {} }, { type: "resume-desktop", state: saved, area })).toEqual(saved);
+});
 it("validates stored paths and history, caps history and upgrades old layouts", () => {
   const state = initialDesktop("lms-classes", area), win = state.windows["lms-classes"]!;
   for (const path of [null, 123, "../bad", "a".repeat(513)]) {

@@ -15,6 +15,7 @@ export type WindowAction =
   | { type: "place"; id: DesktopAppId; rect: Rect; mode: WindowMode; area: Area }
   | { type: "resize-area"; area: Area }
   | { type: "restore"; state: DesktopState }
+  | { type: "resume-desktop"; state: DesktopState; area: Area; route?: { id: DesktopAppId; path: string } }
   | { type: "arrange"; area: Area }
   | { type: "close-all" };
 
@@ -50,6 +51,15 @@ export function activeWindow(state: DesktopState): DesktopAppId | undefined {
 }
 export function windowReducer(state: DesktopState, action: WindowAction): DesktopState {
   if (action.type === "restore") return action.state;
+  if (action.type === "resume-desktop") {
+    const windows = { ...action.state.windows };
+    for (const [id, win] of Object.entries(state.windows) as [DesktopAppId, DesktopWindow][]) {
+      const saved = windows[id];
+      windows[id] = saved ? { ...saved, path: win.path, backStack: win.backStack } : { ...win, rect: defaultRect(id, action.area), open: false, minimized: false };
+    }
+    const restored = { windows };
+    return action.route ? windowReducer(restored, { type: "open", ...action.route, area: action.area }) : restored;
+  }
   if (action.type === "resize-area") return { windows: Object.fromEntries(Object.entries(state.windows).map(([id, win]) => [id, { ...win, rect: fitRect(win!.rect, action.area) }])) };
   if (action.type === "close-all") return { windows: Object.fromEntries(Object.entries(state.windows).map(([id, win]) => [id, { ...win, open: false, minimized: false }])) };
   if (action.type === "arrange") {

@@ -132,8 +132,7 @@ export function DesktopWorkspace({ initialApp, initialTime, launch = false }: { 
         let restored = initialDesktop(initialApp, area);
         try { restored = readLayout(localStorage.getItem(layoutKey), area) ?? restored; } catch { /* UI storage is optional. */ }
         const route = parseAppHash(window.location.hash);
-        if (route) restored = windowReducer(restored, { type: "open", ...route, area });
-        dispatch({ type: "restore", state: restored });
+        dispatch({ type: "resume-desktop", state: restored, route, area });
       } else if (!mobile) dispatch({ type: "resize-area", area });
     });
     return () => cancelAnimationFrame(frame);

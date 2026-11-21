@@ -74,3 +74,19 @@ test("deep links, navigate, back and hashchange keep the window path", async ({ 
   await page.evaluate(() => { location.hash = "lms-students/456"; });
   await expect(page.locator('[data-app="lms-students"] [data-window-path]')).toHaveText("456");
 });
+
+test("mobile navigation history survives returning to desktop", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/#lms-classes");
+  const classes = page.locator('[data-app="lms-classes"]');
+  await classes.getByRole("button", { name: "Chi tiết mẫu", exact: true }).click();
+  await classes.getByRole("button", { name: "Tổng quan mẫu", exact: true }).click();
+  await expect(classes.locator("[data-window-path]")).toHaveText("123/overview");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.locator(".os-dock")).toBeVisible();
+  await classes.getByRole("button", { name: "Quay lại", exact: true }).click();
+  await expect(classes.locator("[data-window-path]")).toHaveText("123");
+  await classes.getByRole("button", { name: "Quay lại", exact: true }).click();
+  await expect(classes.locator("[data-window-path]")).toHaveText("/");
+  await expect(classes.getByRole("button", { name: "Quay lại", exact: true })).toHaveCount(0);
+});
