@@ -34,6 +34,33 @@ async function load() {
 function session(expires = Math.floor(Date.now() / 1000) + 900) {
   cookies.set("GEEO.AUTH", JSON.stringify({ access_token: "access-old", refresh_token: "refresh-old", token_type: "Bearer", expires_at: expires }));
 }
+it("wires LMS requests to the authenticated API, including void results and ProblemDetails", async () => {
+  await load();
+  session();
+  const { installLmsBrowserTransport } = await import("@/features/lms/lib/browser-transport");
+  const { api, resolveApiUrl } = await import("@/features/lms/lib/transport");
+  const dispose = installLmsBrowserTransport();
+  try {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response("uploaded"))
+      .mockResolvedValueOnce(Response.json({ status: 403, title: "Forbidden", errorCode: "NO_ACCESS" }, {
+        status: 403, headers: { "Content-Type": "application/problem+json" },
+      }));
+    const data = new FormData();
+    data.set("file", "example");
+    await expect(api.post("/upload", data, { responseType: "void" })).resolves.toBeUndefined();
+    expect(fetch).toHaveBeenCalledWith("https://api.geeo.test/upload", expect.objectContaining({
+      method: "POST", body: data, headers: {
+        authorization: "Bearer access-old", "x-idempotency-key": expect.any(String),
+      },
+    }));
+    await expect(api.get("/restricted")).rejects.toMatchObject({
+      name: "ApiError", status: 403, problem: { errorCode: "NO_ACCESS" },
+    });
+    expect(resolveApiUrl("/file/lesson%20plan")).toBe("https://api.geeo.test/file/lesson%20plan");
+  } finally {
+    dispose();
+  }
+});
 it("parses token cookies safely and checks the 120-second expiry boundary", async () => {
   const { token } = await load();
   expect(token.getAuthCookie()).toBeUndefined();
