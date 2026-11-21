@@ -64,6 +64,7 @@ export function TimesheetsPageClient() {
     // Reset any period-scoped selection so a stale filter can't silently
     // hide an entire newly-loaded period.
     setClassFilter('')
+    setEffortTypeFilter('')
   }, [])
 
   const {

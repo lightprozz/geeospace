@@ -52,7 +52,7 @@ const attendance: AttendanceItem = {
   createdAt: updatedAt,
 };
 
-export async function mockWorklog(page: Page, permission: string[], options?: { conflictOnce?: boolean; largeRoster?: boolean }) {
+export async function mockWorklog(page: Page, permission: string[], options?: { conflictOnce?: boolean; largeRoster?: boolean; priorPeriod?: boolean }) {
   await page.clock.setFixedTime(worklogNow);
   await mockGeeo(page, { ...mockUser, permission });
   await seedGeeo(page.context());
@@ -76,7 +76,11 @@ export async function mockWorklog(page: Page, permission: string[], options?: { 
     requests.push({ path, body, headers: request.headers() });
     const containsDay = (from?: string | null, to?: string | null) => !!from && !!to && from <= worklogDay && worklogDay <= to;
     const paged = (items: WorkLogItemV2[]) => ({
-      items: containsDay(body?.from, body?.to) ? items : [], page: 1, pageSize: 2000, hasNext: false,
+      items: items.filter(item => {
+        const day = item.lessonStart?.slice(0, 10);
+        return day && body?.from && body.to && body.from <= day && day <= body.to;
+      }),
+      page: 1, pageSize: 2000, hasNext: false,
     });
     const json = (data: unknown) => route.fulfill({ headers, json: data });
     switch (path) {
@@ -94,7 +98,10 @@ export async function mockWorklog(page: Page, permission: string[], options?: { 
         if (options?.largeRoster && ids.includes(ownEntry.teacherId) && body?.page === 1) {
           return json({ ...paged([]), hasNext: true });
         }
-        return json({ ...paged(entries.filter(item => ids.includes(item.teacherId))), page: body?.page ?? 1 });
+        const allEntries = options?.priorPeriod
+          ? [...entries, { ...otherEntry, id: "worklog-prior", lessonStart: "2026-10-02T08:30:00+07:00" }]
+          : entries;
+        return json({ ...paged(allEntries.filter(item => ids.includes(item.teacherId))), page: body?.page ?? 1 });
       }
       case "/worklog/summary/query":
         return json(containsDay(body?.from, body?.to) ? summary : { ...summary, mtShift: 0, otherShift: 0, total: 0 });

@@ -109,3 +109,15 @@ test("loads every page and teacher batch when the roster exceeds the API limit",
     return [teacherIds.length, page];
   })).toEqual([[200, 1], [200, 2], [1, 1]]);
 });
+
+test("clears the previous period's effort filter when changing periods", async ({ page }) => {
+  await mockWorklog(page, ["worklog.approve"], { priorPeriod: true });
+  await page.goto("/#lms-worklog/timesheets");
+  const panel = page.locator('[data-app="lms-worklog"]');
+  await expect(panel.getByRole("cell", { name: ownEntry.className! })).toBeVisible();
+  await panel.getByRole("combobox", { name: "Effort type" }).click();
+  await page.getByRole("option", { name: "Main Teacher" }).click();
+  await expect(panel.getByRole("cell", { name: otherEntry.className! })).toHaveCount(0);
+  await panel.getByRole("button", { name: "Previous period" }).click();
+  await expect(panel.getByRole("cell", { name: otherEntry.className! })).toBeVisible();
+});
