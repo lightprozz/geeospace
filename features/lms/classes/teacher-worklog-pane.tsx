@@ -91,7 +91,7 @@ import { useWorkLogsByLessonLog } from '@/features/lms/hooks/worklog/use-worklog
 import { isApprovedLockedError, isConcurrencyError } from '@/features/lms/lib/worklog/api'
 import { worklogKeys } from '@/features/lms/lib/worklog/query-keys'
 import { hasWorklogEditableChanges } from './worklog-edits'
-import { withMissingTeacherDrafts } from './worklog-teacher-drafts'
+import { selectTeacherShift, withMissingTeacherDrafts } from './worklog-teacher-drafts'
 import { useCan } from '@/lib/use-can'
 import { PERMISSIONS } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
@@ -367,38 +367,7 @@ export function TeacherWorklogPane({ logId, classId }: TeacherWorklogPaneProps) 
     (teacherId: string, effortType: string) => {
       const score = shiftOptions.find((x) => x.value === effortType)?.score ?? 0
 
-      setWorkLogs((prev) => {
-        // If switching away from 'off', remove any substitute for this teacher
-        let updated =
-          effortType !== ShiftTypeConstant.Off
-            ? prev.filter((w) => w.subsForTeacherId !== teacherId)
-            : prev
-
-        const isAloneVariant =
-          effortType === ShiftTypeConstant.Alone ||
-          effortType === ShiftTypeConstant.AloneExpat
-
-        // If setting 'alone' or 'alone_expat', set all others to 'off'
-        if (isAloneVariant) {
-          updated = updated.map((w) => {
-            if (w.teacherId === teacherId && !w.subsForTeacherId && !w.isExpat) {
-              return { ...w, effortType, score }
-            }
-            if (!w.subsForTeacherId && !w.isExpat) {
-              return { ...w, effortType: ShiftTypeConstant.Off }
-            }
-            return w
-          })
-        } else {
-          updated = updated.map((w) =>
-            w.teacherId === teacherId && !w.subsForTeacherId && !w.isExpat
-              ? { ...w, effortType, score }
-              : w,
-          )
-        }
-
-        return updated
-      })
+      setWorkLogs(prev => selectTeacherShift(prev, teacherId, effortType, score))
     },
     [shiftOptions],
   )
