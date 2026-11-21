@@ -5,7 +5,7 @@
 // Pattern: canonical table from material-table.tsx
 // ---------------------------------------------------------------------------
 
-import { useMemo, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import {
   FileText,
   RefreshCw,
@@ -55,55 +55,8 @@ import {
   type StudentAllItem,
 } from '@/features/lms/types/student'
 import { cn } from '@/lib/utils'
-import { shortenName } from './student-utils'
-import { useSort, sortWithBirthdayPriority } from '@/hooks/use-sort'
-
-// ---------------------------------------------------------------------------
-// Sort configuration
-// ---------------------------------------------------------------------------
-
-type StudentSortColumn = 'name' | 'englishName' | 'birthday' | 'startDate' | null
-
-const STUDENT_SORT_STORAGE_KEY = 'students-table-sort'
-
-// ---------------------------------------------------------------------------
-// Birthday helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Check if a student's birthday is today (same month + day, any year).
- * Handles both ISO format and dd/MM/yyyy backend format.
- */
-function checkBirthdayString(birthday: string | null): boolean {
-  if (!birthday) return false
-  const today = new Date()
-  const todayMonth = today.getMonth() // 0-indexed
-  const todayDay = today.getDate()
-
-  // Try dd/MM/yyyy format first (e.g. "15/08/2017")
-  const ddMM = birthday.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-  if (ddMM) {
-    const day = parseInt(ddMM[1], 10)
-    const month = parseInt(ddMM[2], 10) - 1 // convert to 0-indexed
-    return month === todayMonth && day === todayDay
-  }
-
-  // Fallback: ISO / parseable date
-  try {
-    const d = new Date(birthday)
-    if (isNaN(d.getTime())) return false
-    return d.getMonth() === todayMonth && d.getDate() === todayDay
-  } catch {
-    return false
-  }
-}
-
-/**
- * Also check birthdayFormat ("dd/MM/yyyy") which backend pre-formats.
- */
-function isStudentBirthdayToday(student: StudentAllItem): boolean {
-  return checkBirthdayString(student.birthday)
-}
+import { shortenName, isStudentBirthdayToday, type StudentSortColumn } from './student-utils'
+import type { SortConfig } from '@/hooks/use-sort'
 
 // ---------------------------------------------------------------------------
 // Constants (design system standard)
@@ -117,6 +70,8 @@ const COLUMN_COUNT = 10
 // ---------------------------------------------------------------------------
 
 interface StudentsTableProps {
+  sortConfig: SortConfig<StudentSortColumn>
+  toggleSort: (column: StudentSortColumn) => void
   students: StudentAllItem[]
   isLoading: boolean
   totalFiltered: number
@@ -140,6 +95,8 @@ interface StudentsTableProps {
 
 export function StudentsTable({
   students,
+  sortConfig,
+  toggleSort,
   isLoading,
   totalFiltered,
   page,
@@ -153,66 +110,12 @@ export function StudentsTable({
   canUpdateStudent,
   isInactiveTab = false,
 }: StudentsTableProps) {
-  // ── Sort state with localStorage persistence ─────────────────────────
-  const { sortConfig, toggleSort } = useSort<NonNullable<StudentSortColumn>>(
-    STUDENT_SORT_STORAGE_KEY,
-    null
-  )
-
   // ── Phone visibility toggle ───────────────────────────────────────────
   const [showPhones, setShowPhones] = useState(false)
 
   const togglePhones = useCallback(() => {
     setShowPhones((prev) => !prev)
   }, [])
-
-  // ── Sort: birthday-today students float to top when no column sort is active ────
-  const sortedStudents = useMemo(() => {
-    // Inactive tab: no sorting
-    if (isInactiveTab) return students
-
-    // Helper to check birthday today
-    const checkBirthdayToday = (student: StudentAllItem) =>
-      checkBirthdayString(student.birthday)
-
-    // Build sortable wrapper with isBirthdayToday method
-    const sortableStudents = students.map(s => ({
-      ...s,
-      isBirthdayToday: () => checkBirthdayToday(s)
-    }))
-
-    // Sort function based on column
-    const sortFn = (a: StudentAllItem & { isBirthdayToday: () => boolean }, b: StudentAllItem & { isBirthdayToday: () => boolean }) => {
-      let aVal = ''
-      let bVal = ''
-
-      switch (sortConfig.column) {
-        case 'name':
-          aVal = a.studentName || ''
-          bVal = b.studentName || ''
-          break
-        case 'englishName':
-          aVal = a.englishName || ''
-          bVal = b.englishName || ''
-          break
-        case 'birthday':
-          aVal = a.birthday || ''
-          bVal = b.birthday || ''
-          break
-        case 'startDate':
-          aVal = a.beginDate || ''
-          bVal = b.beginDate || ''
-          break
-        default:
-          return 0
-      }
-
-      const cmp = aVal.localeCompare(bVal, undefined, { sensitivity: 'base' })
-      return sortConfig.direction === 'asc' ? cmp : -cmp
-    }
-
-    return sortWithBirthdayPriority(sortableStudents, sortConfig.column, sortFn)
-  }, [students, isInactiveTab, sortConfig])
 
   // ── Loading state — delegate to TableSkeleton ──────────────────────
   if (isLoading) {
@@ -268,7 +171,7 @@ export function StudentsTable({
           </TableHeader>
           <TableBody>
             {/* Empty state — inline colSpan row (design system) */}
-            {sortedStudents.length === 0 && (
+            {students.length === 0 && (
               <TableRow>
                 <TableCell colSpan={COLUMN_COUNT} className="h-48">
                   <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
@@ -280,7 +183,7 @@ export function StudentsTable({
               </TableRow>
             )}
 
-            {sortedStudents.map((student, idx) => {
+            {students.map((student, idx) => {
               const status = deriveStudentStatus(student)
               const badge = getStatusBadgeConfig(status)
               const rowIndex = (page - 1) * pageSize + idx + 1

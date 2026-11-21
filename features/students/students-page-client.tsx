@@ -39,6 +39,8 @@ import {
 } from '@/features/lms/types/student'
 
 import { StudentsTable } from './students-table'
+import { useSort } from '@/hooks/use-sort'
+import { sortStudents, type StudentSortColumn } from './student-utils'
 
 export function StudentsPageClient() {
   // ── Auth ───────────────────────────────────────────────────────────
@@ -271,6 +273,8 @@ export function StudentsPageClient() {
     [deduplicateStudents, filteredInactiveStudents]
   )
 
+  const { sortConfig, toggleSort } = useSort<StudentSortColumn>('students-table-sort', null)
+
   // ── Client-side pagination ────────────────────────────────────────
   const activeToShow = dedupedActiveStudents
   const inactiveToShow = dedupedInactiveStudents
@@ -280,8 +284,8 @@ export function StudentsPageClient() {
 
   const paginatedStudents = useMemo(() => {
     const start = (page - 1) * pageSize
-    return currentStudents.slice(start, start + pageSize)
-  }, [currentStudents, page, pageSize])
+    return sortStudents(currentStudents, sortConfig, activeTab === 'inactive').slice(start, start + pageSize)
+  }, [currentStudents, page, pageSize, sortConfig, activeTab])
 
   // ── Router ──────────────────────────────────────────────────────
   const router = useStudentNavigation()
@@ -472,6 +476,8 @@ export function StudentsPageClient() {
           >
             <StudentsTable
               students={paginatedStudents}
+              sortConfig={sortConfig}
+              toggleSort={toggleSort}
               isLoading={isLoading}
               totalFiltered={totalFiltered}
               page={page}
@@ -492,6 +498,8 @@ export function StudentsPageClient() {
           >
             <StudentsTable
               students={paginatedStudents}
+              sortConfig={sortConfig}
+              toggleSort={toggleSort}
               isLoading={isLoading}
               totalFiltered={totalFiltered}
               page={page}
