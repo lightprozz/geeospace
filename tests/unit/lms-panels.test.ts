@@ -91,12 +91,13 @@ describe("materials", () => {
     localStorage.removeItem("materials-table-sort");
     mount(h(MaterialsPageClient));
     await screen.findByText("Counting video");
-    const name = screen.getByRole("columnheader", { name: "Name" });
-    fireEvent.click(name);
+    fireEvent.click(await screen.findByRole("columnheader", { name: "Name" }));
     expect(JSON.parse(localStorage.getItem("materials-table-sort")!)).toEqual({ field: "name", desc: false });
-    fireEvent.click(name);
+    await screen.findByText("Counting video");
+    fireEvent.click(await screen.findByRole("columnheader", { name: "Name" }));
     expect(JSON.parse(localStorage.getItem("materials-table-sort")!)).toEqual({ field: "name", desc: true });
-    fireEvent.click(name);
+    await screen.findByText("Counting video");
+    fireEvent.click(await screen.findByRole("columnheader", { name: "Name" }));
     expect(localStorage.getItem("materials-table-sort")).toBeNull();
   });
   it("renders an empty library", async () => {
