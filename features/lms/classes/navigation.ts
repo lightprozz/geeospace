@@ -15,8 +15,8 @@ export function useRouter() {
     push: (url: string) => {
       if (url === '/classes') navigate('')
       else if (url.startsWith('/classes/')) navigate(url.slice('/classes/'.length))
-      else if (url.startsWith('/students/')) window.location.hash = `lms-students/${url.slice('/students/'.length)}`
-      else if (url.startsWith('/timetable')) window.location.hash = `lms-timetable${url.slice('/timetable'.length)}`
+      else if (url.startsWith('/students/')) window.location.assign(`#lms-students/${url.slice('/students/'.length)}`)
+      else if (url.startsWith('/timetable')) window.location.assign('#lms-timetable')
     },
   }
 }

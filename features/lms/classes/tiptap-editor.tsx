@@ -8,7 +8,6 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import { memo, useEffect, useRef } from 'react'
 import StarterKit from '@tiptap/starter-kit'
-import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
 import {
   Bold,
@@ -47,7 +46,6 @@ export const TiptapEditor = memo(function TiptapEditor({
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Underline,
       Placeholder.configure({
         placeholder: placeholder ?? 'Enter content...',
       }),

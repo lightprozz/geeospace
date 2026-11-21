@@ -76,7 +76,7 @@ export function ClassTabsShell({
     if (activeTab === 'reports' || activeTab === 'exams') {
       onCollapsePanel()
     }
-     
+
   }, [activeTab, onCollapsePanel])
 
   return (
@@ -95,6 +95,7 @@ export function ClassTabsShell({
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
+                  aria-label={tab.label}
                   className="flex items-center gap-1.5 h-7 px-2.5 text-xs font-medium rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground transition-all whitespace-nowrap"
                 >
                   <Icon className="size-3.5" />

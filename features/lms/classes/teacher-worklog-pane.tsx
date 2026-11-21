@@ -90,8 +90,8 @@ import {
 import { useWorkLogsByLessonLog } from '@/features/lms/hooks/worklog/use-worklogs'
 import { isApprovedLockedError, isConcurrencyError } from '@/features/lms/lib/worklog/api'
 import { worklogKeys } from '@/features/lms/lib/worklog/query-keys'
-import { usePermissionStore } from '@/stores/use-permission-store'
-import { PERMISSIONS } from '@/features/lms/classes/temp-permissions'
+import { useCan } from '@/lib/use-can'
+import { PERMISSIONS } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
 import type { AllTeacher, ShiftOption, WorkLogItemV2 } from '@/features/lms/types/worklog'
 import {
@@ -266,7 +266,7 @@ function getFilteredOptions(
 // ---------------------------------------------------------------------------
 
 export function TeacherWorklogPane({ logId, classId }: TeacherWorklogPaneProps) {
-  const hasApprove = usePermissionStore((s) => s.has(PERMISSIONS.WORKLOG_APPROVE))
+  const hasApprove = useCan(PERMISSIONS.WORKLOG_APPROVE)
   const qc = useQueryClient()
 
   const { data: classTeachers = [] } = useClassTeachers(classId)

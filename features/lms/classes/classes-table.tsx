@@ -43,9 +43,9 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatDate, formatTime } from '@/lib/format-date'
-import { shortenName } from '@/lib/utils'
-import { usePermission } from '@/features/lms/classes/temp-permissions'
-import { PERMISSIONS } from '@/features/lms/classes/temp-permissions'
+import { shortenName } from './shorten-name'
+import { useCan } from '@/lib/use-can'
+import { PERMISSIONS } from '@/lib/permissions'
 import type { ClassItem, ClassTeacherInfo } from '@/features/lms/types/class'
 
 // ---------------------------------------------------------------------------
@@ -137,9 +137,8 @@ export function ClassesTable({
   onSortChange,
 }: ClassesTableProps) {
   const router = useRouter()
-  const { can } = usePermission()
-  const canEdit = can(PERMISSIONS.CLASS_UPDATE)
-  const canDelete = can(PERMISSIONS.CLASS_DELETE)
+  const canEdit = useCan(PERMISSIONS.CLASS_UPDATE)
+  const canDelete = useCan(PERMISSIONS.CLASS_DELETE)
 
   if (isLoading) return <TableSkeleton />
 
@@ -279,10 +278,10 @@ export function ClassesTable({
 
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7 hover:bg-primary/10 hover:text-primary" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:bg-primary/10 hover:text-primary"
                             onClick={(e) => {
                               e.stopPropagation()
                               router.push(`/timetable?classId=${item.id}&returnTo=/classes`)
@@ -297,10 +296,10 @@ export function ClassesTable({
 
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7 hover:bg-primary/10 hover:text-primary" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:bg-primary/10 hover:text-primary"
                             onClick={(e) => {
                               e.stopPropagation()
                               router.push(`/classes/${item.id}`)

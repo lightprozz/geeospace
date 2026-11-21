@@ -19,7 +19,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, shortenName } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { shortenName } from './shorten-name'
 import type { ClassCourseEntity, ClassCourseInfo, ClassTeacherGrid } from '@/features/lms/types/class'
 
 // ---------------------------------------------------------------------------
@@ -194,7 +195,7 @@ export function ClassOverviewPanel({
   }
 
   // ── Data computation ───────────────────────────────────────────────
-  
+
   let scheduleDays = '—'
   let infoStartTime = classInfo?.startTimeLocal
   let infoEndTime = classInfo?.endTimeLocal

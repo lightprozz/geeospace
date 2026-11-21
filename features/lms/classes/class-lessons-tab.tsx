@@ -171,8 +171,7 @@ export function ClassLessonsTab({
 
   const handleLetsLearn = (e: React.MouseEvent, lesson: ClassLessonGrid) => {
     e.stopPropagation()
-    // Opens Let's Learn preview in new tab — pass classId for student roster
-    window.open(`/lets-learn/${lesson.id}?preview=true&source=classLesson&classId=${classId}`, '_blank')
+    window.location.assign(`#lms-lets-learn/${lesson.id}`)
   }
 
   const handleViewPlan = (e: React.MouseEvent, lesson: ClassLessonGrid) => {

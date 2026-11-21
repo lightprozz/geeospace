@@ -51,8 +51,8 @@ import {
 } from '@/features/lms/hooks/classes/use-classes'
 import { useAuthStore } from '@/stores/use-auth-store'
 import { useExamDraftStore, buildExamDraftKey } from '@/features/lms/stores/use-exam-draft-store'
-import { usePermission } from '@/features/lms/classes/temp-permissions'
-import { PERMISSIONS } from '@/features/lms/classes/temp-permissions'
+import { useCan } from '@/lib/use-can'
+import { PERMISSIONS } from '@/lib/permissions'
 
 // Types + Utils
 import {
@@ -86,8 +86,7 @@ interface ClassExamsTabProps {
 
 export function ClassExamsTab({ classId }: ClassExamsTabProps) {
   // ── Permissions ──
-  const { can } = usePermission()
-  const canSaveExamResult = can(PERMISSIONS.CLASS_UPDATE)
+  const canSaveExamResult = useCan(PERMISSIONS.CLASS_UPDATE)
 
   // ── Data hooks ──
   const { data: students = [] } = useClassStudents(classId)
@@ -236,12 +235,12 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
       hasUserEdited.current = draftScores !== null // Don't mark as edited if restored from draft
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setScores(computedScores)
-       
+
       setComment(computedComment)
-       
+
       setDraftRestored(draftScores !== null)
     }
-     
+
   }, [computedScores, computedComment, draftScores])
 
   // ── Auto-hide draft banner after 3 seconds ──
@@ -251,12 +250,12 @@ export function ClassExamsTab({ classId }: ClassExamsTabProps) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowDraftBanner(true)
       const timer = setTimeout(() => {
-         
+
         setShowDraftBanner(false)
       }, 3000)
       return () => clearTimeout(timer)
     } else {
-       
+
       setShowDraftBanner(false)
     }
   }, [draftRestored])

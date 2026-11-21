@@ -49,7 +49,8 @@ import {
   CLASS_TYPE,
 } from '@/features/lms/types/student'
 import type { ClassStudentGrid } from '@/features/lms/types/class-student'
-import { cn, shortenName } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { shortenName } from './shorten-name'
 
 // ---------------------------------------------------------------------------
 // Birthday helper
@@ -194,6 +195,7 @@ export function ClassStudentsTab({ classId }: ClassStudentsTabProps) {
   // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-full overflow-hidden">
+      {(isStudied ? errorSuspended : errorActive) && <p role="alert" className="p-3 text-destructive">Unable to load students.</p>}
       {/* Toolbar */}
       <div className="px-4 pt-1 pb-1 border-b shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
         {/* List toggle */}

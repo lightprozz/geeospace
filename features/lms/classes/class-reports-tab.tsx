@@ -70,8 +70,8 @@ import type { LessonLogEntry, StudentLogEntry } from '@/features/lms/types/class
 import { useReportDraftStore } from '@/features/lms/stores/use-report-draft-store'
 import type { DraftStudent } from '@/features/lms/stores/use-report-draft-store'
 import { cn } from '@/lib/utils'
-import { usePermission } from '@/features/lms/classes/temp-permissions'
-import { PERMISSIONS } from '@/features/lms/classes/temp-permissions'
+import { useCan } from '@/lib/use-can'
+import { PERMISSIONS } from '@/lib/permissions'
 import { TeacherWorklogPane } from './teacher-worklog-pane'
 
 // ---------------------------------------------------------------------------
@@ -238,7 +238,7 @@ export function ClassReportsTab({ classId }: ClassReportsTabProps) {
 
   // ── Data: detail panes (fire only when a session is selected) ──────
   const { data: studentReport, isLoading: loadingStudents } =
-    useStudentReport(effectiveLogId)
+    useStudentReport(classId, effectiveLogId)
   const { data: lessonReport, isLoading: loadingStats } =
     useLessonReport(effectiveLogId)
   const { data: logInfo } =
@@ -391,6 +391,7 @@ export function ClassReportsTab({ classId }: ClassReportsTabProps) {
             <ScrollArea className="flex-1 min-h-0">
               {activeSubTab === 'attendance' && (
                 <AttendancePane
+                  classId={classId}
                   data={studentReport ?? []}
                   isLoading={loadingStudents}
                   logId={effectiveLogId}
@@ -519,24 +520,25 @@ function StatusIcon({ present }: { present: number }) {
 type EditableStudent = DraftStudent
 
 function AttendancePane({
+  classId,
   data,
   isLoading,
   logId,
   classLessonId,
 }: {
+  classId: string
   data: StudentLogEntry[]
   isLoading: boolean
   logId: string | null
   classLessonId: string | null
 }) {
-  const { can } = usePermission()
-  const canLessonLogWrite = can(PERMISSIONS.TEACHER_LESSONLOG_WRITE)
-  const canAssessmentWrite = can(PERMISSIONS.TEACHER_ASSESSMENT_WRITE)
+  const canLessonLogWrite = useCan(PERMISSIONS.TEACHER_LESSONLOG_WRITE)
+  const canAssessmentWrite = useCan(PERMISSIONS.TEACHER_ASSESSMENT_WRITE)
 
   const [isEditing, setIsEditing] = useState(false)
   const [editState, setEditState] = useState<EditableStudent[]>([])
   const [draftRestored, setDraftRestored] = useState(false)
-  const saveMutation = useSaveStudentLessonLog(logId)
+  const saveMutation = useSaveStudentLessonLog()
   const saveAssessmentMutation = useSaveStudentAssessment(classLessonId)
 
   // Draft store
@@ -583,17 +585,17 @@ function AttendancePane({
         const merged = freshEditState.map((fresh) => draftMap.get(fresh.id) ?? fresh)
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setEditState(merged)
-         
+
         setIsEditing(true)
-         
+
         setDraftRestored(true)
         return
       }
     }
 
-     
+
     setEditState(freshEditState)
-     
+
     setDraftRestored(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [freshEditState, logId])
@@ -626,7 +628,7 @@ function AttendancePane({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsEditing(false)
-     
+
     setDraftRestored(false)
   }, [logId])
 
@@ -653,6 +655,7 @@ function AttendancePane({
   )
 
   const handleSave = useCallback(async () => {
+    if (!logId) return
     // Save each changed student record sequentially
     for (const student of editState) {
       const original = data.find((s) => s.id === student.id)
@@ -665,6 +668,8 @@ function AttendancePane({
         // Even if attendance is unchanged, check criteria changes below
       } else {
         await saveMutation.mutateAsync({
+          classId,
+          logId,
           id: student.id,
           data: {
             present: student.present,
@@ -694,7 +699,7 @@ function AttendancePane({
     setDraftRestored(false)
     // Clean up draft from localStorage after successful save
     if (logId) clearDraft(logId)
-  }, [editState, data, saveMutation, criteriaList, assessmentMap, saveAssessmentMutation, logId, clearDraft])
+  }, [classId, editState, data, saveMutation, criteriaList, assessmentMap, saveAssessmentMutation, logId, clearDraft])
 
   if (isLoading) return <AttendanceSkeleton />
 

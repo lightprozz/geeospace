@@ -34,8 +34,8 @@ import { useAllClasses, useDeleteClass } from '@/features/lms/hooks/classes/use-
 import { useClientTable, type ClientSort } from '@/hooks/use-client-table'
 import { toClassItem } from '@/features/lms/types/class'
 import type { ClassItem } from '@/features/lms/types/class'
-import { usePermission } from '@/features/lms/classes/temp-permissions'
-import { PERMISSIONS } from '@/features/lms/classes/temp-permissions'
+import { useCan } from '@/lib/use-can'
+import { PERMISSIONS } from '@/lib/permissions'
 import { ClassesTable } from './classes-table'
 import { ClassUpsertDialog } from './class-upsert-dialog'
 
@@ -46,8 +46,7 @@ type ClassItemRecord = ClassItem & Record<string, unknown>
 
 export function ClassesPageClient() {
   // ── Permissions ────────────────────────────────────────────────
-  const { can } = usePermission()
-  const canCreateClass = can(PERMISSIONS.CLASS_CREATE)
+  const canCreateClass = useCan(PERMISSIONS.CLASS_CREATE)
 
   // ── State ──────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<'active' | 'finished'>('active')
@@ -61,7 +60,7 @@ export function ClassesPageClient() {
 
   // ── Data — fetch ALL classes (1 API call, then client-side process) ──
   const finishedClasses: 0 | 1 = activeTab === 'finished' ? 1 : 0
-  const { data: rawClasses = [], isLoading } = useAllClasses(finishedClasses)
+  const { data: rawClasses = [], isLoading, error, refetch } = useAllClasses(finishedClasses)
 
   // Deduplicate + transform to FE-ready ClassItem
   const allClasses: ClassItemRecord[] = (() => {
@@ -176,6 +175,7 @@ export function ClassesPageClient() {
   return (
     <div className="flex h-full min-w-[760px] flex-col">
       <header className="flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3"><div>{header.breadcrumbs}</div><div>{header.actions}</div></header>
+      {error && <div role="alert" className="p-4 text-destructive">Unable to load classes. <Button variant="outline" onClick={() => void refetch()}>Retry</Button></div>}
       {/* ── Body ────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
         {/* Main panel */}
