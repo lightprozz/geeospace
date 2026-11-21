@@ -68,6 +68,9 @@ export function UnitPlanPageClient({ lessonId, lesson }: UnitPlanPageClientProps
   // Local drag-drop + multi-select state
   const [localUnits, setLocalUnits] = useState<UnitListItem[]>([])
   const [selectedUnitIds, setSelectedUnitIds] = useState<Set<string>>(new Set())
+  const [search, setSearch] = useState('')
+  const searchTerm = search.trim().toLowerCase()
+  const displayedUnits = localUnits.filter((unit) => (unit.procedures ?? '').toLowerCase().includes(searchTerm))
 
   // Dialog states
   const [createOpen, setCreateOpen] = useState(false)
@@ -88,6 +91,7 @@ export function UnitPlanPageClient({ lessonId, lesson }: UnitPlanPageClientProps
   )
 
   function handleDragEnd(event: DragEndEvent) {
+    if (searchTerm) return
     const { active, over } = event
     if (!over || active.id === over.id) return
 
@@ -103,11 +107,11 @@ export function UnitPlanPageClient({ lessonId, lesson }: UnitPlanPageClientProps
   }
 
   // --- Multi-select Handlers ---
-  const isAllSelected = localUnits.length > 0 && selectedUnitIds.size === localUnits.length
+  const isAllSelected = displayedUnits.length > 0 && displayedUnits.every((unit) => selectedUnitIds.has(unit.id))
 
   function handleSelectAll(checked: boolean) {
     if (checked) {
-      setSelectedUnitIds(new Set(localUnits.map((u) => u.id)))
+      setSelectedUnitIds(new Set(displayedUnits.map((u) => u.id)))
     } else {
       setSelectedUnitIds(new Set())
     }
@@ -209,6 +213,8 @@ export function UnitPlanPageClient({ lessonId, lesson }: UnitPlanPageClientProps
             <input 
               type="text" 
               placeholder="Search units..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
               className="w-full pl-9 pr-4 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-ring bg-muted/20"
             />
           </div>
@@ -221,17 +227,19 @@ export function UnitPlanPageClient({ lessonId, lesson }: UnitPlanPageClientProps
               <LoadingSkeleton />
             ) : localUnits.length === 0 ? (
               <EmptyUnitState lessonId={lessonId} onCopied={() => {}} />
+            ) : displayedUnits.length === 0 ? (
+              <p role="status">No units match your search.</p>
             ) : (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={localUnits.map((u) => u.id)} strategy={verticalListSortingStrategy}>
+                <SortableContext items={displayedUnits.map((u) => u.id)} strategy={verticalListSortingStrategy}>
                   <div className="space-y-4">
-                    {localUnits.map((unit) => (
+                    {displayedUnits.map((unit) => (
                       <SortableUnitCard
                         key={unit.id}
                         unit={unit}
                         isSelected={unitId === unit.id}
                         isChecked={selectedUnitIds.has(unit.id)}
-                        canReorder={canUpdateUnit}
+                        canReorder={canUpdateUnit && !searchTerm}
                         onClick={() => setUnitId(unitId === unit.id ? null : unit.id)}
                         onCheck={(checked) => handleCheckUnit(unit.id, checked)}
                       />
