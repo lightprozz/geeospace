@@ -76,7 +76,7 @@ export function FormTemplateDetailClient({ id }: FormTemplateDetailClientProps) 
     try {
       // State is stated explicitly, not toggled — the server may hold a different
       // state than the last page load, and a toggle would flip whatever it finds.
-      await toggleMutation.mutateAsync(!template.deactivate)
+      await toggleMutation.mutateAsync(template.deactivate)
     } catch {
       // TanStack surfaces the error through the mutation state.
     }

@@ -288,7 +288,7 @@ function ToggleActivateButton({ templateId, deactivate }: { templateId: string; 
     try {
       // State is stated explicitly, not toggled — the server may hold a different
       // state than the last page load, and a toggle would flip whatever it finds.
-      await toggleMutation.mutateAsync(!deactivate)
+      await toggleMutation.mutateAsync(deactivate)
     } catch {
       // Error handled by TanStack
     }
