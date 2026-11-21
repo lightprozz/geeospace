@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { useAuthStore } from "@/stores/use-auth-store";
+import { useAuthStore, watchAuthLogout } from "@/stores/use-auth-store";
 
 export function AuthInitializer({ children }: { children?: ReactNode }) {
   const initialize = useAuthStore(state => state.initialize);
-  useEffect(() => { void initialize(); }, [initialize]);
+  useEffect(() => {
+    const stopWatching = watchAuthLogout();
+    void initialize();
+    return stopWatching;
+  }, [initialize]);
   return <>{children}</>;
 }
