@@ -134,5 +134,5 @@ export async function mockManagement(page: Page, permissions = managementPermiss
     }
     return json({ title: "Unmocked API request" }, 404);
   });
-  return { requests, state, routes, users };
+  return { requests, state, routes, users, branches };
 }

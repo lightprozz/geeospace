@@ -200,13 +200,35 @@ export function isUserActive(
   return user.isDisabled === false
 }
 
-export function parseAssignedCampuses(assignment: string | null | undefined): string[] {
+export function parseAssignedCampuses(
+  assignment: string | null | undefined,
+  campusNames: readonly string[],
+): string[] {
   if (!assignment) return []
   try {
     const ids: unknown = JSON.parse(assignment)
     if (Array.isArray(ids)) return ids.filter((id): id is string => typeof id === 'string' && !!id)
   } catch { /* Older accounts store comma-separated campus names. */ }
-  return assignment.split(',').map(name => name.trim()).filter(Boolean)
+  const split = (value: string) => value.split(',').map(part => part.trim())
+  const compoundNames = campusNames
+    .filter(name => name.includes(','))
+    .map(name => ({ name, parts: split(name.toLowerCase()) }))
+    .sort((a, b) => b.parts.length - a.parts.length)
+  const parts = split(assignment)
+  const lowerParts = parts.map(part => part.toLowerCase())
+  const names: string[] = []
+  for (let i = 0; i < parts.length;) {
+    // Legacy comma-separated values are ambiguous; prefer the longest known campus.
+    const match = compoundNames.find(({ parts }) => parts.every((part, offset) => part === lowerParts[i + offset]))
+    if (match) {
+      names.push(match.name)
+      i += match.parts.length
+    } else {
+      if (parts[i]) names.push(parts[i])
+      i++
+    }
+  }
+  return names
 }
 
 /** Get initials from full name for Avatar fallback */

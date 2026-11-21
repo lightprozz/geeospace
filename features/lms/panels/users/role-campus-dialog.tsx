@@ -92,7 +92,7 @@ export function RoleCampusDialog({
   const failedQuery = [userQuery, rolesQuery, campusesQuery].find(query => query.isError)
   const isLoading = userQuery.isLoading || rolesQuery.isLoading || campusesQuery.isLoading
   const selectedRole = roleOverride ?? roles.find(role => role.normalizedName === userDetail?.roleId?.toUpperCase())?.id ?? ''
-  const assignedCampuses = parseAssignedCampuses(userDetail?.assignedCampus)
+  const assignedCampuses = parseAssignedCampuses(userDetail?.assignedCampus, campuses.map(campus => campus.name))
   const initialCampusIds = new Set(assignedCampuses.map(value => campuses.find(campus => campus.name === value)?.id ?? value))
   const selectedCampusIds = campusOverride ?? initialCampusIds
 

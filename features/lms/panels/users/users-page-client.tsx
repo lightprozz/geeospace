@@ -72,6 +72,8 @@ export function UsersPageClient() {
     queryFn: fetchCampuses,
   })
 
+  const availableBranches = useMemo(() => [...new Set(campuses.map(c => c.name).filter(Boolean))].sort(), [campuses])
+
   // ── Client-side filtering + table processing ────────────────────
   const filterPredicate = useCallback(
     (user: UserRecord) => {
@@ -89,12 +91,12 @@ export function UsersPageClient() {
       // Branch filter
       if (branchFilter !== 'all') {
         const selectedBranch = branchFilter.toLowerCase()
-        if (!parseAssignedCampuses(user.branch).some(branch => branch.toLowerCase() === selectedBranch)) return false
+        if (!parseAssignedCampuses(user.branch, availableBranches).some(branch => branch.toLowerCase() === selectedBranch)) return false
       }
 
       return true
     },
-    [statusTab, roleFilter, branchFilter],
+    [statusTab, roleFilter, branchFilter, availableBranches],
   )
 
   const table = useClientTable<UserRecord>({
@@ -127,9 +129,6 @@ export function UsersPageClient() {
   })
 
   // ── Derived data ─────────────────────────────────────────────────
-  const availableBranches = useMemo(() => {
-    return [...new Set(campuses.map(c => c.name).filter(Boolean))].sort()
-  }, [campuses])
   const availableRoles = useMemo(() => [...new Set(allUsers.flatMap(user => user.roleId ? [user.roleId] : []))].sort(), [allUsers])
 
   const handleSortChange = useCallback(

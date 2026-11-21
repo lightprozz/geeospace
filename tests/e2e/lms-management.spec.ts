@@ -88,6 +88,27 @@ test("users: filters by whole campus name across multi-campus assignments", asyn
   await expect(rows.first()).toContainText("Mai Nguyen");
 });
 
+test("users: recognizes campuses whose names contain commas", async ({ page }) => {
+  const { users, branches } = await mockManagement(page);
+  branches.push({ ...branches[0], id: "austin", name: "Austin" }, { ...branches[0], id: "austin-tx", name: "Austin, TX" });
+  users[0].branch = "South Campus, Austin, TX";
+  users[1].branch = "Austin";
+  users[1].isActive = true;
+  await page.goto("/#lms-users");
+  const panel = page.locator('[data-app="lms-users"]');
+  const rows = panel.locator("tbody tr");
+  const filter = panel.getByRole("combobox", { name: "Filter by branch" });
+  await expect(rows).toHaveCount(2);
+  await filter.click();
+  await page.getByRole("option", { name: "Austin, TX", exact: true }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText("Mai Nguyen");
+  await filter.click();
+  await page.getByRole("option", { name: "Austin", exact: true }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText("Linh Tran");
+});
+
 test("users: toggles a column sort from the keyboard and announces its direction", async ({ page }) => {
   const { users } = await mockManagement(page);
   users[1].isActive = true;
