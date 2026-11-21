@@ -6,4 +6,5 @@ export const appEnglish: Record<Exclude<DesktopAppId, `lms-${string}`>, [string,
   work: ["Work & pay", "Reconcile worklogs, working time and published payslips."], notifications: ["Notices", "Updates for you and your centre."],
   assistant: ["Assistant", "Find and open the right feature."], lms: ["Gee-O LMS", "Gee-O LMS teaching and administration apps."],
   account: ["Account", "Gee-O Auth connection status."], appearance: ["Appearance", "Wallpaper, colour and transparency."],
+  staff: ["Work", "Requests, worklogs and payroll."], admin: ["Administration", "Users and roles."],
 };

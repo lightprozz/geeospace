@@ -27,8 +27,8 @@ function UnconnectedPanel({ id, onOpen }: PanelProps) {
 const LmsHub = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsHub })));
 const LmsPlaceholder = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsPlaceholder })));
 const panels: Partial<Record<DesktopAppId, ComponentType<PanelProps>>> = {
-  ...Object.fromEntries(desktopApps.filter(app => app.group === "lms").map(app => [app.id, LmsPlaceholder])),
-  account: AccountPanel, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub,
+  ...Object.fromEntries(desktopApps.filter(app => app.group !== "workspace" && app.id !== "requests" && app.id !== "work").map(app => [app.id, LmsPlaceholder])),
+  account: AccountPanel, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub, staff: LmsHub, admin: LmsHub,
 };
 export function AppPanel(props: PanelProps) {
   const Panel = panels[props.id] ?? UnconnectedPanel;

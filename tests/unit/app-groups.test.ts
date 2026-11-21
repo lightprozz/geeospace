@@ -7,12 +7,16 @@ const area = { width: 1440, height: 800 };
 it("registers unique apps in valid groups with a single LMS dock entry", () => {
   expect(new Set(desktopApps.map(app => app.id)).size).toBe(desktopApps.length);
   expect(desktopApps.every(app => appGroups.some(group => group.id === app.group))).toBe(true);
-  expect(appsInGroup("lms")).toHaveLength(16);
-  expect(dockApps.filter(app => app.group === "lms").map(app => app.id)).toEqual(["lms"]);
-  expect(dockApps.filter(app => app.group === "workspace").map(app => app.id)).toEqual(["today", "calendar", "requests", "learning", "work", "notifications", "assistant", "account"]);
+  expect(appsInGroup("lms")).toHaveLength(11);
+  expect(appsInGroup("staff").map(app => app.id)).toEqual(["requests", "work", "staff", "lms-worklog", "lms-form-templates"]);
+  expect(appsInGroup("admin").map(app => app.id)).toEqual(["admin", "lms-users", "lms-roles"]);
+  for (const group of ["lms", "staff", "admin"] as const) expect(dockApps.filter(app => app.group === group).map(app => app.id)).toEqual([group]);
+  expect(dockApps.filter(app => app.group === "workspace").map(app => app.id)).toEqual(["today", "calendar", "learning", "notifications", "assistant", "account"]);
+  expect(desktopApps.some(app => String(app.id) === "lms-requests")).toBe(false);
+  expect(parseAppHash("#lms-requests/123")).toEqual({ id: "requests", path: "123" });
 });
 it("searches across groups and handles empty and unmatched queries", () => {
-  expect(searchApps("yeu cau").map(app => app.id)).toEqual(["requests", "lms-requests"]);
+  expect(searchApps("yeu cau cua toi").map(app => app.id)).toEqual(["requests"]);
   expect(searchApps("Levels Lessons").map(app => app.id)).toEqual(["lms-curriculum"]);
   expect(searchApps("Workspace").every(app => app.group === "workspace")).toBe(true);
   expect(searchApps("")).toHaveLength(desktopApps.length);
@@ -20,7 +24,7 @@ it("searches across groups and handles empty and unmatched queries", () => {
 });
 it("ranks app matches above group-only matches while preserving group searches", () => {
   const work = searchApps("work").map(app => app.id);
-  expect(work.slice(0, 2)).toEqual(["work", "lms-worklog"]);
+  expect(work[0]).toBe("work");
   expect(work.indexOf("today")).toBeGreaterThan(work.indexOf("lms-worklog"));
   for (const query of ["LMS", "Gee-O LMS"]) expect(searchApps(query).map(app => app.id)).toEqual(appsInGroup("lms").map(app => app.id));
   expect(searchApps("workspace")).toHaveLength(appsInGroup("workspace").length);

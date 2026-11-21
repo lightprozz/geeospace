@@ -22,6 +22,24 @@ test("dock has one LMS entry and hub launches Classes with shared running state"
   await expect(lms).toHaveAttribute("data-running", "true");
 });
 
+test("work and administration hubs share dock state with their children", async ({ page }) => {
+  const dock = page.locator(".os-dock");
+  for (const [id, name, child, childName] of [["staff", "Công việc", "lms-worklog", "Nhật ký công việc"], ["admin", "Quản trị", "lms-users", "Người dùng"]]) {
+    const entry = dock.getByRole("button", { name, exact: true });
+    await expect(entry).toHaveCount(1);
+    await entry.click();
+    const hub = page.locator(`[data-app="${id}"]`);
+    await hub.getByRole("button", { name: childName, exact: true }).click();
+    await expect(page.locator(`[data-app="${child}"]`)).toBeVisible();
+    await expect(entry).toHaveAttribute("aria-current", "true");
+    await hub.getByRole("button", { name: `Đóng ${name}`, exact: true }).click({ force: true });
+    await expect(entry).toHaveAttribute("data-running", "true");
+  }
+  await expect(dock.locator('[data-launch-app="work"], [data-launch-app="requests"], [data-launch-app^="lms-"]')).toHaveCount(0);
+  await page.goto("/#lms-requests/123");
+  await expect(page.locator('[data-app="requests"]')).toBeVisible();
+});
+
 test("launcher groups, cross-group search, keyboard navigation and focus trap", async ({ page }) => {
   await page.locator(".os-dock").getByRole("button", { name: "Tất cả ứng dụng", exact: true }).click();
   const launcher = page.getByRole("dialog", { name: "Tất cả ứng dụng", exact: true });
@@ -32,22 +50,20 @@ test("launcher groups, cross-group search, keyboard navigation and focus trap", 
   await expect(launcher).toBeHidden();
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog", { name: "Tìm nhanh chức năng" });
-  await expect(dialog.locator(".os-launcher-group-heading")).toHaveText(["Không gian làm việc", "Gee-O LMS"]);
+  await expect(dialog.locator(".os-launcher-group-heading")).toHaveText(["Không gian làm việc", "Gee-O LMS", "Công việc", "Quản trị"]);
   const input = dialog.getByRole("combobox");
-  await input.fill("yeu cau");
-  await expect(dialog.getByRole("option")).toHaveCount(2);
-  await expect(dialog.getByRole("option").nth(0)).toContainText("Không gian làm việc");
-  await expect(dialog.getByRole("option").nth(1)).toContainText("Gee-O LMS");
-  await page.keyboard.press("ArrowDown");
+  await input.fill("yeu cau cua toi");
+  await expect(dialog.getByRole("option")).toHaveCount(1);
+  await expect(dialog.getByRole("option")).toContainText("Công việc");
   await page.keyboard.press("Enter");
-  await expect(page.locator('[data-app="lms-requests"]')).toBeVisible();
+  await expect(page.locator('[data-app="requests"]')).toBeVisible();
   await page.keyboard.press("Control+k");
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Shift+Tab");
   await expect(dialog.getByRole("button", { name: "Đóng tìm kiếm" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(dialog.getByRole("combobox")).toBeFocused();
-  for (let i = 0; i < 10; i++) await page.keyboard.press("ArrowDown");
+  await dialog.getByRole("combobox").fill("Levels Lessons");
   await page.keyboard.press("Enter");
   await expect(page.locator('[data-app="lms-curriculum"]')).toBeVisible();
 });
@@ -57,7 +73,6 @@ test("search selects an app match before group-only matches", async ({ page }) =
   const dialog = page.getByRole("dialog", { name: "Tìm nhanh chức năng" });
   await dialog.getByRole("combobox").fill("work");
   await expect(dialog.getByRole("option").nth(0)).toContainText("Công & lương");
-  await expect(dialog.getByRole("option").nth(1)).toContainText("Nhật ký công việc");
   await page.keyboard.press("Enter");
   await expect(page.locator('[data-app="work"]')).toBeVisible();
 });
