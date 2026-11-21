@@ -49,10 +49,11 @@ import type { StudentLessonAttendanceInput } from '@/features/lms/types/class-re
  * Returns flat array — search/sort/filter/pagination handled by useClientTable.
  * Campus scoped via JWT claims (server-side).
  */
-export function useAllClasses(finishedClasses: 0 | 1) {
+export function useAllClasses(finishedClasses: 0 | 1, enabled = true) {
   return useQuery({
     queryKey: classKeys.listAll(finishedClasses),
     queryFn: () => fetchAllClasses(finishedClasses),
+    enabled,
   })
 }
 

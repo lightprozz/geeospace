@@ -9,10 +9,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { holidayKeys } from '@/features/lms/lib/holidays/query-keys'
-import { classKeys } from '@/features/lms/lib/classes/query-keys'
+import { useAllClasses } from '@/features/lms/hooks/classes/use-classes'
 import { fetchHolidays, saveHolidays, resetClassLessons } from '@/features/lms/lib/holidays/api'
 import { parseHolidayRows } from '@/features/lms/lib/holidays/utils'
-import { fetchClassList } from '@/features/lms/lib/classes/api'
 
 import type { HolidayData } from '@/features/lms/types/holiday'
 import type { SaveHolidayInput } from '@/features/lms/types/holiday'
@@ -37,15 +36,10 @@ export function useHolidays(userId: string) {
 
 /**
  * Fetch active class list for the class exceptions dropdown.
- * Reuses existing fetchClassList from lib/classes/api.ts (finishedClasses=0 = active).
+ * Share the unpaginated active class query used by the Classes panel.
  */
 export function useClassListForHolidays(userId: string) {
-  return useQuery({
-    queryKey: classKeys.list(0),
-    queryFn: () => fetchClassList(userId, 0),
-    select: (data) => data.items,
-    enabled: !!userId,
-  })
+  return useAllClasses(0, !!userId)
 }
 
 // ---------------------------------------------------------------------------
