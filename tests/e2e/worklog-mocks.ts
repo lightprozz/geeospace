@@ -52,7 +52,7 @@ const attendance: AttendanceItem = {
   createdAt: updatedAt,
 };
 
-export async function mockWorklog(page: Page, permission: string[], options?: { conflictOnce?: boolean }) {
+export async function mockWorklog(page: Page, permission: string[], options?: { conflictOnce?: boolean; largeRoster?: boolean }) {
   await page.clock.setFixedTime(worklogNow);
   await mockGeeo(page, { ...mockUser, permission });
   await seedGeeo(page.context());
@@ -72,7 +72,7 @@ export async function mockWorklog(page: Page, permission: string[], options?: { 
     if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
     const url = new URL(request.url());
     const path = url.pathname.replace("/api/v2/working-time", "");
-    const body = request.postDataJSON() as { from?: string; to?: string; status?: string } | null;
+    const body = request.postDataJSON() as { from?: string; to?: string; status?: string; teacherIds?: string[]; page?: number } | null;
     requests.push({ path, body, headers: request.headers() });
     const containsDay = (from?: string | null, to?: string | null) => !!from && !!to && from <= worklogDay && worklogDay <= to;
     const paged = (items: WorkLogItemV2[]) => ({
@@ -83,12 +83,19 @@ export async function mockWorklog(page: Page, permission: string[], options?: { 
       case "/api/AspNetUsers/teacher":
         return json([
           { id: ownEntry.teacherId, firstName: "Mai", lastName: "Nguyen", englishName: "May" },
+          ...Array.from({ length: options?.largeRoster ? 199 : 0 }, (_, index) => ({ id: `extra-${index}`, firstName: "Teacher", lastName: String(index) })),
           { id: otherEntry.teacherId, firstName: "Linh", lastName: "Tran", englishName: "Lily" },
         ]);
       case "/worklog/query":
         return json(paged(entries.filter(item => item.teacherId === mockUser.sub)));
-      case "/worklog/query/all-teachers":
-        return json(paged(entries));
+      case "/worklog/query/all-teachers": {
+        const ids = body?.teacherIds ?? [];
+        if (ids.length > 200) return route.fulfill({ status: 400, headers, json: { title: "Teacher batch too large" } });
+        if (options?.largeRoster && ids.includes(ownEntry.teacherId) && body?.page === 1) {
+          return json({ ...paged([]), hasNext: true });
+        }
+        return json({ ...paged(entries.filter(item => ids.includes(item.teacherId))), page: body?.page ?? 1 });
+      }
       case "/worklog/summary/query":
         return json(containsDay(body?.from, body?.to) ? summary : { ...summary, mtShift: 0, otherShift: 0, total: 0 });
       case "/worklog/shift-options":

@@ -97,3 +97,15 @@ test("lets a narrow window reach day cells and refetches the grid after a stale 
   await expect(page.getByText("Rejected", { exact: true })).toBeVisible();
   expect(requests.filter(request => request.path === "/worklog/query/all-teachers")).toHaveLength(2);
 });
+
+test("loads every page and teacher batch when the roster exceeds the API limit", async ({ page }) => {
+  const requests = await mockWorklog(page, ["worklog.approve"], { largeRoster: true });
+  await page.goto("/#lms-worklog/timesheets");
+  const panel = page.locator('[data-app="lms-worklog"]');
+  await expect(panel.getByRole("cell", { name: ownEntry.className! })).toBeVisible();
+  await expect(panel.getByRole("cell", { name: otherEntry.className! })).toBeVisible();
+  expect(requests.filter(request => request.path === "/worklog/query/all-teachers").map(({ body }) => {
+    const { teacherIds, page } = body as { teacherIds: string[]; page: number };
+    return [teacherIds.length, page];
+  })).toEqual([[200, 1], [200, 2], [1, 1]]);
+});
