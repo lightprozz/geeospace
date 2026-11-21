@@ -132,3 +132,19 @@ test("only flags missing attendance for days with actual work", async ({ page })
   await expect(offDay).toBeVisible();
   await expect(offDay.getByText("Lệch", { exact: true })).toHaveCount(0);
 });
+
+test("starts My Worklog in the current period after closing and reopening its window", async ({ page }) => {
+  await mockWorklog(page, ["worklog.read"]);
+  await page.goto("/#lms-worklog");
+  const panel = page.locator('[data-app="lms-worklog"]');
+  await panel.getByRole("tab", { name: "Ledger" }).click();
+  await expect(panel.getByText(ownEntry.className!, { exact: true })).toBeVisible();
+  await panel.getByRole("button", { name: "Previous period" }).click();
+  await expect(panel.getByText(ownEntry.className!, { exact: true })).toHaveCount(0);
+  await panel.getByRole("button", { name: /Đóng.*Nhật ký công việc/ }).click();
+  await expect(panel.getByRole("heading", { name: "My Worklog", includeHidden: true })).toHaveCount(0);
+  await page.getByRole("navigation", { name: "Dock ứng dụng" }).getByRole("button", { name: "Công việc", exact: true }).click();
+  await page.locator('[data-app="staff"]').getByRole("button", { name: "Nhật ký công việc" }).click();
+  await expect(panel.getByRole("tab", { name: "Calendar" })).toHaveAttribute("aria-selected", "true");
+  await expect(panel.getByRole("button", { name: `View worklog for ${worklogDay}` })).toBeVisible();
+});
