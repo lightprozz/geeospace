@@ -22,13 +22,26 @@ function mount(node: React.ReactNode) {
 }
 beforeEach(() => {
   usePermissionStore.setState({ isLoaded: true, permissions: ["curriculum.create", "content.material.write"] });
-  request = vi.fn(async (path: string) => path.includes("check-exists") ? false : path.endsWith("/query") ? { items: [material], total: 1, page: 1, pageSize: 20, hasNext: false } : [level]);
+  request = vi.fn(async (path: string) => path.includes("check-exists") ? { exists: false, exceedsMaxLessons: false, hasTeachingLog: false } : path.endsWith("/query") ? { items: [material], total: 1, page: 1, pageSize: 20, hasNext: false } : [level]);
   dispose = configureLmsTransport({ request: (path, options) => request(path, options), resolveUrl: path => path });
   useCurriculumStore.getState().closeLesson();
 });
 afterEach(() => { cleanup(); dispose(); });
 
 describe("curriculum", () => {
+  it.each([
+    [{ exists: false, exceedsMaxLessons: false, hasTeachingLog: true }, false],
+    [{ exists: true, exceedsMaxLessons: false, hasTeachingLog: false }, true],
+    [{ exists: false, exceedsMaxLessons: true, hasTeachingLog: false }, true],
+  ])("checks lesson conflict flags %j", async (result, conflict) => {
+    request.mockResolvedValue(result);
+    useCurriculumStore.getState().openCreateLesson();
+    mount(h(LessonUpsertDialog, { levelId: "level-1" }));
+    fireEvent.change(screen.getByLabelText(/Lesson Number/), { target: { value: "2" } });
+    fireEvent.blur(screen.getByLabelText(/Lesson Number/));
+    await waitFor(() => expect(request).toHaveBeenCalled());
+    await waitFor(() => expect(Boolean(screen.queryByText("Lesson number already exists or exceeds the level limit"))).toBe(conflict));
+  });
   it("renders levels and filters to an empty state", async () => {
     mount(h(LevelList, { selectedLevelId: "", onSelectLevel: vi.fn(), onDeleteLevel: vi.fn() }));
     expect(await screen.findByText("Explorers")).toBeTruthy();

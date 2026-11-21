@@ -50,6 +50,7 @@ export function LessonUpsertDialog({ levelId }: LessonUpsertDialogProps) {
     reset,
     getValues,
     setError,
+    clearErrors,
     formState: { errors },
   } = useForm<UpsertLessonInput>({
     // zodResolver requires type cast for complex schemas
@@ -88,15 +89,17 @@ export function LessonUpsertDialog({ levelId }: LessonUpsertDialogProps) {
 
     try {
       const exists = await checkLessonExists(levelId, lesson, editId)
-      if (exists) {
+      if (exists.exists || exists.exceedsMaxLessons) {
         setError('lesson', {
           message: 'Lesson number already exists or exceeds the level limit',
         })
+      } else {
+        clearErrors('lesson')
       }
     } catch {
       // Silent fail — don't block submit if validation API is unavailable
     }
-  }, [getValues, levelId, isEdit, lessonDialog.data, setError])
+  }, [getValues, levelId, isEdit, lessonDialog.data, setError, clearErrors])
 
   function onSubmit(values: UpsertLessonInput) {
     if (isEdit && lessonDialog.data) {
