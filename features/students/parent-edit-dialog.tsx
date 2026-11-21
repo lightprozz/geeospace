@@ -286,7 +286,7 @@ export function ParentEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onOpenChange(false)}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>

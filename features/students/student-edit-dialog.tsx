@@ -118,7 +118,7 @@ export function StudentEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onOpenChange(false)}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Student Info</DialogTitle>
           <DialogDescription>
