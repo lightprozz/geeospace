@@ -7,6 +7,7 @@
 // ---------------------------------------------------------------------------
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { editAttendanceField, editAttendanceCriterion, restoreAttendanceDrafts, type AttendanceDraft } from './attendance-drafts'
 import {
   BookOpen,
   Calendar,
@@ -68,7 +69,6 @@ import { useAuthStore } from '@/stores/use-auth-store'
 import { getAttendanceBadgeConfig, AttendanceType } from '@/features/lms/types/class-report'
 import type { LessonLogEntry, StudentLogEntry } from '@/features/lms/types/class-report'
 import { useReportDraftStore } from '@/features/lms/stores/use-report-draft-store'
-import type { DraftStudent } from '@/features/lms/stores/use-report-draft-store'
 import { cn } from '@/lib/utils'
 import { useCan } from '@/lib/use-can'
 import { PERMISSIONS } from '@/lib/permissions'
@@ -517,7 +517,7 @@ function StatusIcon({ present }: { present: number }) {
 }
 
 /** Editable local state per student (same shape as DraftStudent) */
-type EditableStudent = DraftStudent
+type EditableStudent = AttendanceDraft
 
 function AttendancePane({
   classId,
@@ -580,9 +580,7 @@ function AttendancePane({
     if (logId && hasDraft(logId)) {
       const draft = getDraft(logId)
       if (draft) {
-        // Restore draft — merge with fresh IDs in case roster changed
-        const draftMap = new Map(draft.students.map((s) => [s.id, s]))
-        const merged = freshEditState.map((fresh) => draftMap.get(fresh.id) ?? fresh)
+        const merged = restoreAttendanceDrafts(freshEditState, draft.students)
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setEditState(merged)
 
@@ -633,9 +631,9 @@ function AttendancePane({
   }, [logId])
 
   const updateField = useCallback(
-    (id: string, field: keyof Omit<EditableStudent, 'criteria'>, value: number | string) => {
+    <K extends 'present' | 'starScore' | 'note'>(id: string, field: K, value: EditableStudent[K]) => {
       setEditState((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)),
+        prev.map((s) => (s.id === id ? editAttendanceField(s, field, value) : s)),
       )
     },
     [],
@@ -646,7 +644,7 @@ function AttendancePane({
       setEditState((prev) =>
         prev.map((s) =>
           s.id === id
-            ? { ...s, criteria: { ...s.criteria, [criteriaNumber]: value } }
+            ? editAttendanceCriterion(s, criteriaNumber, value)
             : s,
         ),
       )
