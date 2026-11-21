@@ -18,6 +18,8 @@ export interface ApiClientOptions extends Omit<RequestInit, "body"> {
   formBody?: URLSearchParams | Record<string, string>
   /** Idempotency key (auto-generated for POST/PUT/PATCH/DELETE if not set) */
   idempotencyKey?: string
+  /** Successful response carries no data the caller needs. */
+  responseType?: "void"
 }
 
 // V2 query/response types
@@ -118,6 +120,7 @@ export async function apiFetch<T = unknown>(
     formBody,
     headers: optsHeaders,
     idempotencyKey,
+    responseType,
     ...rest
   } = options
 
@@ -222,7 +225,7 @@ export async function apiFetch<T = unknown>(
   }
 
   // 204 No Content
-  if (res.status === 204) return undefined as T
+  if (res.status === 204 || responseType === "void") return undefined as T
 
   const text = await res.text()
   return text.trim() ? JSON.parse(text) as T : undefined as T
