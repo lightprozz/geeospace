@@ -59,15 +59,17 @@ test('launcher → lesson → roster and toolkit → end session', async ({ page
   expect(externalAvatarRequests).toEqual([])
 })
 
-test('deep links show empty and error states without closing the workspace', async ({ page }) => {
+test('deep links show empty and error states without closing the workspace', async ({ page }, info) => {
   await page.route('https://api.geeo.test/api/v2/lesson-delivery/units/**', route => route.fulfill({ json: [] }))
   await page.goto('/#lets-learn/empty')
   await expect(page.getByText('No lesson content available')).toBeVisible()
   await page.getByRole('button', { name: 'Go Back', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Start lesson' })).toBeVisible()
-  await page.route('https://api.geeo.test/api/v2/lesson-delivery/units/**', route => route.fulfill({ status: 400, contentType: 'application/problem+json', json: { title: 'Lesson not found' } }))
+  await page.route('https://api.geeo.test/api/v2/lesson-delivery/units/**', route => route.fulfill({ status: 404, json: { title: 'Lesson not found' } }))
   await page.goto('/#lets-learn/missing')
   await expect(page.getByText('Lesson not found', { exact: true })).toBeVisible()
+  await expect(page.getByText('{"title":"Lesson not found"}', { exact: true })).toHaveCount(0)
+  if (process.env.SCREENSHOT_DIR && info.project.name === 'desktop') await page.screenshot({ animations: 'disabled', path: `${process.env.SCREENSHOT_DIR}/lets-learn-404-fixed.png` })
 })
 
 test('tool overlays fit a short maximized lesson window', async ({ page }, info) => {
@@ -102,10 +104,6 @@ test('tool overlays fit a short maximized lesson window', async ({ page }, info)
   await roster.getByRole('button', { name: 'Toolkit', exact: true }).click()
   await expect(badgeTray).toBeHidden()
   await roster.getByRole('button', { name: 'Close tool', exact: true }).click()
-  await roster.getByRole('button', { name: 'Badges', exact: true }).click()
-  await expect(badgeTray).toBeVisible()
-  await roster.getByRole('button', { name: 'Random', exact: true }).click()
-  await expect(badgeTray).toBeHidden()
   for (const tool of ['Groups', 'Noise Meter', 'Directions', 'Think - Pair - Share', 'Today', 'Music']) {
     await roster.getByRole('button', { name: 'Toolkit', exact: true }).click()
     await roster.getByRole('button', { name: tool, exact: true }).click()
@@ -114,4 +112,8 @@ test('tool overlays fit a short maximized lesson window', async ({ page }, info)
     await expect.poll(async () => surface.evaluate(element => getComputedStyle(element).overflowY)).toMatch(/auto|scroll/)
     await roster.getByRole('button', { name: 'Close tool', exact: true }).click()
   }
+  await roster.getByRole('button', { name: 'Badges', exact: true }).click()
+  await expect(badgeTray).toBeVisible()
+  await roster.getByRole('button', { name: 'Random', exact: true }).click()
+  await expect(badgeTray).toBeHidden()
 })

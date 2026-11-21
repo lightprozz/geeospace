@@ -281,6 +281,30 @@ it("maps ProblemDetails, supports interceptors, and accepts any empty successful
   vi.mocked(fetch).mockResolvedValueOnce(new Response("  "));
   expect(await client.apiFetch("/empty")).toBeUndefined();
 });
+it.each([
+  [JSON.stringify({ title: "Lesson not found" }), "application/json", "Lesson not found"],
+  [JSON.stringify({ title: "Lesson not found", detail: "  Choose another lesson.  " }), "application/problem+json", "Choose another lesson."],
+  [JSON.stringify({ title: "Lesson not found", detail: " " }), "text/plain", "Lesson not found"],
+  [JSON.stringify({ title: 42, detail: [] }), "application/json", "Request failed (404)"],
+  ["{}", "application/problem+json", "Request failed (404)"],
+  ["", "application/json", "Request failed (404)"],
+  ["{invalid", "application/problem+json", "Request failed (404)"],
+  ["[]", "application/json", "Request failed (404)"],
+  ["null", "application/json", "Request failed (404)"],
+  ["Lesson unavailable", "text/plain", "Lesson unavailable"],
+])("extracts readable API errors from %s (%s)", async (body, contentType, message) => {
+  await load();
+  session();
+  const { installLmsBrowserTransport } = await import("@/features/lms/lib/browser-transport");
+  const { api } = await import("@/features/lms/lib/transport");
+  const dispose = installLmsBrowserTransport();
+  try {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(body, { status: 404, headers: { "Content-Type": contentType } }));
+    await expect(api.get("/missing")).rejects.toMatchObject({ name: "ApiError", status: 404, message });
+  } finally {
+    dispose();
+  }
+});
 it.each(["NEXT_PUBLIC_API_URL", "NEXT_PUBLIC_AUTH_API_URL"])("does not fetch when %s is missing", async variable => {
   vi.stubEnv(variable, "");
   const { store, client, token } = await load();
