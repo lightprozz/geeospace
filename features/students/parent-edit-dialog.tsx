@@ -150,9 +150,9 @@ export function ParentEditDialog({
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedExisting(null)
-       
+
       setIsCreatingNew(false)
-       
+
       setSearchQuery('')
       if (parentData) {
         reset({
