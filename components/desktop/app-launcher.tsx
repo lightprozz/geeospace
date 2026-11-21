@@ -20,7 +20,7 @@ export function AppLauncher({ mode, onOpen, onClose }: { mode: "launcher" | "sea
     root.current?.querySelector("input")?.focus();
     return () => { if (previous?.isConnected) previous.focus(); };
   }, []);
-  return <div ref={backdrop} data-app-overlay className="os-overlay-backdrop" onPointerDown={(event) => { if (event.target === event.currentTarget) close(); }}><div ref={root} className={`os-launcher os-launcher-${mode}`} role="dialog" aria-modal="true" aria-label={mode === "search" ? t("Tìm nhanh chức năng", "Quick feature search") : t("Tất cả ứng dụng", "All apps")} onKeyDown={(event) => {
+  return <div ref={backdrop} data-app-overlay className="os-overlay-backdrop" onPointerDown={(event) => { if (event.target === event.currentTarget) close(); }}><div ref={root} className={`os-launcher os-launcher-mode-${mode}`} role="dialog" aria-modal="true" aria-label={mode === "search" ? t("Tìm nhanh chức năng", "Quick feature search") : t("Tất cả ứng dụng", "All apps")} onKeyDown={(event) => {
     if (event.key === "Escape") { event.stopPropagation(); close(); }
     if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); setSelected((value) => (value + (event.key === "ArrowDown" ? 1 : -1) + Math.max(1, apps.length)) % Math.max(1, apps.length)); }
     if (event.key === "Enter" && event.target instanceof HTMLInputElement && apps[selected]) { event.preventDefault(); open(apps[selected].id); }
