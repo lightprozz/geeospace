@@ -33,7 +33,8 @@ import {
 import { useLessonsByLevel } from '@/features/lms/hooks/curriculum/use-lesson-plans'
 import { useDeleteLessonPlan, useBulkDeleteLessonPlans, useUploadWorksheet } from '@/features/lms/hooks/curriculum/use-lesson-plans'
 import { useCurriculumStore } from '@/features/lms/stores/use-curriculum-store'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import { LessonRow } from './lesson-row'
 import { EmptyLessonState } from './empty-lesson-state'
 import type { LevelListItem, LessonListItem } from '@/features/lms/types/curriculum'
@@ -44,10 +45,10 @@ interface LessonTableProps {
 
 export function LessonTable({ level }: LessonTableProps) {
   const { can } = usePermission()
-  const canCreateLesson = can('curriculum.create')
-  const canDeleteLesson = can('curriculum.delete')
+  const canCreateLesson = can(PERMISSIONS.CURRICULUM_CREATE)
+  const canDeleteLesson = can(PERMISSIONS.CURRICULUM_DELETE)
 
-  const { data: lessons = [], isLoading } = useLessonsByLevel(level.id)
+  const { data: lessons = [], isLoading, isError } = useLessonsByLevel(level.id)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [worksheetLessonId, setWorksheetLessonId] = useState<string | null>(null)
@@ -76,7 +77,8 @@ export function LessonTable({ level }: LessonTableProps) {
   const handleCheck = useCallback((id: string, checked: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev)
-      checked ? next.add(id) : next.delete(id)
+      if (checked) next.add(id)
+      else next.delete(id)
       return next
     })
   }, [])
@@ -144,7 +146,7 @@ export function LessonTable({ level }: LessonTableProps) {
 
       {/* ── Table body ── */}
       <div className="flex-1 overflow-auto">
-        {isLoading ? (
+        {isError ? <p role="alert">Unable to load lessons.</p> : isLoading ? (
           <LoadingSkeleton />
         ) : lessons.length === 0 ? (
           <EmptyLessonState levelName={level.name} />

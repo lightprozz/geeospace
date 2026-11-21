@@ -2,7 +2,8 @@
 
 import React from 'react'
 import { X, Clock, FolderOpen, BookOpen, Edit, Trash2 } from 'lucide-react'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import type { UnitListItem } from '@/features/lms/types/curriculum'
 
 interface UnitDetailPaneProps {
@@ -14,8 +15,8 @@ interface UnitDetailPaneProps {
 
 export function UnitDetailPane({ unit, onClose, onDelete, onEdit }: UnitDetailPaneProps) {
   const { can } = usePermission()
-  const canUpdateUnit = can('curriculum.update')
-  const canDeleteUnit = can('curriculum.delete')
+  const canUpdateUnit = can(PERMISSIONS.CURRICULUM_UPDATE)
+  const canDeleteUnit = can(PERMISSIONS.CURRICULUM_DELETE)
 
   return (
     <div className="w-full md:w-[400px] bg-background border-l border-border flex flex-col h-full shrink-0 animate-in fade-in slide-in-from-right-5 duration-200">

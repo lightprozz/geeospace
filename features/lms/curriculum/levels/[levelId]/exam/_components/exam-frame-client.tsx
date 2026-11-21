@@ -30,7 +30,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Loader2 } from 'lucide-react'
 import { useExamForms, useSaveExamForms } from '@/features/lms/hooks/curriculum/use-exam-forms'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import { ExamTemplateCard } from './exam-template-card'
 import { DEFAULT_EXAM_FORM } from '@/features/lms/types/curriculum'
 import type { LevelDetail, ExamFormItemRequest } from '@/features/lms/types/curriculum'
@@ -43,7 +44,7 @@ interface ExamFrameClientProps {
 export function ExamFrameClient({ level, levelId }: ExamFrameClientProps) {
   const router = useRouter()
   const { can } = usePermission()
-  const canUpdateExamFrame = can('curriculum.update')
+  const canUpdateExamFrame = can(PERMISSIONS.CURRICULUM_UPDATE)
   const { data: serverForms = [] } = useExamForms(levelId)
   const { mutate: saveForms, isPending: isSaving } = useSaveExamForms(levelId)
 

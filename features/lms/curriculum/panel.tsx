@@ -2,6 +2,9 @@
 
 import { useWindowNavigation } from "@/components/desktop/window-navigation";
 import { LmsUiScope } from "@/components/ui/lms-ui-scope";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { PermissionGuard } from "@/components/auth/permission-guard";
+import { PERMISSIONS } from "@/lib/permissions";
 import { useLessonById } from "@/features/lms/hooks/curriculum/use-lesson-plans";
 import { useStudyLevel } from "@/features/lms/hooks/curriculum/use-study-levels";
 import { useDeletedLessons, useLessonContent } from "@/features/lms/hooks/curriculum/use-lesson-content";
@@ -29,8 +32,12 @@ function ExamPanel({ id }: { id: string }) {
   return <ExamFrameClient key={id} levelId={id} level={level.data} />;
 }
 
-export default function CurriculumPanel() {
+function CurriculumRoutes() {
   const { path } = useWindowNavigation();
   const parts = path.replace(/^\//, "").split("/");
   return <LmsUiScope className="h-full flex flex-col bg-background text-foreground overflow-auto">{!parts[0] ? <CurriculumPageClient /> : parts[0] === "lessons" && parts[1] && ["units", "content"].includes(parts[2]) ? <LessonPanel id={parts[1]} tab={parts[2]} /> : parts[0] === "levels" && parts[1] && parts[2] === "exam" ? <ExamPanel id={parts[1]} /> : <p role="alert">Curriculum page not found.</p>}</LmsUiScope>;
+}
+
+export default function CurriculumPanel() {
+  return <PermissionGuard permission={PERMISSIONS.CURRICULUM_READ}><TooltipProvider><CurriculumRoutes /></TooltipProvider></PermissionGuard>;
 }

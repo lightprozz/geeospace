@@ -21,7 +21,7 @@ interface LevelListProps {
 
 export function LevelList({ selectedLevelId, onSelectLevel, onDeleteLevel }: LevelListProps) {
   const [filter, setFilter] = useState('')
-  const { data: levels = [], isLoading } = useStudyLevels()
+  const { data: levels = [], isLoading, isError } = useStudyLevels()
 
   const filtered = levels.filter((l) =>
     l.name.toLowerCase().includes(filter.toLowerCase()),
@@ -54,7 +54,7 @@ export function LevelList({ selectedLevelId, onSelectLevel, onDeleteLevel }: Lev
 
       {/* Scrollable level cards */}
       <div className="flex-1 overflow-y-auto py-2 px-2 space-y-1.5">
-        {isLoading ? (
+        {isError ? <p role="alert">Unable to load study levels.</p> : isLoading ? (
           // Skeleton loading — 4 placeholder cards
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="rounded-lg border p-3 space-y-2">

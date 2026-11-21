@@ -27,7 +27,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useRelatedLessons } from '@/features/lms/hooks/curriculum/use-lesson-content'
 import { useCopyUnitsFromLesson, useUnitsByLesson } from '@/features/lms/hooks/curriculum/use-unit-plans'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import type { RelatedLesson } from '@/features/lms/types/curriculum'
 
 interface EmptyUnitStateProps {
@@ -37,7 +38,7 @@ interface EmptyUnitStateProps {
 
 export function EmptyUnitState({ lessonId, onCopied }: EmptyUnitStateProps) {
   const { can } = usePermission()
-  const canCopyUnits = can('curriculum.create')
+  const canCopyUnits = can(PERMISSIONS.CURRICULUM_CREATE)
 
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)

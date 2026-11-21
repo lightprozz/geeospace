@@ -38,7 +38,8 @@ import {
 } from '@/components/ui/alert-dialog'
 
 import { useUnitsByLesson, useReorderUnitPlans, useDeleteUnitPlan } from '@/features/lms/hooks/curriculum/use-unit-plans'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import { SortableUnitCard } from './unit-card'
 import { UnitUpsertDialog } from './unit-upsert-dialog'
 import { CategoryDialog } from './category-dialog'
@@ -53,9 +54,9 @@ interface UnitPlanPageClientProps {
 
 export function UnitPlanPageClient({ lessonId, lesson }: UnitPlanPageClientProps) {
   const { can } = usePermission()
-  const canCreateUnit = can('curriculum.create')
-  const canUpdateUnit = can('curriculum.update')
-  const { data: units = [], isLoading } = useUnitsByLesson(lessonId)
+  const canCreateUnit = can(PERMISSIONS.CURRICULUM_CREATE)
+  const canUpdateUnit = can(PERMISSIONS.CURRICULUM_UPDATE)
+  const { data: units = [], isLoading, isError } = useUnitsByLesson(lessonId)
   const { mutate: reorder } = useReorderUnitPlans(lessonId)
   const { mutate: deleteUnit, isPending: isDeleting } = useDeleteUnitPlan(lessonId)
 
@@ -141,7 +142,7 @@ export function UnitPlanPageClient({ lessonId, lesson }: UnitPlanPageClientProps
   const hasTimeMismatch = lessonTime > 0 && totalTime !== lessonTime
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex h-full flex-1 overflow-hidden">
       {/* ---------------- CENTER PANE ---------------- */}
       <div className={`flex-1 flex flex-col min-w-0 bg-background ${unitId ? 'hidden md:flex' : 'flex'}`}>
         
@@ -214,7 +215,7 @@ export function UnitPlanPageClient({ lessonId, lesson }: UnitPlanPageClientProps
         {/* Unit List */}
         <div className="flex-1 overflow-y-auto p-6 bg-muted/30">
           <div className="space-y-4 max-w-4xl mx-auto">
-            {isLoading ? (
+            {isError ? <p role="alert">Unable to load unit plans.</p> : isLoading ? (
               <LoadingSkeleton />
             ) : localUnits.length === 0 ? (
               <EmptyUnitState lessonId={lessonId} onCopied={() => {}} />

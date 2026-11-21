@@ -33,7 +33,6 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { CategoryCheckboxGrid } from './category-checkbox-grid'
 import { useCreateMaterial, useUpdateMaterial, useMaterial } from '@/features/lms/hooks/materials/use-materials'
-import { useAuthStore, type AuthUser } from '@/stores/use-auth-store'
 import {
   UpsertMaterialSchema,
   MATERIAL_FORMAT_OPTIONS,
@@ -73,7 +72,6 @@ export function MaterialUpsertDialog({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  const user = useAuthStore((s) => s.user)
   const { mutate: createMat, isPending: isCreating } = useCreateMaterial()
   const { mutate: updateMat, isPending: isUpdating } = useUpdateMaterial()
   const isPending = isCreating || isUpdating
@@ -161,7 +159,7 @@ export function MaterialUpsertDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="min-w-2xl max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEdit ? 'Edit Material' : 'Create Material'}

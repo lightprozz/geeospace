@@ -37,7 +37,8 @@ import {
   useApproveMaterial,
   useDeleteMaterial,
 } from '@/features/lms/hooks/materials/use-materials'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import {
   isApproved,
   getFormatLabel,
@@ -86,9 +87,9 @@ export function MaterialDetailPanel({
   const { mutate: approve, isPending: isApproving } = useApproveMaterial()
   const { mutate: deleteMat, isPending: isDeleting } = useDeleteMaterial()
   const { can } = usePermission()
-  const canEditMaterial = can('content.material.write')
-  const canApproveMaterial = can('content.material.approve')
-  const canDeleteMaterial = can('content.material.delete')
+  const canEditMaterial = can(PERMISSIONS.CONTENT_MATERIAL_WRITE)
+  const canApproveMaterial = can(PERMISSIONS.CONTENT_MATERIAL_APPROVE)
+  const canDeleteMaterial = can(PERMISSIONS.CONTENT_MATERIAL_DELETE)
 
   const cfg =
     material.materialFormat

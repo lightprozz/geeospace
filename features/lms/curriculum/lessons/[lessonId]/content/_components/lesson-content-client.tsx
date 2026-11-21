@@ -20,7 +20,8 @@ import { TiptapEditor } from '@/features/lms/curriculum/tiptap-editor'
 import { useSaveLessonContent } from '@/features/lms/hooks/curriculum/use-lesson-content'
 import { useUploadWorksheet, useDeleteWorksheet } from '@/features/lms/hooks/curriculum/use-lesson-plans'
 import { fetchLessonContent } from '@/features/lms/lib/curriculum/api'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import { MediaList } from './media-list'
 import { OldVersionSelector } from './old-version-selector'
 import type { LessonDetail, LessonContentDto, RelatedLesson } from '@/features/lms/types/curriculum'
@@ -71,7 +72,7 @@ export function LessonContentClient({
 }: LessonContentClientProps) {
   const router = useRouter()
   const { can } = usePermission()
-  const canUpdateContent = can('curriculum.update')
+  const canUpdateContent = can(PERMISSIONS.CURRICULUM_UPDATE)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [mediaUrls, setMediaUrls] = useState<string[]>(
     parseMediaUrls(initialContent?.media ?? null),

@@ -29,7 +29,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { ExamOverallTable } from './exam-overall-table'
 import { ExamAcademicTable } from './exam-academic-table'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import { DEFAULT_EXAM_FORM } from '@/features/lms/types/curriculum'
 import type { ExamFormItemRequest, ExamFormJson } from '@/features/lms/types/curriculum'
 
@@ -55,7 +56,7 @@ export function ExamTemplateCard({
   onDelete,
 }: ExamTemplateCardProps) {
   const { can } = usePermission()
-  const canDeleteTemplate = can('curriculum.delete')
+  const canDeleteTemplate = can(PERMISSIONS.CURRICULUM_DELETE)
 
   const [parsed, setParsed] = useState<ExamFormJson>(() =>
     parseExamFormJson(form.examFormJson || ''),

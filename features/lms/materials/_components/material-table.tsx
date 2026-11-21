@@ -5,7 +5,6 @@
 // Includes: client-side pagination with sticky footer
 // ---------------------------------------------------------------------------
 
-import { useState, useMemo } from 'react'
 import {
   FileText,
   Video,
@@ -40,14 +39,13 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { isApproved, type Material, type MaterialListItem, type MaterialFormatInt } from '@/features/lms/types/material'
+import { isApproved, type MaterialListItem, type MaterialFormatInt } from '@/features/lms/types/material'
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100] as const
-const DEFAULT_PAGE_SIZE = 20
 
 // ---------------------------------------------------------------------------
 // Format helpers — keyed by int values (1-5)

@@ -28,7 +28,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useCurriculumStore } from '@/features/lms/stores/use-curriculum-store'
 import { useDuplicateStudyLevel } from '@/features/lms/hooks/curriculum/use-study-levels'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import type { LevelListItem } from '@/features/lms/types/curriculum'
 
 interface LevelCardProps {
@@ -43,9 +44,9 @@ export function LevelCard({ level, isSelected, onSelect, onDelete }: LevelCardPr
   const openEditLevel = useCurriculumStore((s) => s.openEditLevel)
   const { mutate: duplicateLevel, isPending: isDuplicating } = useDuplicateStudyLevel()
   const { can } = usePermission()
-  const canUpdateLevel = can('curriculum.update')
-  const canCreateLevel = can('curriculum.create')
-  const canDeleteLevel = can('curriculum.delete')
+  const canUpdateLevel = can(PERMISSIONS.CURRICULUM_UPDATE)
+  const canCreateLevel = can(PERMISSIONS.CURRICULUM_CREATE)
+  const canDeleteLevel = can(PERMISSIONS.CURRICULUM_DELETE)
 
   return (
     <div

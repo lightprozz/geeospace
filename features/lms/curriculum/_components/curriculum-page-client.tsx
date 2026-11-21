@@ -16,7 +16,8 @@ import {
 } from '@/components/ui/breadcrumb'
 import { PanelHeader } from '@/features/lms/port-support'
 import { useCurriculumStore } from '@/features/lms/stores/use-curriculum-store'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import { LevelList } from './level-list'
 import { LessonTable } from './lesson-table'
 import { LevelUpsertDialog } from './level-upsert-dialog'
@@ -30,7 +31,7 @@ export function CurriculumPageClient() {
 
   const openCreateLevel = useCurriculumStore((s) => s.openCreateLevel)
   const { can } = usePermission()
-  const canCreateLevel = can('curriculum.create')
+  const canCreateLevel = can(PERMISSIONS.CURRICULUM_CREATE)
 
   // ── Inject breadcrumb + actions into shared header ──────────────
   const panelHeader = <PanelHeader config={{
@@ -105,4 +106,3 @@ function EmptySelectState() {
     </div>
   )
 }
-

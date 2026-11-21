@@ -7,12 +7,13 @@
 import { BookOpen, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCurriculumStore } from '@/features/lms/stores/use-curriculum-store'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 
 export function EmptyLessonState({ levelName }: { levelName: string }) {
   const openCreateLesson = useCurriculumStore((s) => s.openCreateLesson)
   const { can } = usePermission()
-  const canCreateLesson = can('curriculum.create')
+  const canCreateLesson = can(PERMISSIONS.CURRICULUM_CREATE)
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">

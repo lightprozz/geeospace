@@ -2,12 +2,6 @@
 
 import { useMemo, type ReactNode } from "react";
 import { useWindowNavigation } from "@/components/desktop/window-navigation";
-import { usePermissionStore } from "@/stores/use-permission-store";
-
-export function usePermission() {
-  const permissions = usePermissionStore(state => state.permissions);
-  return { can: (permission: string) => permissions.includes(permission) };
-}
 
 export function useRouter() {
   const { navigate, back } = useWindowNavigation();

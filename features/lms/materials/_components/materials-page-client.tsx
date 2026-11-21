@@ -9,7 +9,6 @@ import { useState, useMemo } from 'react'
 import { Plus, Search, CheckCheck, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Breadcrumb,
@@ -38,19 +37,19 @@ import {
   useBulkApproveMaterials,
   useBulkDeletePending,
 } from '@/features/lms/hooks/materials/use-materials'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import {
   CATEGORY_FLAG_KEYS,
-  type Material,
   type MaterialListItem,
   type MaterialCategoryFlags,
 } from '@/features/lms/types/material'
 
 export function MaterialsPageClient() {
   const { can } = usePermission()
-  const canCreateMaterial = can('content.material.write')
-  const canApproveMaterial = can('content.material.approve')
-  const canDeleteMaterial = can('content.material.delete')
+  const canCreateMaterial = can(PERMISSIONS.CONTENT_MATERIAL_WRITE)
+  const canApproveMaterial = can(PERMISSIONS.CONTENT_MATERIAL_APPROVE)
+  const canDeleteMaterial = can(PERMISSIONS.CONTENT_MATERIAL_DELETE)
 
   const [activeTab, setActiveTab] = useState<'library' | 'approvals'>('library')
   const [searchQuery, setSearchQuery] = useState('')
@@ -89,7 +88,6 @@ export function MaterialsPageClient() {
   // Persist sort to localStorage
   const handleSortChange = (field: string) => {
     const newDesc = sortField === field ? !sortDesc : false
-    const newField = sortField === field && !sortDesc ? field : field
 
     if (sortField === field && !sortDesc) {
       // Toggle off if already desc
@@ -115,7 +113,7 @@ export function MaterialsPageClient() {
   }, [categoryFlags])
 
   // ── Data ──────────────────────────────────────────────────────────
-  const { data: queryResult, isLoading } = useMaterialsQuery({
+  const { data: queryResult, isLoading, isError } = useMaterialsQuery({
     status: activeTab === 'library' ? 'approved' : 'pending',
     page: page + 1, // API is 1-indexed, UI is 0-indexed
     pageSize,
@@ -181,7 +179,8 @@ export function MaterialsPageClient() {
   function handleSelect(id: string, checked: boolean) {
     setSelectedIds((prev) => {
       const next = new Set(prev)
-      checked ? next.add(id) : next.delete(id)
+      if (checked) next.add(id)
+      else next.delete(id)
       return next
     })
   }
@@ -217,6 +216,7 @@ export function MaterialsPageClient() {
   return (
     <div className="flex h-full flex-col">
       {panelHeader}
+      {isError && <p role="alert">Unable to load materials.</p>}
       {/* ── Body ────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
         {/* Main panel */}

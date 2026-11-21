@@ -17,7 +17,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { usePermission } from '@/features/lms/port-support'
+import { usePermission } from '@/components/auth/permission-guard'
+import { PERMISSIONS } from '@/lib/permissions'
 import type { LessonListItem } from '@/features/lms/types/curriculum'
 
 interface LessonRowProps {
@@ -40,8 +41,8 @@ export const LessonRow = memo(function LessonRow({
   onNavigate,
 }: LessonRowProps) {
   const { can } = usePermission()
-  const canUpdateLesson = can('curriculum.update')
-  const canDeleteLesson = can('curriculum.delete')
+  const canUpdateLesson = can(PERMISSIONS.CURRICULUM_UPDATE)
+  const canDeleteLesson = can(PERMISSIONS.CURRICULUM_DELETE)
 
   return (
     <TableRow className={isChecked ? 'bg-muted/40' : undefined}>
