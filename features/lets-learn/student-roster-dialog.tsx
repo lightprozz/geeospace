@@ -98,9 +98,10 @@ export function StudentRosterDialog({
 
   // ── Random picker ──────────────────────────────────────────────────────
   const handleRandomize = useCallback(() => {
+    setIsBadgeMode(false)
+    setActiveTool('none')
     const validStudents = rosterStudents.filter((s) => !s.isClassEntry)
     if (validStudents.length === 0) return
-    setIsBadgeMode(false)
     setIsRandomizing(true)
     setRandomlySelected(null)
 
@@ -119,6 +120,10 @@ export function StudentRosterDialog({
 
   // ── Tool helpers ───────────────────────────────────────────────────────
   const closeTool = () => setActiveTool('none')
+  const selectTool = (tool: ToolType) => {
+    setIsBadgeMode(false)
+    setActiveTool(tool)
+  }
   const toggleBadgeMode = () => {
     setIsBadgeMode(!isBadgeMode)
     setActiveTool('none')
@@ -209,7 +214,7 @@ export function StudentRosterDialog({
               {activeTool === 'toolkit' && (
                 <ToolkitGrid
                   onClose={closeTool}
-                  onSelectTool={setActiveTool}
+                  onSelectTool={selectTool}
                   onRandomize={handleRandomize}
                 />
               )}
@@ -299,7 +304,7 @@ export function StudentRosterDialog({
               {/* Toolkit */}
               <button
                 onClick={() =>
-                  setActiveTool(activeTool === 'toolkit' ? 'none' : 'toolkit')
+                  selectTool(activeTool === 'toolkit' ? 'none' : 'toolkit')
                 }
                 className={`flex items-center gap-3 transition-colors whitespace-nowrap p-2 rounded-xl hover:bg-muted ${
                   activeTool === 'toolkit'
@@ -350,7 +355,7 @@ export function StudentRosterDialog({
 
               {/* Timer shortcut */}
               <button
-                onClick={() => setActiveTool('timer')}
+                onClick={() => selectTool('timer')}
                 className={`flex items-center gap-3 transition-colors whitespace-nowrap p-2 rounded-xl hover:bg-muted ${
                   activeTool === 'timer'
                     ? 'text-violet-500 bg-violet-500/10'
