@@ -164,6 +164,7 @@ function OptionRow({ option, index, onChange, onRemove }: OptionRowProps) {
         className="h-8"
       />
       <Button
+        type="button"
         variant="ghost"
         size="sm"
         onClick={() => onRemove(index)}
@@ -199,6 +200,7 @@ function DropdownConfig({ field, onUpdate }: { field: Field; onUpdate: Update })
         />
       ))}
       <Button
+        type="button"
         variant="outline"
         size="sm"
         onClick={() =>
@@ -254,6 +256,7 @@ function MultipleCheckboxConfig({
         />
       ))}
       <Button
+        type="button"
         variant="outline"
         size="sm"
         onClick={() =>
