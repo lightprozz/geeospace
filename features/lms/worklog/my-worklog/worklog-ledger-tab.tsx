@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils'
 import { formatScore, roundAwayFromZero } from '@/features/lms/lib/worklog/grid-model'
 import { todayDateKeyInSaigon, type DayColumn } from '@/features/lms/lib/worklog/payroll-cycle'
 import {
+  ShiftTypeConstant,
   WorkLogStatusV2,
   type AttendanceItem,
   type ShiftOption,
@@ -111,8 +112,9 @@ export function WorklogLedgerTab({
             // Presence-based reconciliation (mockup parity): taught but never
             // clocked in => Lệch; both present => Khớp; otherwise nothing to
             // reconcile.
-            const hasDiscrepancy = worklogs.length > 0 && attendance.length === 0
-            const isMatched = worklogs.length > 0 && attendance.length > 0
+            const worked = worklogs.some((worklog) => worklog.effortType !== ShiftTypeConstant.Off)
+            const hasDiscrepancy = worked && attendance.length === 0
+            const isMatched = worked && attendance.length > 0
 
             return (
               <tr

@@ -121,3 +121,14 @@ test("clears the previous period's effort filter when changing periods", async (
   await panel.getByRole("button", { name: "Previous period" }).click();
   await expect(panel.getByRole("cell", { name: otherEntry.className! })).toBeVisible();
 });
+
+test("only flags missing attendance for days with actual work", async ({ page }) => {
+  await mockWorklog(page, ["worklog.read"], { offDay: true });
+  await page.goto("/#lms-worklog");
+  const panel = page.locator('[data-app="lms-worklog"]');
+  await panel.getByRole("tab", { name: "Ledger" }).click();
+  await expect(panel.getByRole("row", { name: /Explorer 1/ }).getByText("Lệch", { exact: true })).toBeVisible();
+  const offDay = panel.getByRole("row", { name: /Day off/ });
+  await expect(offDay).toBeVisible();
+  await expect(offDay.getByText("Lệch", { exact: true })).toHaveCount(0);
+});

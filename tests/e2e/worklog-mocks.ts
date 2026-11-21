@@ -52,7 +52,7 @@ const attendance: AttendanceItem = {
   createdAt: updatedAt,
 };
 
-export async function mockWorklog(page: Page, permission: string[], options?: { conflictOnce?: boolean; largeRoster?: boolean; priorPeriod?: boolean }) {
+export async function mockWorklog(page: Page, permission: string[], options?: { conflictOnce?: boolean; largeRoster?: boolean; priorPeriod?: boolean; offDay?: boolean }) {
   await page.clock.setFixedTime(worklogNow);
   await mockGeeo(page, { ...mockUser, permission });
   await seedGeeo(page.context());
@@ -91,7 +91,10 @@ export async function mockWorklog(page: Page, permission: string[], options?: { 
           { id: otherEntry.teacherId, firstName: "Linh", lastName: "Tran", englishName: "Lily" },
         ]);
       case "/worklog/query":
-        return json(paged(entries.filter(item => item.teacherId === mockUser.sub)));
+        return json(paged([
+          ...entries.filter(item => item.teacherId === mockUser.sub),
+          ...(options?.offDay ? [{ ...ownEntry, id: "off-day", effortType: "off", className: "Day off", score: 0, lessonStart: "2026-11-03T08:30:00+07:00" }] : []),
+        ]));
       case "/worklog/query/all-teachers": {
         const ids = body?.teacherIds ?? [];
         if (ids.length > 200) return route.fulfill({ status: 400, headers, json: { title: "Teacher batch too large" } });
