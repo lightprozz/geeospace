@@ -6,6 +6,8 @@
 
 import { useState } from 'react'
 import { FilePreview } from './file-preview'
+import { downloadAuthenticated } from '@/lib/api-client'
+import { toast } from 'sonner'
 import {
   FileText,
   Video,
@@ -92,7 +94,7 @@ export function MaterialPreviewDialog({
         }
       }}
     >
-      <DialogContent className="max-w-screen-xl h-[90vh] flex flex-col overflow-hidden">
+      <DialogContent className="sm:max-w-5xl h-[85vh] flex flex-col overflow-hidden" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-sm">
             <FormatIcon className="h-4 w-4 text-muted-foreground" />
@@ -101,7 +103,7 @@ export function MaterialPreviewDialog({
         </DialogHeader>
 
         {/* Preview area */}
-        <div className="flex-1 min-h-[500px] relative rounded-md overflow-hidden border bg-muted/20">
+        <div className="flex-1 min-h-0 relative rounded-md overflow-hidden border bg-muted/20">
           {material.fileName && previewUrl ? <FilePreview key={material.id} url={previewUrl} name={material.fileName} /> : previewUrl ? (
             <>
               {!iframeLoaded && (
@@ -112,7 +114,7 @@ export function MaterialPreviewDialog({
               <iframe
                 src={previewUrl}
                 title={`Preview: ${material.name}`}
-                className="w-full h-full border-0 min-h-[500px]"
+                className="w-full h-full border-0"
                 onLoad={() => setIframeLoaded(true)}
                 sandbox="allow-scripts allow-same-origin"
                 allowFullScreen
@@ -146,6 +148,9 @@ export function MaterialPreviewDialog({
         </div>
 
         <DialogFooter>
+          {material.fileName && <Button variant="outline" onClick={() => {
+            void downloadAuthenticated(getMaterialViewUrl(material.id, material.fileName!), material.fileName!).catch(() => toast.error('Unable to download material'))
+          }}>Download file</Button>}
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
@@ -190,8 +195,5 @@ function getPreviewUrl(material: MaterialListItem): string | null {
 /** Get the URL for "Open in new tab" button */
 function getOpenUrl(material: MaterialListItem): string | null {
   if (material.url) return material.url
-  if (material.fileName) {
-    return getMaterialViewUrl(material.id, material.fileName)
-  }
   return null
 }

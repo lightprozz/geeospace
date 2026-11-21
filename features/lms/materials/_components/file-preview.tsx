@@ -1,9 +1,10 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { getValidToken } from "@/lib/auth/token";
 
-const PdfPreview = lazy(() => import("./pdf-preview"));
+const PdfPreview = dynamic(() => import("./pdf-preview"), { ssr: false, loading: () => <p role="status">Loading PDF viewer…</p> });
 
 export function FilePreview({ url, name }: { url: string; name: string }) {
   const [source, setSource] = useState("");
@@ -26,5 +27,5 @@ export function FilePreview({ url, name }: { url: string; name: string }) {
   }, [url]);
   if (failed) return <p role="alert">Unable to load preview.</p>;
   if (!source) return <p role="status">Loading preview…</p>;
-  return name.toLowerCase().endsWith(".pdf") ? <Suspense fallback={<p role="status">Loading PDF viewer…</p>}><PdfPreview url={source} /></Suspense> : <iframe title={`Preview: ${name}`} src={source} className="w-full h-full" sandbox="allow-scripts allow-same-origin" />;
+  return name.toLowerCase().endsWith(".pdf") ? <PdfPreview url={source} /> : <iframe title={`Preview: ${name}`} src={source} className="w-full h-full" sandbox="" />;
 }
