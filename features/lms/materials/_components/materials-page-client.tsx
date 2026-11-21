@@ -214,13 +214,13 @@ export function MaterialsPageClient() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="@container flex h-full min-w-0 flex-col">
       {panelHeader}
       {isError && <p role="alert">Unable to load materials.</p>}
       {/* ── Body ────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="relative flex min-h-0 flex-1 overflow-hidden">
         {/* Main panel */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
           <Tabs
             value={activeTab}
             onValueChange={handleTabChange}
@@ -228,7 +228,7 @@ export function MaterialsPageClient() {
           >
             {/* Tab bar + search + category filter + bulk actions */}
             <div className="px-4 pt-3 pb-2 space-y-2 border-b shrink-0">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <TabsList className="h-8">
                   <TabsTrigger
                     value="library"
@@ -245,7 +245,7 @@ export function MaterialsPageClient() {
                 </TabsList>
 
                 {/* Search */}
-                <div className="relative flex-1 max-w-xs">
+                <div className="relative flex-1 min-w-40 max-w-xs">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     placeholder="Search by name, owner, category..."

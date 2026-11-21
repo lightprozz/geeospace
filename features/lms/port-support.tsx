@@ -9,5 +9,5 @@ export function useRouter() {
 }
 
 export function PanelHeader({ config }: { config: { breadcrumbs?: ReactNode; actions?: ReactNode } }) {
-  return <header className="flex items-center justify-between gap-3 border-b p-3 shrink-0">{config.breadcrumbs}{config.actions}</header>;
+  return <header className="flex flex-wrap items-center justify-between gap-3 border-b p-3 shrink-0">{config.breadcrumbs}{config.actions}</header>;
 }

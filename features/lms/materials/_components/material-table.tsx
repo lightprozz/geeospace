@@ -182,8 +182,8 @@ export function MaterialTable({
   return (
     <div className="flex flex-col h-full">
       {/* ── Table body ── */}
-      <div className="flex-1 overflow-auto">
-        <Table>
+      <div className="flex-1 min-h-0 overflow-auto [&>[data-slot=table-container]]:overflow-x-auto">
+        <Table className="min-w-[640px]">
           <TableHeader className="sticky top-0 bg-card z-10">
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-10 pr-0">
@@ -286,7 +286,7 @@ export function MaterialTable({
       </div>
 
       {/* ── Sticky Footer: summary + pagination ── */}
-      <div className="shrink-0 border-t bg-card/80 backdrop-blur-sm px-4 py-2 flex items-center justify-between gap-4">
+      <div className="shrink-0 border-t bg-card/80 backdrop-blur-sm px-4 py-2 flex flex-wrap items-center justify-between gap-3">
         {/* Left: summary info */}
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="font-medium tabular-nums">
@@ -302,7 +302,7 @@ export function MaterialTable({
         </div>
 
         {/* Right: page size + navigation */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Page size selector */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground whitespace-nowrap">

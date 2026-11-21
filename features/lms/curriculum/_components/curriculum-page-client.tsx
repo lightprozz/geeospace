@@ -54,12 +54,12 @@ export function CurriculumPageClient() {
 
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="@container flex h-full min-w-0 flex-col">
       {panelHeader}
       {/* ── Two-panel body ───────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden @max-[700px]:flex-col">
         {/* Left panel — Level list */}
-        <aside className="w-72 lg:w-80 flex flex-col border-r bg-card shrink-0 overflow-hidden">
+        <aside className="w-72 flex flex-col border-r bg-card shrink-0 overflow-hidden @max-[700px]:w-full @max-[700px]:max-h-44 @max-[700px]:border-b">
           <LevelList
             selectedLevelId={selectedLevel?.id ?? ''}
             onSelectLevel={setSelectedLevel}
@@ -68,7 +68,7 @@ export function CurriculumPageClient() {
         </aside>
 
         {/* Right panel — Lesson table or empty state */}
-        <main className="flex-1 flex flex-col overflow-hidden bg-background">
+        <main className="min-w-0 min-h-0 flex-1 flex flex-col overflow-hidden bg-background">
           {selectedLevel ? (
             <LessonTable level={selectedLevel} />
           ) : (

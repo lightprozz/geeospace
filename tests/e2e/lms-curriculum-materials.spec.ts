@@ -42,11 +42,13 @@ test("launcher opens curriculum and materials with mocked APIs", async ({ page }
   await page.locator(".os-dock").getByRole("button", { name: "Tất cả ứng dụng", exact: true }).click();
   await launcher.getByRole("option", { name: /Giáo trình/ }).click();
   const curriculum = page.locator('[data-app="lms-curriculum"]');
-  await curriculum.getByRole("button", { name: "Phóng to hoặc khôi phục Giáo trình", exact: true }).click();
   await expect(curriculum.getByText("Explorers", { exact: true })).toBeVisible();
   if (process.env.LMS_SCREENSHOTS) { await mkdir("/home/ubuntu/shots", { recursive: true }); await page.screenshot({ path: "/home/ubuntu/shots/curriculum-levels.png", fullPage: true }); }
   await curriculum.getByText("Explorers", { exact: true }).click();
   await expect(curriculum.getByText("Numbers and counting", { exact: true })).toBeVisible();
+  await expect(curriculum.getByRole("button", { name: "Add Lesson", exact: true })).toBeVisible();
+  if (process.env.LMS_SCREENSHOTS) await page.screenshot({ path: "/home/ubuntu/shots/curriculum-default.png", fullPage: true });
+  await curriculum.getByRole("button", { name: "Phóng to hoặc khôi phục Giáo trình", exact: true }).click();
   await page.goto("/#lms-curriculum/lessons/lesson-1/units");
   await expect(curriculum.getByText("Warm-up", { exact: true })).toBeVisible();
   if (process.env.LMS_SCREENSHOTS) await page.screenshot({ path: "/home/ubuntu/shots/curriculum-units.png", fullPage: true });
@@ -56,8 +58,14 @@ test("launcher opens curriculum and materials with mocked APIs", async ({ page }
   await page.locator(".os-dock").getByRole("button", { name: "Tất cả ứng dụng", exact: true }).click();
   await launcher.getByRole("option", { name: /Học liệu/ }).click();
   const materials = page.locator('[data-app="lms-materials"]');
-  await materials.getByRole("button", { name: "Phóng to hoặc khôi phục Học liệu", exact: true }).click();
   await expect(materials.getByText("Counting practice", { exact: true })).toBeVisible();
+  const resize = materials.locator('[data-edge="e"]');
+  for (let i = 0; i < 20; i++) await resize.press("Shift+ArrowLeft");
+  await expect(materials).toHaveAttribute("data-phase", "visible");
+  await expect.poll(async () => Math.round((await materials.boundingBox())!.width)).toBe(320);
+  await expect(materials.getByRole("button", { name: "Categories", exact: true })).toBeVisible();
+  if (process.env.LMS_SCREENSHOTS) await page.screenshot({ path: "/home/ubuntu/shots/materials-narrow.png", fullPage: true });
+  await materials.getByRole("button", { name: "Phóng to hoặc khôi phục Học liệu", exact: true }).click();
   if (process.env.LMS_SCREENSHOTS) await page.screenshot({ path: "/home/ubuntu/shots/materials-list.png", fullPage: true });
   await materials.getByText("Counting practice", { exact: true }).click();
   await materials.getByRole("button", { name: "Preview", exact: true }).click();

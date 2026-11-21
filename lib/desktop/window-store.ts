@@ -37,6 +37,7 @@ export function fitRect(rect: Rect, area: Area): Rect {
 export function defaultRect(id: DesktopAppId, area: Area): Rect {
   const wide = ["calendar", "learning", "lms", "work"].includes(id);
   const rect = { x: 34, y: 28, width: wide ? 820 : 510, height: 640 };
+  if (id === "lms-curriculum" || id === "lms-materials") Object.assign(rect, { width: 1100, height: 720 });
   if (id === "appearance") Object.assign(rect, { x: (area.width - 560) / 2, y: 24, width: 560, height: 640 });
   if (id === "assistant") Object.assign(rect, { x: Math.max(100, area.width - 690), y: 74, width: 640, height: 570 });
   return fitRect(rect, area);

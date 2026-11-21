@@ -104,7 +104,7 @@ export function LessonTable({ level }: LessonTableProps) {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* ── Table Header ── */}
-      <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-b shrink-0">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-sm">{level.name}</span>
           <Separator orientation="vertical" className="h-4" />
@@ -145,13 +145,13 @@ export function LessonTable({ level }: LessonTableProps) {
       />
 
       {/* ── Table body ── */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 min-h-0 overflow-auto [&>[data-slot=table-container]]:overflow-x-auto">
         {isError ? <p role="alert">Unable to load lessons.</p> : isLoading ? (
           <LoadingSkeleton />
         ) : lessons.length === 0 ? (
           <EmptyLessonState levelName={level.name} />
         ) : (
-          <Table>
+          <Table className="min-w-[640px]">
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-10 pr-0">

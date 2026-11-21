@@ -107,7 +107,7 @@ export function MaterialDetailPanel({
   return (
     <div
       className={cn(
-        'w-80 lg:w-96 shrink-0 border-l bg-card flex flex-col',
+        'w-80 shrink-0 border-l bg-card flex flex-col @max-[700px]:absolute @max-[700px]:inset-0 @max-[700px]:z-10 @max-[700px]:w-full',
         'animate-in slide-in-from-right-5 duration-200',
       )}
     >
