@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
+import { authBaseURL, mockGeeo, seedGeeo } from "./geeo-mocks";
+
+test.use({ baseURL: authBaseURL });
 
 test.beforeEach(async ({ page }, info) => {
   test.skip(info.project.name !== "desktop", "App grouping desktop acceptance");
+  await mockGeeo(page);
+  await seedGeeo(page.context());
   await page.goto("/");
   await expect(page.locator(".geeospace-os")).toHaveAttribute("data-ready", "true");
 });

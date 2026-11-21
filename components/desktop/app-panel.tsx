@@ -4,10 +4,13 @@ import { desktopApps, type DesktopAppId } from "@/lib/desktop/apps";
 import { WorkspaceRegionBoundary } from "@/components/workspace-region";
 import { useSpace } from "./space-context";
 import { AppGlyph } from "./app-glyph";
+import { AccountPanel } from "./account-panel";
+import { isGeeoConfigured } from "@/lib/env";
+import { useAuthStore } from "@/stores/use-auth-store";
 
 type PanelProps = { id: DesktopAppId; onOpen: (id: DesktopAppId) => void };
 
-function AccountPanel({ onOpen }: PanelProps) {
+function UnconfiguredAccountPanel({ onOpen }: PanelProps) {
   const { t } = useSpace();
   return <div className="os-panel os-account-panel"><span className="os-panel-symbol"><ShieldCheck size={30} /></span><p className="os-eyebrow">GEE-O AUTH</p><h1>{t("Kết nối đăng nhập chưa được thiết lập.", "Sign-in is not configured yet.")}</h1><p>{t("Ứng dụng cần được đăng ký với Gee-O Auth trước khi bạn có thể đăng nhập. Hiện tại chưa có phiên đăng nhập hoặc dữ liệu cá nhân được tải.", "Geeospace must be registered with Gee-O Auth before sign-in is available. No session or personal data has been loaded.")}</p><div className="os-info"><LockKeyhole size={17} /><span>{t("Bạn không cần tạo tài khoản Geeospace riêng. Quản trị hệ thống cần hoàn tất client, callback và kiểm chứng xác thực tập trung.", "Your Gee-O account is all you need. System administrators must complete the client, callback and central authentication checks.")}</span></div><button className="os-button os-button-secondary" onClick={() => onOpen("today")}>{t("Về Hôm nay ", "Back to Today ")}<ArrowRight size={16} /></button></div>;
 }
@@ -28,9 +31,15 @@ const LmsHub = lazy(() => import("./lms-panels").then(module => ({ default: modu
 const LmsPlaceholder = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsPlaceholder })));
 const panels: Partial<Record<DesktopAppId, ComponentType<PanelProps>>> = {
   ...Object.fromEntries(desktopApps.filter(app => app.group !== "workspace" && app.id !== "requests" && app.id !== "work").map(app => [app.id, LmsPlaceholder])),
-  account: AccountPanel, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub, staff: LmsHub, admin: LmsHub,
+  account: props => isGeeoConfigured ? <AccountPanel /> : <UnconfiguredAccountPanel {...props} />, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub, staff: LmsHub, admin: LmsHub,
 };
 export function AppPanel(props: PanelProps) {
+  const { t, label } = useSpace();
+  const authenticated = useAuthStore(state => state.isAuthenticated);
+  const loading = useAuthStore(state => state.isLoading);
+  if (desktopApps.find(app => app.id === props.id)?.group !== "workspace" && !authenticated) {
+    return <div className="os-panel os-lms-gate"><h1>{label(props.id)}</h1>{loading ? <p role="status">{t("Đang tải phiên đăng nhập…", "Loading your session…")}</p> : <><h2>{t("Đăng nhập Gee-O để dùng LMS", "Sign in to Gee-O to use the LMS")}</h2><button className="os-button" onClick={() => props.onOpen("account")}>{t("Mở Tài khoản", "Open Account")}</button></>}</div>;
+  }
   const Panel = panels[props.id] ?? UnconnectedPanel;
   return <Suspense fallback={<div className="os-panel" role="status">…</div>}><Panel {...props} /></Suspense>;
 }

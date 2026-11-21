@@ -313,6 +313,11 @@ button:disabled, input:disabled { cursor: not-allowed; }
   .os-resize-e, .os-resize-w { width: 14px; }
   .os-resize-ne,.os-resize-nw,.os-resize-se,.os-resize-sw { width: 24px; height: 24px; }
 }
+.os-auth-form { display: grid; gap: 18px; margin-block: 24px; max-width: 360px; }
+.os-auth-form label { display: grid; gap: 8px; font-size: 13px; }
+.os-auth-form input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); color: inherit; font: inherit; }
+.os-auth-form [role="alert"] { margin: 0; }
+.os-auth-form button:disabled { opacity: .6; cursor: wait; }
 @media (max-width: 767px) {
   .os-window { animation: none; }
   .os-mobile-home { transform-origin: center 25%; }
