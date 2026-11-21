@@ -394,6 +394,20 @@ describe("cellStatus", () => {
 // ---------------------------------------------------------------------------
 
 describe("serializeGridCsv", () => {
+  it("prevents spreadsheet formulas in text fields without changing signed scores", () => {
+    const items = [makeItem({
+      teacherName: "=1+1",
+      className: " +2",
+      level: "@3",
+      effortType: "-4",
+      score: -1.5,
+      lessonStart: "2026-01-05T09:00:00",
+    })]
+    const model = buildGridModel(items, "2026-01")
+    const columns = dayColumns("2026-01").filter((column) => column.dateKey === "2026-01-05")
+    expect(serializeGridCsv(model, columns).split("\r\n")[1]).toBe("'=1+1,' +2,'@3,'-4,-1.5,-1.5")
+  })
+
   it("emits a header row, one row per grid row, and a totals row", () => {
     const items = [makeItem({ score: 1.5, lessonStart: "2026-01-05T09:00:00" })]
     const model = buildGridModel(items, "2026-01")

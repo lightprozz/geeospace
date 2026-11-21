@@ -281,6 +281,10 @@ function escapeCsvField(value: string): string {
   return value
 }
 
+function asSpreadsheetText(value: string): string {
+  return /^[\t\r\n]|^\s*[=+\-@]/u.test(value) ? `'${value}` : value
+}
+
 /**
  * Trims float noise and unnecessary trailing zeros (0.70 -> "0.7", 3.00 ->
  * "3"). Shared by the CSV serializer AND the grid UI's cell/total display so
@@ -308,10 +312,7 @@ export function serializeGridCsv(model: GridModel, columns: DayColumn[]): string
 
   for (const row of model.rows) {
     const fields = [
-      row.teacherName,
-      row.className ?? "",
-      row.level ?? "",
-      row.effortType,
+      ...[row.teacherName, row.className ?? "", row.level ?? "", row.effortType].map(asSpreadsheetText),
       ...columns.map((c) => formatCell(row.days[c.dateKey])),
       formatScore(row.total),
     ]
