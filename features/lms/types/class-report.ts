@@ -45,6 +45,10 @@ export interface StudentLogEntry {
   note: string
 }
 
+export type StudentLessonAttendanceInput = Pick<StudentLogEntry, "present" | "starScore"> & {
+  note: string
+}
+
 /**
  * Assessment criteria master data — from GetAssessmentCriteria
  * Maps to [dbo].[AssessmentCriteria] table.

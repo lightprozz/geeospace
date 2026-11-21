@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchAllTeachers } from "@/features/lms/lib/classes/api";
+import { fetchAllTeachers, fetchStudentReport, saveStudentLessonLog } from "@/features/lms/lib/classes/api";
 import { getWorksheetUrl, uploadWorksheet } from "@/features/lms/lib/curriculum/api";
 import { getMaterialViewUrl, uploadMaterialFile } from "@/features/lms/lib/materials/api";
 import { getErrorDetail, isConflictError } from "@/features/lms/lib/requests/api";
@@ -70,6 +70,19 @@ describe("LMS domain transport boundary", () => {
       expect(options.body).toBeInstanceOf(FormData);
       expect(options.body.get(part)).toBe(file);
     }
+  });
+
+  it("reads and updates attendance under the selected class and lesson log", async () => {
+    installAdapter();
+    request.mockResolvedValueOnce([]);
+    const data = { present: 1, starScore: 3, note: "Participated" };
+
+    await fetchStudentReport("class-1", "log-3");
+    await saveStudentLessonLog("class-1", "log-3", "attendance-2", data);
+
+    const base = "/api/v2/class/classes/class-1/reports/log-3/students";
+    expect(request).toHaveBeenNthCalledWith(1, base, { method: "GET" });
+    expect(request).toHaveBeenNthCalledWith(2, `${base}/attendance-2`, { method: "PUT", body: data });
   });
 
   it("resolves encoded file paths using the adapter, without fetching them", () => {

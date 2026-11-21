@@ -27,3 +27,7 @@ form collections used by both Requests and Form Templates are in
 
 Auth, the Query provider, shadcn components, and per-panel UI are separate
 ports. This layer does not mount any components or make requests on import.
+
+For attendance reports, pass the active class and lesson log to
+`useStudentReport(classId, logId)` and include both IDs in
+`useSaveStudentLessonLog()` mutation variables.

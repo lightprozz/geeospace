@@ -18,6 +18,7 @@ import type { ClassStudentGrid, StudentSessionStats } from "@/features/lms/types
 import type {
   LessonLogEntry,
   StudentLogEntry,
+  StudentLessonAttendanceInput,
   LessonStatEntry,
   LessonLogInfo,
   AssessmentCriteria,
@@ -246,22 +247,18 @@ export async function fetchLessonLogs(
 }
 
 /** GET /api/v2/class/classes/{classId}/reports/{logId}/students */
-export async function fetchStudentReport(logId: string, classId?: string): Promise<StudentLogEntry[]> {
-  // classId required for sub-resource routing
-  const cId = classId ?? "_"
-  return api.get<StudentLogEntry[]>(`${CLASSES_API}/${cId}/reports/${logId}/students`)
+export async function fetchStudentReport(classId: string, logId: string): Promise<StudentLogEntry[]> {
+  return api.get<StudentLogEntry[]>(`${CLASSES_API}/${classId}/reports/${logId}/students`)
 }
 
 /** PUT /api/v2/class/classes/{classId}/reports/{logId}/students/{id} */
 export async function saveStudentLessonLog(
+  classId: string,
+  logId: string,
   id: string,
-  data: { present: number; starScore: number; note: string },
-  classId?: string,
-  logId?: string,
+  data: StudentLessonAttendanceInput,
 ): Promise<void> {
-  const cId = classId ?? "_"
-  const lId = logId ?? "_"
-  return api.put<void>(`${CLASSES_API}/${cId}/reports/${lId}/students/${id}`, data)
+  return api.put<void>(`${CLASSES_API}/${classId}/reports/${logId}/students/${id}`, data)
 }
 
 /** POST /api/v2/reports/StudentReport (filtered by classId) */

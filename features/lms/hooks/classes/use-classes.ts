@@ -6,7 +6,7 @@
 // Pattern: identical to hooks/curriculum/use-study-levels.ts
 // ---------------------------------------------------------------------------
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { skipToken, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { classKeys } from '@/features/lms/lib/classes/query-keys'
 import {
@@ -38,6 +38,7 @@ import {
   fetchAllTeachers,
 } from '@/features/lms/lib/classes/api'
 import type { CreateClassInput } from '@/features/lms/types/class'
+import type { StudentLessonAttendanceInput } from '@/features/lms/types/class-report'
 
 // ---------------------------------------------------------------------------
 // Queries
@@ -253,11 +254,10 @@ export function useLessonLogs(userId: string, classId: string) {
 }
 
 /** Student attendance rows for a specific lesson log. */
-export function useStudentReport(logId: string | null) {
+export function useStudentReport(classId: string, logId: string | null) {
   return useQuery({
-    queryKey: classKeys.studentReport(logId ?? ''),
-    queryFn: () => fetchStudentReport(logId!),
-    enabled: !!logId,
+    queryKey: classKeys.studentReport(classId, logId ?? ''),
+    queryFn: classId && logId ? () => fetchStudentReport(classId, logId) : skipToken,
   })
 }
 
@@ -283,17 +283,17 @@ export function useLessonLogInfo(logId: string | null) {
  * Save student attendance record (present, starScore, note).
  * Invalidates the student report cache for the given logId on success.
  */
-export function useSaveStudentLessonLog(logId: string | null) {
+export function useSaveStudentLessonLog() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (vars: {
+    mutationFn: ({ classId, logId, id, data }: {
+      classId: string
+      logId: string
       id: string
-      data: { present: number; starScore: number; note: string }
-    }) => saveStudentLessonLog(vars.id, vars.data),
-    onSuccess: () => {
-      if (logId) {
-        qc.invalidateQueries({ queryKey: classKeys.studentReport(logId) })
-      }
+      data: StudentLessonAttendanceInput
+    }) => saveStudentLessonLog(classId, logId, id, data),
+    onSuccess: (_, { classId, logId }) => {
+      qc.invalidateQueries({ queryKey: classKeys.studentReport(classId, logId) })
       toast.success('Attendance saved')
     },
     onError: (err) => {

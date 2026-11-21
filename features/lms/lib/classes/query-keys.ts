@@ -25,8 +25,8 @@ export const classKeys = {
     ['classes', 'student-session-stats', classId] as const,
   lessonLogs: (userId: string, classId: string) =>
     ['classes', 'lesson-logs', userId, classId] as const,
-  studentReport: (logId: string) =>
-    ['classes', 'student-report', logId] as const,
+  studentReport: (classId: string, logId: string) =>
+    ['classes', 'student-report', classId, logId] as const,
   lessonReport: (logId: string) =>
     ['classes', 'lesson-report', logId] as const,
   lessonLogInfo: (logId: string) =>
