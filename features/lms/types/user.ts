@@ -155,6 +155,7 @@ export interface AccountInfo {
 export interface AccountListItem {
   id: string
   fullName: string | null
+  englishName: string | null
   email: string | null
   /** Role NAME (not ID) — from AspNetRoles.Name via AccountService line 47 */
   roleId: string | null
@@ -196,7 +197,62 @@ export function isUserActive(
   user: Pick<AccountListItem, 'status'> | Pick<AccountInfo, 'isDisabled'>,
 ): boolean {
   if ('status' in user) return user.status === true
-  return user.isDisabled === true
+  return user.isDisabled === false
+}
+
+export function parseAssignedCampuses(
+  assignment: string | null | undefined,
+  campusNames: readonly (string | null | undefined)[],
+): { kind: 'ids' | 'names'; values: string[]; needsReview: boolean } {
+  if (!assignment?.trim()) return { kind: 'ids', values: [], needsReview: false }
+  try {
+    const ids: unknown = JSON.parse(assignment)
+    if (Array.isArray(ids)) {
+      return { kind: 'ids', values: ids.filter((id): id is string => typeof id === 'string' && !!id), needsReview: false }
+    }
+  } catch { /* Older accounts store comma-separated campus names. */ }
+  const split = (value: string) => value.split(',')
+  const catalog = new Map<string, { name: string; spelling: string }[]>()
+  let maxParts = 0
+  for (const name of campusNames) {
+    if (typeof name !== 'string' || !name.trim()) continue
+    const parts = split(name)
+    maxParts = Math.max(maxParts, parts.length)
+    const spelling = name.trim()
+    const key = parts.map(part => part.trim().toLowerCase()).join(',')
+    const names = catalog.get(key) ?? []
+    names.push({ name, spelling })
+    catalog.set(key, names)
+  }
+  const rawParts = split(assignment)
+  const parts = rawParts.map(part => part.trim())
+  const lowerParts = parts.map(part => part.toLowerCase())
+  const best = new Array<{ missing: number; ambiguous: boolean; values: string[] }>(parts.length + 1)
+  best[parts.length] = { missing: 0, ambiguous: false, values: [] }
+  // Prefer parses that leave the fewest unknown names; keep candidates for read-only filtering.
+  for (let start = parts.length - 1; start >= 0; start--) {
+    const fallback = best[start + 1]
+    let choice = parts[start]
+      ? { ...fallback, missing: fallback.missing + 1, values: [parts[start], ...fallback.values] }
+      : fallback
+    for (let end = start + 1; end <= Math.min(start + maxParts, parts.length); end++) {
+      const names = catalog.get(lowerParts.slice(start, end).join(','))
+      if (!names) continue
+      const spelling = rawParts.slice(start, end).join(',').trim()
+      const exact = names.filter(name => name.spelling === spelling)
+      const matches = exact.length ? exact : names
+      const rest = best[end]
+      const values = [...new Set([...matches.map(({ name }) => name), ...rest.values])]
+      if (rest.missing < choice.missing) {
+        choice = { ...rest, values, ambiguous: rest.ambiguous || matches.length > 1 }
+      } else if (rest.missing === choice.missing) {
+        choice = { ...choice, ambiguous: true, values: [...new Set([...choice.values, ...values])] }
+      }
+    }
+    best[start] = choice
+  }
+  const { missing, ambiguous, values } = best[0]
+  return { kind: 'names', values, needsReview: ambiguous || missing > 0 }
 }
 
 /** Get initials from full name for Avatar fallback */
