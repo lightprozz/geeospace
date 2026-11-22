@@ -4,10 +4,7 @@
 // Full-period, all-teachers fetch for the manager Timesheets grid (Phase 6).
 // CLIENT-ONLY — 'use client' required for hooks.
 //
-// Rate-Limit Fix (2026-07-16): Replaced the N-request per-teacher fan-out with
-// a single POST /worklog/query/all-teachers call. The new endpoint queries ALL
-// specified teachers' worklogs in ONE database query, eliminating 429 errors
-// on large rosters (45+ teachers) that the fan-out pattern triggered.
+// Batch teachers up to the endpoint's cap rather than fetching per teacher.
 //
 // AUTH: worklog.approve required (same as viewing another owner's worklogs).
 // ---------------------------------------------------------------------------
@@ -19,21 +16,15 @@ import type { WorkLogItemV2 } from '@/features/lms/types/worklog'
 
 /** Contract's raised pageSize cap for the full-period grid (see v2-working-time-contract.md). */
 const GRID_PAGE_SIZE = 2000
+const MAX_TEACHER_IDS = 200
 
 /**
- * Max concurrent page-walks for the single all-teachers query. 2000/page *
- * 50 = 100,000 rows in a single period is far beyond any real dataset.
- * Guards against an unbounded loop if `hasNext` were ever miscomputed
- * server-side; throws loudly instead of hanging the fetch.
+ * Guard each batch against an unbounded loop if the API misreports hasNext.
  */
 const MAX_PAGES = 50
 
 /**
- * Pages through EVERY worklog for ALL teachers in `[from, to]` via a single
- * POST /worklog/query/all-teachers call, looping until `hasNext === false`.
- * The full-period-completeness requirement ("never compute totals over a
- * partial page") is enforced structurally here: the returned promise only
- * resolves once the last page has been fetched.
+ * Resolve only after all pages of all teacher batches have been fetched.
  */
 async function fetchAllWorkLogsForTeachers(
   teacherIds: readonly string[],
@@ -41,27 +32,25 @@ async function fetchAllWorkLogsForTeachers(
   to: string,
 ): Promise<WorkLogItemV2[]> {
   const items: WorkLogItemV2[] = []
-  let page = 1
-
-  for (;;) {
-    const result = await queryAllTeachersWorkLogs({
-      teacherIds: [...teacherIds],
-      from,
-      to,
-      page,
-      pageSize: GRID_PAGE_SIZE,
-    })
-    items.push(...result.items)
-    if (!result.hasNext) return items
-
-    page += 1
-    if (page > MAX_PAGES) {
-      throw new Error(
-        `All-teachers worklog page-walk (${from}..${to}) exceeded ${MAX_PAGES} pages — ` +
-          `aborting instead of looping unbounded. Check the BE's hasNext computation.`,
-      )
+  const uniqueIds = [...new Set(teacherIds)]
+  for (let offset = 0; offset < uniqueIds.length; offset += MAX_TEACHER_IDS) {
+    const batch = uniqueIds.slice(offset, offset + MAX_TEACHER_IDS)
+    for (let page = 1; ; page++) {
+      const result = await queryAllTeachersWorkLogs({
+        teacherIds: batch,
+        from,
+        to,
+        page,
+        pageSize: GRID_PAGE_SIZE,
+      })
+      items.push(...result.items)
+      if (!result.hasNext) break
+      if (page >= MAX_PAGES) {
+        throw new Error(`All-teachers worklog query (${from}..${to}) exceeded ${MAX_PAGES} pages for one batch.`)
+      }
     }
   }
+  return items
 }
 
 export const timesheetsGridKeys = {
@@ -72,8 +61,7 @@ export const timesheetsGridKeys = {
 
 /**
  * Fetches every worklog for `teacherIds` within `periodKey`'s date range
- * using a single POST /worklog/query/all-teachers call. The `data` returned
- * is complete once the query resolves — no fan-out, no concurrency management.
+ * using the all-teachers endpoint in sequential batches.
  */
 export function useTimesheetsGridData(
   periodKey: PeriodKey,

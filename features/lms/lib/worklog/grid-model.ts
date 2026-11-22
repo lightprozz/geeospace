@@ -281,6 +281,10 @@ function escapeCsvField(value: string): string {
   return value
 }
 
+function asSpreadsheetText(value: string): string {
+  return /^[\t\r\n]|^\s*[=+\-@]/u.test(value) ? `'${value}` : value
+}
+
 /**
  * Trims float noise and unnecessary trailing zeros (0.70 -> "0.7", 3.00 ->
  * "3"). Shared by the CSV serializer AND the grid UI's cell/total display so
@@ -302,31 +306,47 @@ function formatCell(cell: GridCell | undefined): string {
  * string with `\r\n` line endings. Includes a trailing TOTAL row mirroring
  * the grid's sticky grand-total footer.
  */
-export function serializeGridCsv(model: GridModel, columns: DayColumn[]): string {
+export function serializeGridCsv(model: GridModel, columns: DayColumn[], options?: { groupByTeacher?: boolean }): string {
   const headers = ["Teacher", "Class", "Level", "Effort Type", ...columns.map((c) => c.dateKey), "Total"]
-  const lines = [headers.map(escapeCsvField).join(",")]
+  const lines: string[] = []
+  const addLine = (fields: string[]) => lines.push(fields.map(escapeCsvField).join(","))
+  addLine(headers)
 
-  for (const row of model.rows) {
-    const fields = [
-      row.teacherName,
-      row.className ?? "",
-      row.level ?? "",
-      row.effortType,
+  const addDetail = (row: GridRow) => {
+    addLine([
+      ...[row.teacherName, row.className ?? "", row.level ?? "", row.effortType].map(asSpreadsheetText),
       ...columns.map((c) => formatCell(row.days[c.dateKey])),
       formatScore(row.total),
-    ]
-    lines.push(fields.map(escapeCsvField).join(","))
+    ])
   }
 
-  const totalsRow = [
+  if (options?.groupByTeacher) {
+    const byTeacher = new Map<string, GridRow[]>()
+    for (const row of model.rows) {
+      const group = byTeacher.get(row.teacherId)
+      if (group) group.push(row)
+      else byTeacher.set(row.teacherId, [row])
+    }
+    for (const subtotal of model.teacherSubtotals) {
+      byTeacher.get(subtotal.teacherId)?.forEach(addDetail)
+      addLine([
+        `Subtotal — ${subtotal.teacherName}`, "", "", "",
+        ...columns.map(({ dateKey }) => subtotal.days[dateKey] === undefined ? "" : formatScore(subtotal.days[dateKey])),
+        formatScore(subtotal.total),
+      ])
+    }
+  } else {
+    model.rows.forEach(addDetail)
+  }
+
+  addLine([
     "TOTAL",
     "",
     "",
     "",
     ...columns.map((c) => formatScore(model.dayTotals[c.dateKey] ?? 0)),
     formatScore(model.grandTotal),
-  ]
-  lines.push(totalsRow.map(escapeCsvField).join(","))
+  ])
 
   return lines.join("\r\n")
 }
