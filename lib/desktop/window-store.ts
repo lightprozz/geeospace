@@ -35,7 +35,7 @@ export function fitRect(rect: Rect, area: Area): Rect {
   return { width, height, x: Math.max(inset, Math.min(rect.x, area.width - width - inset)), y: Math.max(inset, Math.min(rect.y, area.height - height - inset)) };
 }
 export function defaultRect(id: DesktopAppId, area: Area): Rect {
-  const wide = ["calendar", "learning", "lms", "work", "lms-branches", "lms-users", "lms-roles"].includes(id);
+  const wide = ["calendar", "learning", "lms", "work", "lms-worklog", "lms-branches", "lms-users", "lms-roles"].includes(id);
   const rect = { x: 34, y: 28, width: wide ? 820 : 510, height: 640 };
   if (id === "requests" || id === "lms-form-templates") Object.assign(rect, { width: area.width >= 1024 ? Math.min(1180, area.width - 200) : 510 });
   if (id === "lms-curriculum" || id === "lms-materials") Object.assign(rect, { width: 1100, height: 720 });

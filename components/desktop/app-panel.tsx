@@ -31,6 +31,7 @@ const LmsHub = lazy(() => import("./lms-panels").then(module => ({ default: modu
 const RequestsPanel = lazy(() => import("@/features/forms/requests/requests-panel").then(module => ({ default: module.RequestsPanel })));
 const FormTemplatesPanel = lazy(() => import("@/features/forms/form-templates/form-templates-panel").then(module => ({ default: module.FormTemplatesPanel })));
 const LmsPlaceholder = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsPlaceholder })));
+const ClassesPanel = lazy(() => import("@/features/lms/classes/classes-panel"));
 const SchedulePanel = lazy(() => import("@/features/lms/apps/schedule/panel"));
 const TimetablePanel = lazy(() => import("@/features/lms/apps/timetable/panel"));
 const AttendancePanel = lazy(() => import("@/features/lms/apps/attendance/panel"));
@@ -42,12 +43,14 @@ const panels: Partial<Record<DesktopAppId, ComponentType<PanelProps>>> = {
   ...Object.fromEntries(desktopApps.filter(app => app.group !== "workspace" && app.id !== "requests" && app.id !== "work").map(app => [app.id, LmsPlaceholder])),
   requests: RequestsPanel,
   "lms-form-templates": FormTemplatesPanel,
+  "lms-classes": ClassesPanel,
   "lms-schedule": SchedulePanel, "lms-timetable": TimetablePanel, "lms-attendance": AttendancePanel, "lms-holidays": HolidaysPanel,
   "lms-curriculum": lazy(() => import("@/features/lms/curriculum/panel")),
   "lms-lets-learn": lazy(() => import("@/features/lets-learn/panel")),
   "lms-materials": lazy(() => import("@/features/lms/materials/panel")),
   account: props => isGeeoConfigured ? <AccountPanel /> : <UnconfiguredAccountPanel {...props} />, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub, staff: LmsHub, admin: LmsHub,
   "lms-branches": BranchesPanel, "lms-roles": RolesPanel, "lms-users": UsersPanel,
+  "lms-worklog": lazy(() => import("@/features/lms/worklog/worklog-panel").then(module => ({ default: module.WorklogPanel }))),
 };
 export function AppPanel(props: PanelProps) {
   const { t, label } = useSpace();
