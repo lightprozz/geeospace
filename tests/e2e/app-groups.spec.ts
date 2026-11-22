@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { authBaseURL, mockGeeo, seedGeeo } from "./geeo-mocks";
+import { mockClassesApi } from "./classes-mocks";
 
 test.use({ baseURL: authBaseURL });
 
 test.beforeEach(async ({ page }, info) => {
   test.skip(info.project.name !== "desktop", "App grouping desktop acceptance");
   await mockGeeo(page);
+  await mockClassesApi(page);
   await seedGeeo(page.context());
   await page.goto("/");
   await expect(page.locator(".geeospace-os")).toHaveAttribute("data-ready", "true");
@@ -21,7 +23,7 @@ test("dock has one LMS entry and hub launches Classes with shared running state"
   await expect(hub.getByRole("heading", { name: "Gee-O LMS" })).toBeVisible();
   await hub.getByRole("button", { name: "Lớp học", exact: true }).click();
   const classes = page.locator('[data-app="lms-classes"]');
-  await expect(classes.getByRole("heading", { name: "Đang chuyển sang Geeospace" })).toBeVisible();
+  await expect(classes.getByText("Classes Management", { exact: true })).toBeVisible();
   await expect(lms).toHaveAttribute("aria-current", "true");
   await hub.getByRole("button", { name: "Đóng Gee-O LMS", exact: true }).click({ force: true });
   await expect(lms).toHaveAttribute("data-running", "true");
@@ -83,13 +85,13 @@ test("search selects an app match before group-only matches", async ({ page }) =
 });
 
 test("deep links, navigate, back and hashchange keep the window path", async ({ page }) => {
-  await page.goto("/#lms-classes/123");
+  await page.goto("/#lms-classes/class-1");
   const classes = page.locator('[data-app="lms-classes"]');
-  await expect(classes.locator("[data-window-path]")).toHaveText("123");
-  await classes.getByRole("button", { name: "Tổng quan mẫu" }).click();
-  await expect(page).toHaveURL(/#lms-classes\/123\/overview$/);
+  await expect(classes.getByRole("tab", { name: "Lessons", exact: true })).toHaveAttribute("data-state", "active");
+  await classes.getByRole("tab", { name: "Students", exact: true }).click();
+  await expect(page).toHaveURL(/#lms-classes\/class-1\/students$/);
   await classes.getByRole("button", { name: "Quay lại", exact: true }).click();
-  await expect(classes.locator("[data-window-path]")).toHaveText("123");
+  await expect(page).toHaveURL(/#lms-classes\/class-1$/);
   await expect(classes.getByRole("button", { name: "Quay lại", exact: true })).toHaveCount(0);
   await page.evaluate(() => { location.hash = "lms-schedule/456"; });
   await expect(page.locator('[data-app="lms-schedule"] [data-window-path]')).toHaveText("456");
@@ -99,14 +101,14 @@ test("mobile navigation history survives returning to desktop", async ({ page })
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/#lms-classes");
   const classes = page.locator('[data-app="lms-classes"]');
-  await classes.getByRole("button", { name: "Chi tiết mẫu", exact: true }).click();
-  await classes.getByRole("button", { name: "Tổng quan mẫu", exact: true }).click();
-  await expect(classes.locator("[data-window-path]")).toHaveText("123/overview");
+  await classes.getByText("Starters A", { exact: true }).click();
+  await classes.getByRole("tab", { name: "Students", exact: true }).click();
+  await expect(page).toHaveURL(/#lms-classes\/class-1\/students$/);
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(page.locator(".os-dock")).toBeVisible();
   await classes.getByRole("button", { name: "Quay lại", exact: true }).click();
-  await expect(classes.locator("[data-window-path]")).toHaveText("123");
+  await expect(page).toHaveURL(/#lms-classes\/class-1$/);
   await classes.getByRole("button", { name: "Quay lại", exact: true }).click();
-  await expect(classes.locator("[data-window-path]")).toHaveText("/");
+  await expect(classes.getByText("Classes Management", { exact: true })).toBeVisible();
   await expect(classes.getByRole("button", { name: "Quay lại", exact: true })).toHaveCount(0);
 });
