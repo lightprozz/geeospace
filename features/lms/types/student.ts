@@ -468,7 +468,10 @@ export const ParentEditFormSchema = z.object({
   email: z.string().optional(),
   address: z.string().optional(),
   job: z.string().optional(),
-  yob: z.coerce.number().optional(),
+  yob: z.preprocess(
+    value => value === null || (typeof value === 'string' && !value.trim()) ? undefined : value,
+    z.coerce.number().optional(),
+  ),
   relation: z.number().min(1).max(2),
 })
 

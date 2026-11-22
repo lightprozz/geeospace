@@ -239,6 +239,7 @@ export function useUpdateStudent(studentId: string) {
     mutationFn: (data: Record<string, unknown>) =>
       updateStudent(studentId, data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: studentKeys.all, exact: true })
       queryClient.invalidateQueries({ queryKey: studentKeys.detail(studentId) })
       queryClient.invalidateQueries({ queryKey: studentKeys.lists() })
       toast.success('Student updated successfully')
@@ -259,6 +260,8 @@ export function useUpdateParent(studentId: string) {
     mutationFn: ({ parentId, data }: { parentId: string; data: Record<string, unknown> }) =>
       updateParent(parentId, data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [...studentKeys.all, 'allParents'] })
+      queryClient.invalidateQueries({ queryKey: studentKeys.all, exact: true })
       queryClient.invalidateQueries({ queryKey: studentKeys.parents(studentId) })
       toast.success('Parent info updated successfully')
     },
@@ -278,6 +281,8 @@ export function useCreateParentForStudent(studentId: string) {
     mutationFn: (data: Record<string, unknown>) =>
       createParentForStudent(studentId, data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [...studentKeys.all, 'allParents'] })
+      queryClient.invalidateQueries({ queryKey: studentKeys.all, exact: true })
       queryClient.invalidateQueries({ queryKey: studentKeys.parents(studentId) })
       toast.success('Parent added successfully')
     },
@@ -319,6 +324,7 @@ export function useLinkParentToStudent(studentId: string) {
     mutationFn: ({ parentId, data }: { parentId: string; data: Pick<ParentEditFormInput, 'relation'> }) =>
       linkParentToStudent(parentId, studentId, data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: studentKeys.all, exact: true })
       queryClient.invalidateQueries({ queryKey: studentKeys.parents(studentId) })
       toast.success('Parent linked successfully')
     },

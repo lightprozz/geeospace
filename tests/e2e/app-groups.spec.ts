@@ -94,7 +94,7 @@ test("deep links, navigate, back and hashchange keep the window path", async ({ 
   await expect(page).toHaveURL(/#lms-classes\/class-1$/);
   await expect(classes.getByRole("button", { name: "Quay lại", exact: true })).toHaveCount(0);
   await page.evaluate(() => { location.hash = "lms-students/456"; });
-  await expect(page.locator('[data-app="lms-students"] [data-window-path]')).toHaveText("456");
+  await expect(page.locator('[data-app="lms-students"]').getByRole("link", { name: "Mở liên kết Học viên" })).toHaveAttribute("href", "/#lms-students/456");
 });
 
 test("mobile navigation history survives returning to desktop", async ({ page }) => {
