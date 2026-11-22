@@ -9,7 +9,7 @@ export function formatAppHash(id: DesktopAppId, path = "") {
 export function parseAppHash(hash: string) {
   try {
     const [rawId, ...parts] = hash.replace(/^#/, "").split("/");
-    const id = rawId === "lms-requests" ? "requests" : rawId;
+    const id = rawId === "lms-requests" ? "requests" : rawId === "lets-learn" ? "lms-lets-learn" : rawId;
     const path = parts.map(decodeURIComponent).join("/");
     if (isDesktopApp(id) && isSafePath(path)) return { id, path };
   } catch { /* Malformed URL encoding is not an app route. */ }

@@ -35,6 +35,7 @@ const BranchesPanel = lazy(() => import("@/features/lms/panels/management-panel"
 const panels: Partial<Record<DesktopAppId, ComponentType<PanelProps>>> = {
   ...Object.fromEntries(desktopApps.filter(app => app.group !== "workspace" && app.id !== "requests" && app.id !== "work").map(app => [app.id, LmsPlaceholder])),
   "lms-curriculum": lazy(() => import("@/features/lms/curriculum/panel")),
+  "lms-lets-learn": lazy(() => import("@/features/lets-learn/panel")),
   "lms-materials": lazy(() => import("@/features/lms/materials/panel")),
   account: props => isGeeoConfigured ? <AccountPanel /> : <UnconfiguredAccountPanel {...props} />, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub, staff: LmsHub, admin: LmsHub,
   "lms-branches": BranchesPanel, "lms-roles": RolesPanel, "lms-users": UsersPanel,
