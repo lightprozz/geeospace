@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { join } from "node:path";
 import { authBaseURL, mockGeeo, mockUser, seedGeeo } from "./geeo-mocks";
-import { PERMISSIONS } from "../../lib/permissions";
+import { PERMISSIONS, type Permission } from "../../lib/permissions";
 import { ScheduleSchema, ScheduleCalendarEventSchema } from "../../features/lms/types/schedule";
 import { ClassCourseGridSchema } from "../../features/lms/types/class";
 import { AbsentStudentSchema, SingleLessonDtoSchema } from "../../features/lms/types/attendance";
@@ -32,12 +32,12 @@ const absentStudent = AbsentStudentSchema.parse({
   fatherName: null, fatherPhone: null, motherName: "Lan Tran", motherPhone: "0900000000",
 });
 
-async function setup(page: Page, { empty = false, writable = true } = {}) {
+async function setup(page: Page, { empty = false, writable = true, permissions = writable ? Object.values(PERMISSIONS) : [PERMISSIONS.CLASS_READ] }: { empty?: boolean; writable?: boolean; permissions?: Permission[] } = {}) {
   const unexpected: string[] = [];
   await mockGeeo(page);
   await page.route("https://auth.geeo.test/connect/userinfo", route => route.fulfill({
     headers: { "access-control-allow-origin": "*" },
-    json: { ...mockUser, permission: writable ? Object.values(PERMISSIONS) : [PERMISSIONS.CLASS_READ] },
+    json: { ...mockUser, permission: permissions },
   }));
   await seedGeeo(page.context());
   await page.route("https://api.geeo.test/**", async route => {
@@ -140,10 +140,35 @@ test("read-only permissions hide write actions while deep links still render dat
   await expect(panel.getByRole("button", { name: "Set Schedule" })).toHaveCount(0);
   await panel.getByRole("button", { name: "View Timetable" }).click();
   const timetable = page.locator('[data-app="lms-timetable"]');
-  await timetable.getByRole("button", { name: "List view", exact: true }).click();
-  await expect(timetable.getByText("Starters A", { exact: true }).first()).toBeVisible();
+  await expect(timetable.getByText("Bạn chưa có quyền xem nội dung này.", { exact: true })).toBeVisible();
   expect(unexpected).toEqual([]);
 });
+
+for (const { query, id, permission, content } of [
+  { query: "Attendance", id: "lms-attendance", permission: PERMISSIONS.ATTENDANCE_CATCHUP_READ, content: "Anna" },
+  { query: "Timetable", id: "lms-timetable", permission: PERMISSIONS.CLASS_SCHEDULE, content: "Starters A" },
+]) {
+  test(`${id} denies access without its read permission`, async ({ page }) => {
+    const unexpected = await setup(page, { permissions: Object.values(PERMISSIONS).filter(value => value !== permission) });
+    const requests: string[] = [];
+    page.on("request", request => {
+      if (request.url().startsWith("https://api.geeo.test/")) requests.push(request.url());
+    });
+    const panel = await launch(page, query, id);
+    await expect(panel.getByRole("status")).toContainText("Bạn chưa có quyền xem nội dung này.");
+    await expect(panel.getByText(content, { exact: true })).toHaveCount(0);
+    expect(requests).toEqual([]);
+    expect(unexpected).toEqual([]);
+  });
+
+  test(`${id} renders data with only its read permission`, async ({ page }) => {
+    const unexpected = await setup(page, { permissions: [permission] });
+    const panel = await launch(page, query, id);
+    await expect(panel.getByText(content, { exact: true }).first()).toBeVisible();
+    await expect(panel.getByText("Bạn chưa có quyền xem nội dung này.", { exact: true })).toHaveCount(0);
+    expect(unexpected).toEqual([]);
+  });
+}
 
 test("empty API data keeps the schedule usable", async ({ page }) => {
   const unexpected = await setup(page, { empty: true });
