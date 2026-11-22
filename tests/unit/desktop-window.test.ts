@@ -19,6 +19,10 @@ it.each([{ width: 1440, height: 776 }, { width: 768, height: 900 }])("leaves roo
   const north = fitRect(resizeRect(enlarged, "n", 0, -40), area);
   expect(north.y).toBeLessThan(enlarged.y - 30);
 });
+it.each(["lms-curriculum", "lms-materials"] as const)("opens %s wide and clamps it to smaller viewports", (id) => {
+  expect(defaultRect(id, { width: 1440, height: 900 })).toMatchObject({ width: 1100, height: 720 });
+  expect(defaultRect(id, { width: 600, height: 500 })).toMatchObject({ width: 568, height: 468 });
+});
 it("finds Vietnamese apps regardless of accents, punctuation, case or word order", () => {
   for (const query of ["doi chieu", "ĐỐI CHIẾU", "cong luong", "lương công", "CÔNG & LƯƠNG"]) {
     expect(searchApps(query).map((app) => app.id)).toContain("work");
