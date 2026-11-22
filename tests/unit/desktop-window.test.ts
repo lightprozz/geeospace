@@ -2,6 +2,23 @@ import { expect, it } from "vitest";
 import { searchApps } from "@/lib/desktop/apps";
 import { activeWindow, defaultRect, fitRect, frameRect, initialDesktop, readLayout, resizeRect, windowReducer } from "@/lib/desktop/window-store";
 const area = { width: 1200, height: 700 };
+it.each(["requests", "lms-form-templates"] as const)("opens %s wide enough for Forms and fits smaller workspaces", id => {
+  expect(defaultRect(id, { width: 1280, height: 741 }).width).toBe(1080);
+  expect(defaultRect(id, { width: 300, height: 230 })).toEqual({ x: 16, y: 16, width: 268, height: 198 });
+  const tablet = { width: 768, height: 1024 };
+  const rect = defaultRect(id, tablet);
+  expect(rect.width).toBe(510);
+  expect(fitRect({ ...rect, x: rect.x + 40 }, tablet).x).toBe(rect.x + 40);
+});
+it.each([{ width: 1440, height: 776 }, { width: 768, height: 900 }])("leaves room to drag and resize Forms in a $width-pixel workspace", area => {
+  const initial = defaultRect("requests", area);
+  const moved = fitRect({ ...initial, x: initial.x + 65, y: initial.y + 35 }, area);
+  expect(moved.x).toBeGreaterThan(initial.x + 50);
+  const enlarged = fitRect(resizeRect(moved, "se", 50, 15), area);
+  expect(enlarged.width).toBeGreaterThan(moved.width + 35);
+  const north = fitRect(resizeRect(enlarged, "n", 0, -40), area);
+  expect(north.y).toBeLessThan(enlarged.y - 30);
+});
 it.each(["lms-curriculum", "lms-materials"] as const)("opens %s wide and clamps it to smaller viewports", (id) => {
   expect(defaultRect(id, { width: 1440, height: 900 })).toMatchObject({ width: 1100, height: 720 });
   expect(defaultRect(id, { width: 600, height: 500 })).toMatchObject({ width: 568, height: 468 });
