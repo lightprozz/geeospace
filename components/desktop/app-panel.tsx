@@ -30,6 +30,7 @@ function UnconnectedPanel({ id, onOpen }: PanelProps) {
 const LmsHub = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsHub })));
 const StudentsPanel = lazy(() => import("@/features/students/students-panel").then(module => ({ default: module.StudentsPanel })));
 const LmsPlaceholder = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsPlaceholder })));
+const ClassesPanel = lazy(() => import("@/features/lms/classes/classes-panel"));
 const SchedulePanel = lazy(() => import("@/features/lms/apps/schedule/panel"));
 const TimetablePanel = lazy(() => import("@/features/lms/apps/timetable/panel"));
 const AttendancePanel = lazy(() => import("@/features/lms/apps/attendance/panel"));
@@ -40,6 +41,7 @@ const BranchesPanel = lazy(() => import("@/features/lms/panels/management-panel"
 const panels: Partial<Record<DesktopAppId, ComponentType<PanelProps>>> = {
   ...Object.fromEntries(desktopApps.filter(app => app.group !== "workspace" && app.id !== "requests" && app.id !== "work").map(app => [app.id, LmsPlaceholder])),
   "lms-students": StudentsPanel,
+  "lms-classes": ClassesPanel,
   "lms-schedule": SchedulePanel, "lms-timetable": TimetablePanel, "lms-attendance": AttendancePanel, "lms-holidays": HolidaysPanel,
   "lms-curriculum": lazy(() => import("@/features/lms/curriculum/panel")),
   "lms-lets-learn": lazy(() => import("@/features/lets-learn/panel")),
