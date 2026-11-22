@@ -212,16 +212,26 @@ export async function apiFetch<T = unknown>(
 
   if (!res.ok) {
     const contentType = res.headers.get("Content-Type") ?? ""
-    if (contentType.includes("application/problem+json")) {
-      const problem = (await res.json()) as ProblemDetails
-      throw new ApiError(
-        problem.status ?? res.status,
-        problem.detail ?? problem.title ?? `Request failed (${res.status})`,
-        problem,
-      )
+    const errorBody = (await res.text().catch(() => "")).trim()
+    let problem: ProblemDetails | undefined
+    let isJson = contentType.includes("json") || errorBody.startsWith("{") || errorBody.startsWith("[")
+    try {
+      const parsed: unknown = JSON.parse(errorBody)
+      isJson = true
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        problem = parsed as ProblemDetails
+      }
+    } catch {
+      // Non-JSON errors may carry a plain-text message.
     }
-    const errorBody = await res.text().catch(() => "")
-    throw new ApiError(res.status, errorBody || `Request failed (${res.status})`)
+    const message = [problem?.detail, problem?.title].find(
+      value => typeof value === "string" && value.trim(),
+    )
+    throw new ApiError(
+      res.status,
+      message?.trim() || (!isJson && errorBody) || `Request failed (${res.status})`,
+      problem,
+    )
   }
 
   // 204 No Content
