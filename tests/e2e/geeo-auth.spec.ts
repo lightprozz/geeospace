@@ -23,10 +23,10 @@ test("Account sign-in unlocks LMS, survives reload and gates again after sign-ou
   await account.getByRole("button", { name: "Đóng Tài khoản", exact: true }).click();
   await hub.getByRole("button", { name: "Lớp học", exact: true }).click();
   const classes = page.locator('[data-app="lms-classes"]');
-  await expect(classes.getByRole("heading", { name: "Đang chuyển sang Geeospace" })).toBeVisible();
+  await expect(classes.getByText("Classes Management", { exact: true })).toBeVisible();
   await page.reload();
   await expect(page.locator(".os-account-chip")).toContainText(mockUser.name);
-  await expect(classes.getByRole("heading", { name: "Đang chuyển sang Geeospace" })).toBeVisible();
+  await expect(classes.getByText("Classes Management", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Tài khoản Gee-O", exact: true }).click();
   await account.getByRole("button", { name: "Đăng xuất", exact: true }).click();
   await expect(page.locator(".os-account-chip")).toContainText("Kết nối Gee-O");

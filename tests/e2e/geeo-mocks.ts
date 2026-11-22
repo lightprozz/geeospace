@@ -1,8 +1,9 @@
 import type { BrowserContext, Page } from "@playwright/test";
 
 export const authBaseURL = "http://127.0.0.1:3101";
-export const mockUser = { sub: "teacher-1", name: "Mai Nguyen", email: "mai@example.test", role: ["Teacher"], permission: ["classes.read"] };
+export const mockUser = { sub: "teacher-1", name: "Mai Nguyen", email: "mai@example.test", role: ["Teacher"], permission: ["class.read"] };
 export async function mockGeeo(page: Page, user = mockUser) {
+  await page.route("https://api.geeo.test/api/**", route => route.fulfill({ headers: { "access-control-allow-origin": "*" }, json: [] }));
   await page.route("https://auth.geeo.test/connect/**", async route => {
     const request = route.request();
     const form = new URLSearchParams(request.postData() ?? "");
