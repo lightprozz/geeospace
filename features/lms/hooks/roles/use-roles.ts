@@ -52,8 +52,11 @@ export function useAssignPermission() {
       roleId: string
       request: AssignPermissionRequest
     }) => assignPermission(roleId, request),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: roleKeys.detail(variables.roleId) })
+    onSuccess: async (_data, variables) => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: roleKeys.detail(variables.roleId) }),
+        qc.invalidateQueries({ queryKey: roleKeys.lists() }),
+      ])
       toast.success('Permission granted')
     },
     onError: (err: Error) => {
@@ -73,8 +76,11 @@ export function useRemovePermission() {
       roleId: string
       claimId: string
     }) => removePermission(roleId, claimId),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: roleKeys.detail(variables.roleId) })
+    onSuccess: async (_data, variables) => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: roleKeys.detail(variables.roleId) }),
+        qc.invalidateQueries({ queryKey: roleKeys.lists() }),
+      ])
       toast.success('Permission revoked')
     },
     onError: (err: Error) => {
