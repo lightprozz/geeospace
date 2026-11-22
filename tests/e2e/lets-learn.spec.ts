@@ -19,6 +19,25 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
+for (const path of ['', '/lesson-1/class-1']) {
+  test(`read permission denied blocks lesson entry${path || ' panel'} without fetching`, async ({ page }, info) => {
+    const lessonRequests: string[] = []
+    page.on('request', request => {
+      if (request.url().includes('/lesson-delivery/units/')) lessonRequests.push(request.url())
+    })
+    await page.route('https://auth.geeo.test/connect/userinfo', route => route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: { ...mockUser, permission: [] } }))
+    await page.goto(`/#lets-learn${path}`)
+    await page.addStyleTag({ content: 'nextjs-portal { display: none; }' })
+    const panel = page.locator('[data-app="lms-lets-learn"]')
+    await expect(panel.getByRole('status')).toHaveText('Quyền truy cậpBạn chưa có quyền xem nội dung này.')
+    await expect(panel.getByRole('button', { name: 'Start lesson' })).toHaveCount(0)
+    await expect(panel.getByLabel('Class lesson ID', { exact: true })).toHaveCount(0)
+    await expect(panel.getByAltText('Hello, explorers!')).toHaveCount(0)
+    expect(lessonRequests).toEqual([])
+    if (process.env.SCREENSHOT_DIR && info.project.name === 'desktop' && path) await page.screenshot({ animations: 'disabled', path: `${process.env.SCREENSHOT_DIR}/lets-learn-no-access.png` })
+  })
+}
+
 test('launcher → lesson → roster and toolkit → end session', async ({ page, isMobile }) => {
   const externalAvatarRequests: string[] = []
   page.on('request', request => { if (request.url().includes('dicebear')) externalAvatarRequests.push(request.url()) })
