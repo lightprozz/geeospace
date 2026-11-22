@@ -7,6 +7,7 @@ import { configureLmsTransport } from '@/features/lms/lib/transport'
 import { StudentsPanel } from '@/features/students/students-panel'
 import { WindowNavigationContext } from '@/components/desktop/window-navigation'
 import { usePermissionStore } from '@/stores/use-permission-store'
+import { PERMISSIONS } from '@/lib/permissions'
 import { useStudentStore } from '@/features/lms/stores/use-student-store'
 import { student, studentResponse } from '../students-fixtures'
 
@@ -106,9 +107,19 @@ it('renders a missing student separately from a transport error and retries', as
   await screen.findByText('annie.student')
 })
 
-it('does not query student data without student.read permission', async () => {
-  usePermissionStore.setState({ permissions: [] })
-  mount()
+it.each(['', 'student-1'])('shows the shared no-access state without student.read at path "%s"', async path => {
+  usePermissionStore.setState({ permissions: [PERMISSIONS.STUDENT_UPDATE] })
+  mount(path)
+  expect(screen.getByRole('status').textContent).toContain('Bạn chưa có quyền xem nội dung này.')
   expect(request).not.toHaveBeenCalled()
   expect(screen.queryByPlaceholderText('Search by name or phone...')).toBeNull()
+  expect(screen.queryByText('annie.student')).toBeNull()
+})
+
+it('renders the list with only student.read permission', async () => {
+  usePermissionStore.setState({ permissions: [PERMISSIONS.STUDENT_READ] })
+  mount()
+  expect(await screen.findByText('Nguyen Minh Anh')).toBeTruthy()
+  expect(request).toHaveBeenCalledWith('/api/v2/student/students/all')
+  expect(screen.getByPlaceholderText('Search by name or phone...')).toBeTruthy()
 })
