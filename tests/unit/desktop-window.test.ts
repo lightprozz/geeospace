@@ -1,7 +1,11 @@
 import { expect, it } from "vitest";
 import { searchApps } from "@/lib/desktop/apps";
-import { activeWindow, fitRect, frameRect, initialDesktop, readLayout, resizeRect, windowReducer } from "@/lib/desktop/window-store";
+import { activeWindow, defaultRect, fitRect, frameRect, initialDesktop, readLayout, resizeRect, windowReducer } from "@/lib/desktop/window-store";
 const area = { width: 1200, height: 700 };
+it.each(["lms-curriculum", "lms-materials"] as const)("opens %s wide and clamps it to smaller viewports", (id) => {
+  expect(defaultRect(id, { width: 1440, height: 900 })).toMatchObject({ width: 1100, height: 720 });
+  expect(defaultRect(id, { width: 600, height: 500 })).toMatchObject({ width: 568, height: 468 });
+});
 it("finds Vietnamese apps regardless of accents, punctuation, case or word order", () => {
   for (const query of ["doi chieu", "ĐỐI CHIẾU", "cong luong", "lương công", "CÔNG & LƯƠNG"]) {
     expect(searchApps(query).map((app) => app.id)).toContain("work");

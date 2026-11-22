@@ -24,20 +24,21 @@ const LOOKUPS_API = '/api/v2/lookups/Lookups'
 /** POST /api/v2/users/Users/query */
 export async function fetchAccountList(
   request?: Partial<TableQueryRequest>,
+  signal?: AbortSignal,
 ): Promise<PagedResult<AccountListItem>> {
   // V2 API returns { id, fullName, englishName, email, roleName, branch, isActive, employeeCode }
-  // We need to map to AccountListItem shape { id, fullName, email, roleId, branch, status }
   const result = await queryPaged<Record<string, unknown>>(USERS_API + '/query', {
     page: request?.page ?? 1,
     pageSize: request?.pageSize ?? 20,
     sort: request?.sort ?? [{ field: 'firstName', desc: false }],
     ...request,
-  })
+  }, { signal })
   return {
     ...result,
     items: result.items.map((item) => ({
       id: item.id as string,
       fullName: (item.fullName as string) ?? null,
+      englishName: (item.englishName as string) ?? null,
       email: (item.email as string) ?? null,
       roleId: (item.roleName as string) ?? null,
       branch: (item.branch as string) ?? null,
@@ -46,18 +47,13 @@ export async function fetchAccountList(
   } as PagedResult<AccountListItem>
 }
 
-/**
- * Fetch ALL users for client-side table processing.
- * Uses queryPaged with large pageSize — all search/sort/filter handled on frontend.
- * Returns flat array of AccountListItem.
- */
-export async function fetchAllAccountList(): Promise<AccountListItem[]> {
-  const result = await fetchAccountList({
-    page: 1,
-    pageSize: 500,
-    sort: [{ field: 'firstName', desc: false }],
-  })
-  return result.items
+export async function fetchAllAccountList(signal?: AbortSignal): Promise<AccountListItem[]> {
+  const users: AccountListItem[] = []
+  for (let page = 1; ; page++) {
+    const result = await fetchAccountList({ page, pageSize: 500 }, signal)
+    users.push(...result.items)
+    if (!result.hasNext) return users
+  }
 }
 
 // =========================================================================
