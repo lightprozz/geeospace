@@ -30,10 +30,16 @@ function UnconnectedPanel({ id, onOpen }: PanelProps) {
 const LmsHub = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsHub })));
 const StudentsPanel = lazy(() => import("@/features/students/students-panel").then(module => ({ default: module.StudentsPanel })));
 const LmsPlaceholder = lazy(() => import("./lms-panels").then(module => ({ default: module.LmsPlaceholder })));
+const UsersPanel = lazy(() => import("@/features/lms/panels/management-panel").then(module => ({ default: module.UsersPanel })));
+const RolesPanel = lazy(() => import("@/features/lms/panels/management-panel").then(module => ({ default: module.RolesPanel })));
+const BranchesPanel = lazy(() => import("@/features/lms/panels/management-panel").then(module => ({ default: module.BranchesPanel })));
 const panels: Partial<Record<DesktopAppId, ComponentType<PanelProps>>> = {
   ...Object.fromEntries(desktopApps.filter(app => app.group !== "workspace" && app.id !== "requests" && app.id !== "work").map(app => [app.id, LmsPlaceholder])),
   "lms-students": StudentsPanel,
+  "lms-curriculum": lazy(() => import("@/features/lms/curriculum/panel")),
+  "lms-materials": lazy(() => import("@/features/lms/materials/panel")),
   account: props => isGeeoConfigured ? <AccountPanel /> : <UnconfiguredAccountPanel {...props} />, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub, staff: LmsHub, admin: LmsHub,
+  "lms-branches": BranchesPanel, "lms-roles": RolesPanel, "lms-users": UsersPanel,
 };
 export function AppPanel(props: PanelProps) {
   const { t, label } = useSpace();

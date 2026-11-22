@@ -77,6 +77,19 @@ function purgeStale(
   return cleaned
 }
 
+function latestDrafts(
+  fallback: Record<string, DraftExamEntry>,
+): Record<string, DraftExamEntry> {
+  try {
+    const { name, storage } = useExamDraftStore.persist.getOptions()
+    const persisted = name ? storage?.getItem(name) : undefined
+    if (persisted && 'state' in persisted) {
+      return purgeStale(persisted.state.drafts)
+    }
+  } catch {}
+  return fallback
+}
+
 // ---------------------------------------------------------------------------
 // Store
 // ---------------------------------------------------------------------------
@@ -89,7 +102,7 @@ export const useExamDraftStore = create<ExamDraftState>()(
       saveDraft: (key, scores, comment) =>
         set((state) => ({
           drafts: {
-            ...state.drafts,
+            ...latestDrafts(state.drafts),
             [key]: {
               key,
               scores,
@@ -103,7 +116,7 @@ export const useExamDraftStore = create<ExamDraftState>()(
 
       clearDraft: (key) =>
         set((state) => {
-          const drafts = { ...state.drafts }
+          const drafts = { ...latestDrafts(state.drafts) }
           delete drafts[key]
           return { drafts }
         }),
