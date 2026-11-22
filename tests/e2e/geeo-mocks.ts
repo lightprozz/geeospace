@@ -2,7 +2,7 @@ import type { BrowserContext, Page } from "@playwright/test";
 
 export const authBaseURL = "http://127.0.0.1:3101";
 export const mockUser = { sub: "teacher-1", name: "Mai Nguyen", email: "mai@example.test", role: ["Teacher"], permission: ["class.read"] };
-export async function mockGeeo(page: Page) {
+export async function mockGeeo(page: Page, user = mockUser) {
   await page.route("https://api.geeo.test/api/**", route => route.fulfill({ headers: { "access-control-allow-origin": "*" }, json: [] }));
   await page.route("https://auth.geeo.test/connect/**", async route => {
     const request = route.request();
@@ -15,7 +15,7 @@ export async function mockGeeo(page: Page) {
         await route.fulfill({ headers, json: { access_token: "mock-access", refresh_token: "mock-refresh", token_type: "Bearer", expires_in: 900 } });
       }
     } else {
-      await route.fulfill({ headers, json: mockUser });
+      await route.fulfill({ headers, json: user });
     }
   });
 }

@@ -17,7 +17,7 @@ export async function saveExamSubmission(
   if (!canClear() || (persistedDraft && JSON.stringify(persistedDraft) !== signature)) return false
 
   if (store.persist.getOptions().name === name) {
-    if (store.getState().getDraft(key) !== submitted) return false
+    if (JSON.stringify(store.getState().getDraft(key)) !== signature) return false
     store.getState().clearDraft(key)
   } else if (persisted && persistedDraft) {
     const drafts = { ...persisted.state.drafts }

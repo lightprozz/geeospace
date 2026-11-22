@@ -36,6 +36,24 @@ function deferred() {
 }
 
 describe('exam submission cleanup', () => {
+  it('clears a submitted draft after unrelated writes refresh its object identity, preserving another tab’s drafts', async () => {
+    const first = await openTab('teacher-1')
+    first.exams.getState().saveDraft('submitted', scores, 'Saved grade')
+    const submitted = first.exams.getState().getDraft('submitted')
+    const response = deferred()
+    const saving = first.saveExamSubmission('submitted', () => response.promise)
+    const second = await openTab('teacher-1')
+    second.exams.getState().saveDraft('other-student', scores, 'Other teacher edits')
+    first.exams.getState().saveDraft('local-student', scores, 'Local edits')
+    expect(first.exams.getState().getDraft('submitted')).not.toBe(submitted)
+    response.resolve()
+    expect(await saving).toBe(true)
+    const reloaded = await openTab('teacher-1')
+    expect(reloaded.exams.getState().hasDraft('submitted')).toBe(false)
+    expect(reloaded.exams.getState().getDraft('other-student')?.comment).toBe('Other teacher edits')
+    expect(reloaded.exams.getState().getDraft('local-student')?.comment).toBe('Local edits')
+  })
+
   it('clears a saved draft after the mutation observer unmounts before the response', async () => {
     const tab = await openTab('teacher-1')
     const key = 'class-1::student-1::1'
