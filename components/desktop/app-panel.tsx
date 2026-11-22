@@ -44,6 +44,7 @@ const panels: Partial<Record<DesktopAppId, ComponentType<PanelProps>>> = {
   "lms-materials": lazy(() => import("@/features/lms/materials/panel")),
   account: props => isGeeoConfigured ? <AccountPanel /> : <UnconfiguredAccountPanel {...props} />, assistant: AssistantPanel, today: TodayPanel, lms: LmsHub, staff: LmsHub, admin: LmsHub,
   "lms-branches": BranchesPanel, "lms-roles": RolesPanel, "lms-users": UsersPanel,
+  "lms-worklog": lazy(() => import("@/features/lms/worklog/worklog-panel").then(module => ({ default: module.WorklogPanel }))),
 };
 export function AppPanel(props: PanelProps) {
   const { t, label } = useSpace();
